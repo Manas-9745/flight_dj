@@ -1,6 +1,33 @@
 import { useEffect, useRef, useMemo } from 'react'
 import { Radio, Plane, ShieldCheck, Navigation, MapPin } from 'lucide-react'
+import mapboxgl from 'mapbox-gl'
+import 'mapbox-gl/dist/mapbox-gl.css'
 import { GLOBAL_AIRPORTS } from '../data/airportsData'
+
+const FREE_MAP_STYLE = {
+  version: 8,
+  sources: {
+    'carto-tiles': {
+      type: 'raster',
+      tiles: [
+        'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+        'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+        'https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png'
+      ],
+      tileSize: 256,
+      attribution: '&copy; OpenStreetMap contributors, &copy; CARTO'
+    }
+  },
+  layers: [
+    {
+      id: 'carto-tiles-layer',
+      type: 'raster',
+      source: 'carto-tiles',
+      minzoom: 0,
+      maxzoom: 19
+    }
+  ]
+}
 
 export default function RadarMap({
   position,
@@ -52,15 +79,16 @@ export default function RadarMap({
   const isLive = Boolean(position?.isLive && position?.available)
 
   useEffect(() => {
-    if (!MAPBOX_TOKEN || !window.mapboxgl || !mapContainerRef.current) return
+    if (!mapContainerRef.current) return
     if (mapRef.current) return // Already mounted
 
-    const mapboxgl = window.mapboxgl
-    mapboxgl.accessToken = MAPBOX_TOKEN
+    if (MAPBOX_TOKEN) {
+      mapboxgl.accessToken = MAPBOX_TOKEN
+    }
 
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
-      style: 'mapbox://styles/mapbox/light-v11',
+      style: MAPBOX_TOKEN ? 'mapbox://styles/mapbox/light-v11' : FREE_MAP_STYLE,
       center: [lon, lat],
       zoom: 4,
     })
@@ -189,79 +217,28 @@ export default function RadarMap({
         </div>
       </div>
 
-      {/* Interactive Mapbox Canvas or SVG Radar Graphic */}
-      {MAPBOX_TOKEN && window.mapboxgl ? (
-        <div ref={mapContainerRef} style={{ height: '340px', width: '100%' }} />
-      ) : (
-        <div className="relative h-[340px] bg-gradient-to-br from-[#FAFAF7] via-[#F0F4FC] to-[#E8EDF8] p-6 flex flex-col justify-between overflow-hidden">
-          {/* Radar Circles */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-25 pointer-events-none">
-            <div className="w-[320px] h-[320px] rounded-full border border-blue-300 flex items-center justify-center">
-              <div className="w-[220px] h-[220px] rounded-full border border-blue-200 flex items-center justify-center">
-                <div className="w-[120px] h-[120px] rounded-full border border-blue-200" />
-              </div>
-            </div>
-          </div>
+      {/* Interactive Map Canvas */}
+      <div ref={mapContainerRef} className="w-full bg-[#f8f9fa]" style={{ height: '340px' }} />
 
-          {/* Air Route Dynamic Visual */}
-          <div className="relative z-10 flex items-center justify-between my-auto px-4">
-            {/* Origin Node */}
-            <div className="bg-white/95 p-4 rounded-2xl border border-[#E5E5E0] shadow-xs text-center min-w-[110px]">
-              <span className="text-[10px] font-bold text-[#6B6B6B] uppercase tracking-wider block">Origin</span>
-              <div className="font-mono font-bold text-2xl text-[#0D0D0D] mt-0.5">{origAirport.iata}</div>
-              <span className="text-xs text-[#52524E] font-medium block truncate max-w-[100px] mx-auto">{origAirport.city}</span>
-            </div>
-
-            {/* Flight Arc & Plane */}
-            <div className="flex-1 mx-6 relative flex flex-col items-center">
-              <svg className="w-full h-16 overflow-visible" viewBox="0 0 200 40">
-                <path d="M 10 35 Q 100 0 190 35" fill="none" stroke="#D5D5D0" strokeWidth="2" strokeDasharray="4 4" />
-                <path d="M 10 35 Q 100 0 130 18" fill="none" stroke="#246BFD" strokeWidth="3" />
-              </svg>
-
-              <div 
-                className="absolute top-2 w-9 h-9 rounded-full bg-[#1A1A1A] text-white shadow-md flex items-center justify-center transition-all animate-float"
-                style={{ transform: `rotate(${heading}deg)` }}
-              >
-                <Plane className="w-5 h-5 text-white" />
-              </div>
-
-              <div className="mt-2 text-center">
-                <span className="bg-white text-[#0D0D0D] font-bold text-xs px-3 py-1 rounded-full border border-[#E5E5E0] shadow-xs">
-                  {flightNumber} · {speed} kts
-                </span>
-              </div>
-            </div>
-
-            {/* Destination Node */}
-            <div className="bg-white/95 p-4 rounded-2xl border border-[#E5E5E0] shadow-xs text-center min-w-[110px]">
-              <span className="text-[10px] font-bold text-[#6B6B6B] uppercase tracking-wider block">Destination</span>
-              <div className="font-mono font-bold text-2xl text-[#0D0D0D] mt-0.5">{destAirport.iata}</div>
-              <span className="text-xs text-[#52524E] font-medium block truncate max-w-[100px] mx-auto">{destAirport.city}</span>
-            </div>
-          </div>
-
-          {/* Telemetry Metrics Bar */}
-          <div className="relative z-10 grid grid-cols-4 gap-2 bg-white/95 p-3 rounded-xl border border-[#E5E5E0] shadow-xs">
-            <div className="text-center">
-              <div className="text-[10px] uppercase font-bold text-[#8C8C85]">Latitude</div>
-              <div className="text-xs font-bold text-[#0D0D0D] font-mono mt-0.5">{lat.toFixed(4)}°</div>
-            </div>
-            <div className="text-center border-l border-[#E5E5E0]">
-              <div className="text-[10px] uppercase font-bold text-[#8C8C85]">Longitude</div>
-              <div className="text-xs font-bold text-[#0D0D0D] font-mono mt-0.5">{lon.toFixed(4)}°</div>
-            </div>
-            <div className="text-center border-l border-[#E5E5E0]">
-              <div className="text-[10px] uppercase font-bold text-[#8C8C85]">Altitude</div>
-              <div className="text-xs font-bold text-[#246BFD] font-mono mt-0.5">{alt.toLocaleString()} ft</div>
-            </div>
-            <div className="text-center border-l border-[#E5E5E0]">
-              <div className="text-[10px] uppercase font-bold text-[#8C8C85]">Airspeed</div>
-              <div className="text-xs font-bold text-[#246BFD] font-mono mt-0.5">{speed} kts</div>
-            </div>
-          </div>
+      {/* Telemetry Metrics Bar */}
+      <div className="grid grid-cols-4 gap-2 bg-white p-3 border-t border-[#E5E5E0]">
+        <div className="text-center">
+          <div className="text-[10px] uppercase font-bold text-[#8C8C85]">Latitude</div>
+          <div className="text-xs font-bold text-[#0D0D0D] font-mono mt-0.5">{lat.toFixed(4)}°</div>
         </div>
-      )}
+        <div className="text-center border-l border-[#E5E5E0]">
+          <div className="text-[10px] uppercase font-bold text-[#8C8C85]">Longitude</div>
+          <div className="text-xs font-bold text-[#0D0D0D] font-mono mt-0.5">{lon.toFixed(4)}°</div>
+        </div>
+        <div className="text-center border-l border-[#E5E5E0]">
+          <div className="text-[10px] uppercase font-bold text-[#8C8C85]">Altitude</div>
+          <div className="text-xs font-bold text-[#246BFD] font-mono mt-0.5">{alt.toLocaleString()} ft</div>
+        </div>
+        <div className="text-center border-l border-[#E5E5E0]">
+          <div className="text-[10px] uppercase font-bold text-[#8C8C85]">Airspeed</div>
+          <div className="text-xs font-bold text-[#246BFD] font-mono mt-0.5">{speed} kts</div>
+        </div>
+      </div>
     </div>
   )
 }

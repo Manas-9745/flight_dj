@@ -4,7 +4,34 @@ import {
   Globe, Plane, Search, RefreshCw, Layers, Compass,
   SlidersHorizontal, AlertCircle, ArrowUpRight, Gauge, Radio
 } from 'lucide-react'
+import mapboxgl from 'mapbox-gl'
+import 'mapbox-gl/dist/mapbox-gl.css'
 import { getLiveFlights } from '../services/api'
+
+const FREE_MAP_STYLE = {
+  version: 8,
+  sources: {
+    'carto-tiles': {
+      type: 'raster',
+      tiles: [
+        'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+        'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+        'https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png'
+      ],
+      tileSize: 256,
+      attribution: '&copy; OpenStreetMap contributors, &copy; CARTO'
+    }
+  },
+  layers: [
+    {
+      id: 'carto-tiles-layer',
+      type: 'raster',
+      source: 'carto-tiles',
+      minzoom: 0,
+      maxzoom: 19
+    }
+  ]
+}
 
 export default function GlobalMapPage() {
   const navigate = useNavigate()
@@ -26,7 +53,7 @@ export default function GlobalMapPage() {
     try {
       setLoading(true)
       const res = await getLiveFlights()
-      const list = res.data || []
+      const list = res.flights || res.data || []
       setFlights(list)
       setLastRefreshed(new Date().toLocaleTimeString())
       setError(null)
@@ -35,13 +62,13 @@ export default function GlobalMapPage() {
       setError('Unable to fetch live radar telemetry. Using cached aviation snapshot.')
       // Graceful fallback sample data
       setFlights([
-        { callsign: 'BA142', icao24: '400511', latitude: 51.47, longitude: -0.45, altitude: 34000, velocityKts: 480, heading: 275, origin_country: 'United Kingdom' },
-        { callsign: 'AI645', icao24: '800234', latitude: 19.09, longitude: 72.87, altitude: 28000, velocityKts: 440, heading: 18, origin_country: 'India' },
-        { callsign: 'AF112', icao24: '394a12', latitude: 48.85, longitude: 2.35, altitude: 36000, velocityKts: 510, heading: 120, origin_country: 'France' },
-        { callsign: 'LH404', icao24: '3c65a1', latitude: 50.03, longitude: 8.57, altitude: 38000, velocityKts: 495, heading: 290, origin_country: 'Germany' },
-        { callsign: 'EK201', icao24: '896123', latitude: 25.25, longitude: 55.36, altitude: 39000, velocityKts: 520, heading: 310, origin_country: 'UAE' },
-        { callsign: 'UA88',  icao24: 'a12bc4', latitude: 40.64, longitude: -73.78, altitude: 31000, velocityKts: 460, heading: 85, origin_country: 'United States' },
-        { callsign: 'SQ321', icao24: '76a89b', latitude: 1.36, longitude: 103.99, altitude: 37000, velocityKts: 505, heading: 330, origin_country: 'Singapore' },
+        { callsign: 'BA142', icao24: '400511', latitude: 51.47, longitude: -0.45, altitude: 34000, velocityKts: 480, heading: 275, originCountry: 'United Kingdom' },
+        { callsign: 'AI645', icao24: '800234', latitude: 19.09, longitude: 72.87, altitude: 28000, velocityKts: 440, heading: 18, originCountry: 'India' },
+        { callsign: 'AF112', icao24: '394a12', latitude: 48.85, longitude: 2.35, altitude: 36000, velocityKts: 510, heading: 120, originCountry: 'France' },
+        { callsign: 'LH404', icao24: '3c65a1', latitude: 50.03, longitude: 8.57, altitude: 38000, velocityKts: 495, heading: 290, originCountry: 'Germany' },
+        { callsign: 'EK201', icao24: '896123', latitude: 25.25, longitude: 55.36, altitude: 39000, velocityKts: 520, heading: 310, originCountry: 'UAE' },
+        { callsign: 'UA88',  icao24: 'a12bc4', latitude: 40.64, longitude: -73.78, altitude: 31000, velocityKts: 460, heading: 85, originCountry: 'United States' },
+        { callsign: 'SQ321', icao24: '76a89b', latitude: 1.36, longitude: 103.99, altitude: 37000, velocityKts: 505, heading: 330, originCountry: 'Singapore' },
       ])
     } finally {
       setLoading(false)
@@ -59,19 +86,20 @@ export default function GlobalMapPage() {
     }
   }, [autoRefresh])
 
-  // Mapbox integration when token exists
+  // Interactive map initialization (Mapbox or high-DPI OpenStreetMap / CARTO)
   useEffect(() => {
-    if (!MAPBOX_TOKEN || !window.mapboxgl || !mapContainerRef.current) return
+    if (!mapContainerRef.current) return
 
-    const mapboxgl = window.mapboxgl
-    mapboxgl.accessToken = MAPBOX_TOKEN
+    if (MAPBOX_TOKEN) {
+      mapboxgl.accessToken = MAPBOX_TOKEN
+    }
 
     if (!mapRef.current) {
       const map = new mapboxgl.Map({
         container: mapContainerRef.current,
-        style: 'mapbox://styles/mapbox/light-v11',
+        style: MAPBOX_TOKEN ? 'mapbox://styles/mapbox/light-v11' : FREE_MAP_STYLE,
         center: [15, 35],
-        zoom: 2.5,
+        zoom: 2.2,
       })
       mapRef.current = map
       map.addControl(new mapboxgl.NavigationControl(), 'top-right')
@@ -89,7 +117,7 @@ export default function GlobalMapPage() {
       const el = document.createElement('div')
       el.className = 'aircraft-icon-pin'
       el.style.cssText = `
-        width: 30px; height: 30px;
+        width: 28px; height: 28px;
         background: #FFFFFF;
         border: 2px solid #2563EB;
         box-shadow: 0 4px 10px rgba(37,99,235,0.25);
@@ -107,6 +135,15 @@ export default function GlobalMapPage() {
 
       const marker = new mapboxgl.Marker(el)
         .setLngLat([f.longitude, f.latitude])
+        .setPopup(
+          new mapboxgl.Popup({ offset: 15 }).setHTML(`
+            <div style="font-family:Inter,sans-serif;padding:4px 6px;">
+              <div style="font-weight:700;color:#2563EB;font-size:13px;">${f.callsign || 'Unknown'}</div>
+              <div style="font-size:11px;color:#475569;">${f.originCountry || f.origin_country || 'Commercial Flight'}</div>
+              <div style="font-size:11px;color:#0F172A;margin-top:2px;">Alt: ${f.altitude ? f.altitude.toLocaleString() + ' ft' : 'Ground'} · Speed: ${f.velocityKts || 0} kts</div>
+            </div>
+          `)
+        )
         .addTo(mapRef.current)
 
       markersRef.current.push(marker)
@@ -119,7 +156,8 @@ export default function GlobalMapPage() {
 
   const filteredFlights = flights.filter(f => {
     const q = searchTerm.toUpperCase()
-    return !q || (f.callsign && f.callsign.includes(q)) || (f.origin_country && f.origin_country.toUpperCase().includes(q))
+    const country = f.originCountry || f.origin_country || ''
+    return !q || (f.callsign && f.callsign.includes(q)) || country.toUpperCase().includes(q)
   })
 
   return (
@@ -180,36 +218,8 @@ export default function GlobalMapPage() {
               <div>Last ping: {lastRefreshed || 'Just now'}</div>
             </div>
 
-            {/* Interactive Map or Visual Radar Surface */}
-            {MAPBOX_TOKEN ? (
-              <div ref={mapContainerRef} style={{ height: '540px', width: '100%' }} />
-            ) : (
-              <div className="relative bg-gradient-to-br from-slate-900 via-navy-900 to-slate-950 p-6 flex flex-col items-center justify-center text-center" style={{ minHeight: '540px' }}>
-                {/* Simulated Radar Rings */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
-                  <div className="w-[480px] h-[480px] rounded-full border border-sky-400 animate-pulse" />
-                  <div className="w-[320px] h-[320px] rounded-full border border-sky-400" />
-                  <div className="w-[160px] h-[160px] rounded-full border border-sky-400" />
-                  <div className="absolute w-full h-[1px] bg-sky-400/40" />
-                  <div className="absolute h-full w-[1px] bg-sky-400/40" />
-                </div>
-
-                <div className="relative z-10 max-w-md p-6 bg-navy-800/80 backdrop-blur-md rounded-2xl border border-white/10 text-white shadow-xl">
-                  <div className="w-12 h-12 rounded-xl bg-brand-500/20 border border-brand-500/40 flex items-center justify-center mx-auto mb-3">
-                    <Radio className="w-6 h-6 text-brand-400 animate-pulse" />
-                  </div>
-                  <h3 className="font-display font-bold text-lg text-white mb-1">Global Radar Telemetry Active</h3>
-                  <p className="text-slate-300 text-xs leading-relaxed mb-4">
-                    Receiving live ADS-B state vectors from OpenSky Network feeds. To render high-resolution 3D satellite tiles, add your Mapbox key.
-                  </p>
-                  <div className="text-left bg-black/40 rounded-xl p-3 font-mono text-[11px] text-sky-300 border border-white/5 space-y-1">
-                    <div>FEED: OpenSky Network Public API</div>
-                    <div>TRACKING: {flights.length} active airframes</div>
-                    <div>COVERAGE: Transatlantic & Continental Corridors</div>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Real Interactive World Map Canvas */}
+            <div ref={mapContainerRef} className="w-full bg-[#f8f9fa]" style={{ height: '560px' }} />
           </div>
         </div>
 
