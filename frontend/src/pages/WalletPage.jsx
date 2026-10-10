@@ -369,7 +369,7 @@ export default function WalletPage({ user, token }) {
           <div className="flex items-center gap-2 mt-1">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              Private Vault: {user?.name || user?.email}
+              Private Vault: Passenger ({(user?.email ? user.email.charAt(0) : (user?.name ? user.name.charAt(0) : 'P')).toUpperCase()})
             </span>
             <span className="text-xs text-[#6B6B6B]">| Isolated Storage</span>
           </div>
@@ -687,22 +687,7 @@ export default function WalletPage({ user, token }) {
         </div>
       )}
 
-      {/* Privacy Notice Disclaimer */}
-      <div className="bg-surface-100/60 border border-surface-200 rounded-3xl p-5 text-slate-500 text-xs space-y-1.5">
-        <div className="flex items-center gap-2 font-display font-bold text-navy-800">
-          <Shield className="w-4 h-4 text-brand-600" />
-          <span>AeroMate Privacy & Document Security Principles</span>
-        </div>
-        <p>
-          • <strong>Local Web Crypto:</strong> Offline documents are encrypted directly in your browser with AES-GCM-256 before saving to IndexedDB.
-        </p>
-        <p>
-          • <strong>Legal Notice:</strong> This digital travel wallet is designed for passenger operational convenience. It does not replace physical government identity cards or official DigiLocker documentation required by border authorities.
-        </p>
-        <p>
-          • <strong>Device Storage:</strong> Offline copies remain securely on this phone/browser until explicitly removed by you.
-        </p>
-      </div>
+
 
       {/* Add Document Modal */}
       <AddDocumentModal
