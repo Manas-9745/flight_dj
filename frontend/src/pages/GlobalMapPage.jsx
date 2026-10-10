@@ -8,8 +8,17 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { getLiveFlights } from '../services/api'
 
-// High-definition Leaflet basemap providers (100% free, no tokens required)
+// High-definition Leaflet basemap providers (100% free, no watermarks, no API key required)
 const TILE_PROVIDERS = {
+  dark: {
+    name: 'Dark Radar',
+    icon: '🌑',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    options: {
+      maxZoom: 16,
+      attribution: '&copy; Esri &mdash; Esri, DeLorme, NAVTEQ'
+    }
+  },
   satellite: {
     name: 'Satellite',
     icon: '🛰️',
@@ -19,27 +28,17 @@ const TILE_PROVIDERS = {
       attribution: '&copy; Esri World Imagery'
     }
   },
-  dark: {
-    name: 'Dark Radar',
-    icon: '🌑',
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png',
-    options: {
-      subdomains: 'abcd',
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors, &copy; CARTO'
-    }
-  },
   light: {
     name: 'Daylight',
     icon: '🗺️',
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     options: {
-      subdomains: 'abcd',
       maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors, &copy; CARTO'
+      attribution: '&copy; OpenStreetMap contributors'
     }
   }
 }
+
 
 export default function GlobalMapPage() {
   const navigate = useNavigate()
@@ -110,8 +109,8 @@ export default function GlobalMapPage() {
         preferCanvas: true
       })
 
-      // Custom zoom control in bottom right
-      L.control.zoom({ position: 'bottom-right' }).addTo(map)
+      // Custom zoom control in bottom right (Leaflet position format is 'bottomright')
+      L.control.zoom({ position: 'bottomright' }).addTo(map)
 
       // Add initial tile layer
       const provider = TILE_PROVIDERS[activeTheme] || TILE_PROVIDERS.dark
