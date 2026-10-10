@@ -16,6 +16,7 @@ const statsRoutes = require('./routes/statsRoutes');
 const journeyRoutes = require('./routes/journeyRoutes');
 const alertRoutes = require('./routes/alertRoutes');
 const disruptionRoutes = require('./routes/disruptionRoutes');
+const walletRoutes = require('./routes/walletRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -71,6 +72,7 @@ app.use('/api/assistant', journeyRoutes); // transfer, impact, baggage, hold-che
 app.use('/api/trips', tripRoutes);
 app.use('/api/alerts', alertRoutes);      // Feature 11: Live Crisis & Aviation Alerts
 app.use('/api/disruptions', disruptionRoutes); // Disruption Manager & Recovery
+app.use('/api/wallet', walletRoutes);          // Secure Travel Wallet & Documents
 
 // 404 & Global Error Handling
 app.use(notFoundHandler);

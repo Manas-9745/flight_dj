@@ -161,4 +161,21 @@ export const logQuickHelpExecution = (params) =>
 export const getHealth = () =>
   api.get('/health').then(r => r.data)
 
+// ── Secure Travel Wallet & Documents ──────────────────────────────────────────
+
+export const getWalletDocuments = (token, params = {}) =>
+  api.get('/wallet/documents', { ...authHeader(token), params }).then(r => r.data)
+
+export const getWalletDocument = (id, token) =>
+  api.get(`/wallet/documents/${id}`, authHeader(token)).then(r => r.data)
+
+export const saveWalletDocument = (docData, token) =>
+  api.post('/wallet/documents', docData, authHeader(token)).then(r => r.data)
+
+export const updateWalletDocument = (id, docData, token) =>
+  api.put(`/wallet/documents/${id}`, docData, authHeader(token)).then(r => r.data)
+
+export const deleteWalletDocument = (id, token) =>
+  api.delete(`/wallet/documents/${id}`, authHeader(token)).then(r => r.data)
+
 

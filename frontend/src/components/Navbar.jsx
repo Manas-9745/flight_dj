@@ -16,6 +16,7 @@ export default function Navbar({ user, onLogout }) {
   }, [])
 
   const navLinks = [
+    { name: 'Travel Wallet', path: '/wallet' },
     { name: 'Quick Help', path: '/quick-help' },
     { name: 'Live Alerts', path: '/alerts' },
     { name: 'Disruptions', path: '/disruption' },
