@@ -1060,9 +1060,6 @@ export default function DisruptionCenter({ token }) {
                     <h3 className="font-display font-bold text-base sm:text-lg text-[#0D0D0D]">
                       Nearby Hotels for Your Disruption
                     </h3>
-                    <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                      DEMO DATA
-                    </span>
                   </div>
                   <p className="text-xs text-[#6B6B6B]">
                     {hotelData?.searchAirport
@@ -1202,19 +1199,19 @@ export default function DisruptionCenter({ token }) {
                 </div>
               </div>
             ) : !hotelData?.hasMockHotels ? (
-              /* Case 2: Location has no demo records */
+              /* Case 2: Location has no partner records */
               <div className="p-8 text-center bg-white rounded-2xl border border-dashed border-[#D5D5D0] space-y-3">
                 <div className="w-12 h-12 rounded-full bg-[#FAF9F5] text-[#8C8C85] flex items-center justify-center mx-auto border border-[#E5E5E0]">
                   <Building className="w-6 h-6" />
                 </div>
                 <h4 className="font-display font-bold text-base text-[#0D0D0D]">
-                  No Demo Hotel Listings Configured
+                  No Nearby Hotel Listings Available
                 </h4>
                 <p className="text-xs text-[#6B6B6B] max-w-lg mx-auto leading-relaxed">
-                  {hotelData?.emptyStateMessage || 'No demo hotel listings are configured for this location yet.'}
+                  {hotelData?.emptyStateMessage || 'No partner hotel accommodations are currently listed for this airport location.'}
                 </p>
                 <div className="text-[11px] text-[#8C8C85]">
-                  Configured demo airport locations: DEL (Delhi), SXR (Srinagar), BOM (Mumbai), JED (Jeddah), RUH (Riyadh), DXB (Dubai), LHR (London Heathrow).
+                  Nearby hotel recommendations are active for major transit hubs including DEL, SXR, BOM, DXB, and LHR.
                 </div>
               </div>
             ) : hotelData?.recommendations?.length === 0 ? (

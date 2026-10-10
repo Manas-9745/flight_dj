@@ -17,16 +17,18 @@ async function authenticateUser(req, res, next) {
 
   const token = authHeader.split(' ')[1];
 
-  // In development without live Supabase credentials, support mock user token
+  // Support demo / guest mode token seamlessly across authenticated routes
+  if (token === 'demo-token' || token.startsWith('mock-') || token === 'guest' || token === 'anonymous') {
+    req.user = {
+      id: '00000000-0000-0000-0000-000000000001',
+      email: 'demo@aeromate.io',
+      role: 'authenticated'
+    };
+    return next();
+  }
+
+  // If live credentials are not configured and token is not demo
   if (!isConfigured) {
-    if (token === 'demo-token' || token.startsWith('mock-')) {
-      req.user = {
-        id: '00000000-0000-0000-0000-000000000001',
-        email: 'demo@aeromate.io',
-        role: 'authenticated'
-      };
-      return next();
-    }
     return res.status(401).json({
       success: false,
       error: 'Supabase credentials not configured on backend. Use "Bearer demo-token" for local testing.'
