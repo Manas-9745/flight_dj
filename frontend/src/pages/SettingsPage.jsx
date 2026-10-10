@@ -1,17 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
-  Settings, Globe, Shield, Database, MapPin, Gauge,
-  CheckCircle2, AlertCircle, RefreshCw, Key, UserCheck, Trash2
+  Globe, Gauge, CheckCircle2, Trash2
 } from 'lucide-react'
 
-export default function SettingsPage({ user }) {
+export default function SettingsPage() {
   const [language, setLanguage] = useState(() => localStorage.getItem('aeromate_language') || 'en')
   const [altUnit, setAltUnit] = useState(() => localStorage.getItem('aeromate_unit_alt') || 'feet')
   const [speedUnit, setSpeedUnit] = useState(() => localStorage.getItem('aeromate_unit_speed') || 'knots')
   const [savedMsg, setSavedMsg] = useState(false)
-
-  const hasMapbox = !!import.meta.env.VITE_MAPBOX_TOKEN
-  const hasSupabase = !!import.meta.env.VITE_SUPABASE_URL && !import.meta.env.VITE_SUPABASE_URL.includes('your-')
 
   const handleSave = (e) => {
     e.preventDefault()
@@ -23,134 +19,94 @@ export default function SettingsPage({ user }) {
   }
 
   const handleClearCache = () => {
-    if (window.confirm('Clear all local offline flight snapshots, bag tags, and preferences?')) {
-      localStorage.removeItem('aeromate_offline_wallet')
-      localStorage.removeItem('aeromate_wallet_sync_time')
+    if (window.confirm('Clear saved data and reset preferences?')) {
+      localStorage.removeItem('aeromate_language')
+      localStorage.removeItem('aeromate_unit_alt')
+      localStorage.removeItem('aeromate_unit_speed')
       localStorage.removeItem('aeromate_baggage_tags')
-      alert('Local storage cleared successfully.')
+      alert('Preferences reset successfully.')
       window.location.reload()
     }
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 space-y-6 animate-fade-in font-sans">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 space-y-6 animate-fade-in font-sans">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-display font-bold text-navy-700">Application Settings</h1>
-        <p className="text-slate-500 text-sm mt-1">
-          Configure copilot language preferences, telemetry units, and integration credentials
+        <h1 className="text-2xl font-display font-bold text-[#0D0D0D]">Settings</h1>
+        <p className="text-sm text-[#6B6B6B] mt-1">
+          Manage your language and display units
         </p>
       </div>
 
       {savedMsg && (
-        <div className="p-3 bg-teal-50 border border-teal-200 rounded-xl text-teal-800 text-xs flex items-center gap-2 animate-fade-in">
-          <CheckCircle2 className="w-4 h-4 text-teal-600" />
-          <span>Preferences saved successfully.</span>
+        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs flex items-center gap-2 animate-fade-in">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          <span>Settings saved successfully.</span>
         </div>
       )}
 
-      <form onSubmit={handleSave} className="space-y-6">
-        {/* Language & Localization Card */}
-        <div className="bg-white border border-surface-200 rounded-2xl p-6 shadow-card space-y-4">
-          <h3 className="font-display font-bold text-sm text-navy-700 flex items-center gap-2">
-            <Globe className="w-4 h-4 text-brand-500" /> Language & AI Multilingual Copilot
-          </h3>
-          <p className="text-xs text-slate-500">
-            Select your preferred language. All AI flight assistance, transfer guides, and delay analyses will automatically reply in this language.
+      <form onSubmit={handleSave} className="space-y-5">
+        {/* Language Selection */}
+        <div className="bg-white border border-[#E5E5E0] rounded-2xl p-5 shadow-sm space-y-3">
+          <h2 className="font-display font-bold text-sm text-[#0D0D0D] flex items-center gap-2">
+            <Globe className="w-4 h-4 text-[#246BFD]" /> Language
+          </h2>
+          <p className="text-xs text-[#6B6B6B]">
+            Select your preferred language for flight updates and assistance.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-semibold text-navy-700 block mb-1">Copilot Interface Language</label>
-              <select
-                value={language}
-                onChange={e => setLanguage(e.target.value)}
-                className="input-field"
-              >
-                <option value="en">English (US/UK)</option>
-                <option value="es">Español (Spanish)</option>
-                <option value="fr">Français (French)</option>
-                <option value="de">Deutsch (German)</option>
-                <option value="hi">हिन्दी (Hindi)</option>
-                <option value="zh">中文 (Chinese)</option>
-                <option value="ar">العربية (Arabic)</option>
-                <option value="ja">日本語 (Japanese)</option>
-              </select>
-            </div>
+          <div className="max-w-xs">
+            <select
+              value={language}
+              onChange={e => setLanguage(e.target.value)}
+              className="input-field text-xs font-semibold"
+            >
+              <option value="en">English</option>
+              <option value="es">Español (Spanish)</option>
+              <option value="fr">Français (French)</option>
+              <option value="de">Deutsch (German)</option>
+              <option value="hi">हिन्दी (Hindi)</option>
+              <option value="zh">中文 (Chinese)</option>
+              <option value="ar">العربية (Arabic)</option>
+              <option value="ja">日本語 (Japanese)</option>
+            </select>
           </div>
         </div>
 
-        {/* Telemetry Units */}
-        <div className="bg-white border border-surface-200 rounded-2xl p-6 shadow-card space-y-4">
-          <h3 className="font-display font-bold text-sm text-navy-700 flex items-center gap-2">
-            <Gauge className="w-4 h-4 text-teal-600" /> Telemetry & Aviation Units
-          </h3>
+        {/* Units Selection */}
+        <div className="bg-white border border-[#E5E5E0] rounded-2xl p-5 shadow-sm space-y-3">
+          <h2 className="font-display font-bold text-sm text-[#0D0D0D] flex items-center gap-2">
+            <Gauge className="w-4 h-4 text-emerald-600" /> Measurement Units
+          </h2>
+          <p className="text-xs text-[#6B6B6B]">
+            Choose how altitude and airspeed are displayed.
+          </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div>
-              <label className="font-semibold text-navy-700 block mb-1">Altitude Measurement</label>
+              <label className="font-semibold text-[#0D0D0D] block mb-1">Altitude</label>
               <select
                 value={altUnit}
                 onChange={e => setAltUnit(e.target.value)}
-                className="input-field"
+                className="input-field text-xs font-semibold"
               >
-                <option value="feet">Feet (ft) — Standard Aviation</option>
-                <option value="meters">Meters (m) — Metric Flight Levels</option>
+                <option value="feet">Feet (ft)</option>
+                <option value="meters">Meters (m)</option>
               </select>
             </div>
 
             <div>
-              <label className="font-semibold text-navy-700 block mb-1">Ground Speed Unit</label>
+              <label className="font-semibold text-[#0D0D0D] block mb-1">Speed</label>
               <select
                 value={speedUnit}
                 onChange={e => setSpeedUnit(e.target.value)}
-                className="input-field"
+                className="input-field text-xs font-semibold"
               >
-                <option value="knots">Knots (kts) — Standard Airspeed</option>
-                <option value="kmh">Kilometers per Hour (km/h)</option>
-                <option value="mph">Miles per Hour (mph)</option>
+                <option value="knots">Knots (kts)</option>
+                <option value="kmh">Kilometers per hour (km/h)</option>
+                <option value="mph">Miles per hour (mph)</option>
               </select>
-            </div>
-          </div>
-        </div>
-
-        {/* System & Integrations Status */}
-        <div className="bg-white border border-surface-200 rounded-2xl p-6 shadow-card space-y-4">
-          <h3 className="font-display font-bold text-sm text-navy-700 flex items-center gap-2">
-            <Key className="w-4 h-4 text-amber-500" /> External API & Credential Health
-          </h3>
-
-          <div className="space-y-3 text-xs">
-            <div className="p-3 bg-surface-50 border border-surface-200 rounded-xl flex items-center justify-between">
-              <div>
-                <span className="font-bold text-navy-700 block">Mapbox Satellite & Light Vector Tiles</span>
-                <span className="text-slate-400">Environment key: VITE_MAPBOX_TOKEN</span>
-              </div>
-              <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${
-                hasMapbox ? 'bg-teal-50 text-teal-700 border border-teal-200' : 'bg-surface-200 text-slate-600'
-              }`}>
-                {hasMapbox ? 'Connected' : 'Fallback Canvas Active'}
-              </span>
-            </div>
-
-            <div className="p-3 bg-surface-50 border border-surface-200 rounded-xl flex items-center justify-between">
-              <div>
-                <span className="font-bold text-navy-700 block">Supabase Authentication & Cloud Trips</span>
-                <span className="text-slate-400">Environment key: VITE_SUPABASE_URL</span>
-              </div>
-              <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${
-                hasSupabase ? 'bg-teal-50 text-teal-700 border border-teal-200' : 'bg-brand-50 text-brand-700 border border-brand-200'
-              }`}>
-                {hasSupabase ? 'Supabase Connected' : 'Local Demo Session Active'}
-              </span>
-            </div>
-
-            <div className="p-3 bg-surface-50 border border-surface-200 rounded-xl flex items-center justify-between">
-              <div>
-                <span className="font-bold text-navy-700 block">Current User State</span>
-                <span className="text-slate-400">{user?.email || 'Demo Traveler'}</span>
-              </div>
-              <span className="text-teal-600 font-semibold">Active</span>
             </div>
           </div>
         </div>
@@ -160,16 +116,16 @@ export default function SettingsPage({ user }) {
           <button
             type="button"
             onClick={handleClearCache}
-            className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1.5"
+            className="text-xs text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1.5"
           >
-            <Trash2 className="w-3.5 h-3.5" /> Clear Offline Cache & Reset
+            <Trash2 className="w-3.5 h-3.5" /> Reset Preferences
           </button>
 
           <button
             type="submit"
             className="btn-primary py-2.5 px-6 text-xs"
           >
-            Save Preferences
+            Save Changes
           </button>
         </div>
       </form>

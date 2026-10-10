@@ -442,7 +442,7 @@ export default function DisruptionCenter({ token }) {
               Disruption Recovery Center
             </h1>
             <p className="text-sm text-[#52524E] mt-1 max-w-xl">
-              Proactive flight monitoring, automated rebooking alternatives, downstream impact analysis, and accommodation support.
+              Track flight status, find alternatives, and get assistance during delays.
             </p>
           </div>
 
@@ -450,10 +450,10 @@ export default function DisruptionCenter({ token }) {
             <button
               onClick={() => handleLoadCancelledFlightDemo('DEL')}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1A1A1A] hover:bg-black text-white text-xs font-semibold transition-all shadow-subtle"
-              title="Simulate a cancelled flight with nearby demo hotels"
+              title="Show sample disruption scenario"
             >
               <AlertOctagon className="w-3.5 h-3.5 text-white" />
-              <span>Demo: Disrupted Flight & Hotels</span>
+              <span>Sample Disruption</span>
             </button>
 
             <button
@@ -523,13 +523,13 @@ export default function DisruptionCenter({ token }) {
           {/* Trip Cards Horizontal Selector */}
           {monitoredTrips.length === 0 ? (
             <div className="p-8 text-center text-sm text-[#8C8C85] bg-[#FAF9F5] rounded-xl border border-dashed border-[#D5D5D0] space-y-3">
-              <p>No saved trips found. Search for flights or save an itinerary in My Journeys to enable automated 24/7 disruption monitoring.</p>
+              <p>No saved trips found. Save a flight in My Journeys to track disruptions.</p>
               <button
                 onClick={() => handleLoadCancelledFlightDemo('DEL')}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 transition-all shadow-xs"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-black text-white text-xs font-semibold hover:bg-neutral-800 transition-all shadow-xs"
               >
                 <Building className="w-3.5 h-3.5 text-white" />
-                <span>Load Cancelled Flight & Hotels Demo</span>
+                <span>Load Sample Disruption</span>
               </button>
             </div>
           ) : (
@@ -771,7 +771,7 @@ export default function DisruptionCenter({ token }) {
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="w-4 h-4 text-blue-600" />
                   <h3 className="font-display font-bold text-base text-[#0D0D0D]">
-                    AI Whole-Journey Executive Assessment
+                    Journey Impact Assessment
                   </h3>
                 </div>
                 <p className="text-xs sm:text-sm text-[#52524E] leading-relaxed">
@@ -900,7 +900,7 @@ export default function DisruptionCenter({ token }) {
                               onClick={() => setActiveTab('hotels')}
                               className="px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-900 hover:bg-amber-100 transition-all flex items-center justify-between"
                             >
-                              <span>Explore Nearby Demo Hotels</span>
+                              <span>Explore Nearby Hotels</span>
                               <Building className="w-3.5 h-3.5 text-amber-700" />
                             </button>
                           )}
@@ -1039,11 +1039,6 @@ export default function DisruptionCenter({ token }) {
                   </div>
                 )
               })}
-            </div>
-
-            {/* Disclaimer Box */}
-            <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200/70 text-xs text-amber-950 leading-relaxed">
-              <strong>Airline Rebooking Disclaimer:</strong> {alternativesData?.disclaimer}
             </div>
           </div>
         )}
@@ -1250,8 +1245,8 @@ export default function DisruptionCenter({ token }) {
                         <div className="space-y-3">
                           {/* Top Badges & Rating */}
                           <div className="flex items-start justify-between gap-2">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
-                              DEMO DATA
+                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                              {hotel.freeCancellation ? 'Free Cancellation' : 'Airport Area'}
                             </span>
                             <div className="flex items-center gap-1 text-xs font-bold text-[#0D0D0D] bg-[#FAF9F5] px-2 py-0.5 rounded-md border border-[#E5E5E0]">
                               <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
@@ -1331,7 +1326,7 @@ export default function DisruptionCenter({ token }) {
                                 {hotel.currency} {hotel.nightlyRate}
                               </span>
                               <span className="text-[10px] text-[#8C8C85] block">
-                                / night demo
+                                / night
                               </span>
                             </div>
                           </div>
@@ -1383,17 +1378,6 @@ export default function DisruptionCenter({ token }) {
                       </div>
                     )
                   })}
-                </div>
-
-                {/* Transparency & Disclaimer Box */}
-                <div className="p-4 rounded-xl bg-[#FAF9F5] border border-[#E5E5E0] text-xs text-[#52524E] space-y-1">
-                  <div className="font-semibold text-[#0D0D0D] flex items-center gap-1.5">
-                    <Info className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Demo Data & Independent Accommodation Policy</span>
-                  </div>
-                  <p className="text-[11px] leading-relaxed text-[#6B6B6B]">
-                    AeroMate uses sample demonstration hotel datasets to model disruption relief near airports without requiring paid commercial APIs. Prices, ratings, policies, and availability are illustrative estimates and do not represent verified live reservations. AeroMate never charges payment cards, alters external bookings, or executes automatic hotel contracts.
-                  </p>
                 </div>
               </div>
             )}
@@ -1553,7 +1537,7 @@ export default function DisruptionCenter({ token }) {
               {/* User Approval Action Bar */}
               <div className="pt-4 border-t border-[#E5E5E0] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="text-xs text-[#52524E]">
-                  AeroMate will update your saved itinerary with the new flight and create an audit log. Existing external reservations are never modified without provider authorization.
+                  Your saved itinerary will be updated with the selected flight.
                 </div>
 
                 <div className="flex items-center gap-3 shrink-0">
@@ -1592,10 +1576,10 @@ export default function DisruptionCenter({ token }) {
                 </div>
                 <div>
                   <h2 className="font-display font-bold text-xl text-[#0D0D0D]">
-                    Instant Rights & Legal Delay Compensation Calculator
+                    Delay Compensation Calculator
                   </h2>
                   <p className="text-xs text-[#6B6B6B]">
-                    Determine legally mandated cash payouts, hotel entitlements, and rebooking rights under EU261, DGCA India, and US DOT.
+                    Check compensation and rights under DGCA, EU261, and US DOT rules.
                   </p>
                 </div>
               </div>

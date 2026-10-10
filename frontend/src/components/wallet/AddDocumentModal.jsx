@@ -594,7 +594,7 @@ export default function AddDocumentModal({ isOpen, onClose, onSave, isOffline = 
                     className="text-brand-600 hover:text-brand-700 font-semibold flex items-center gap-1 text-[11px] hover:underline"
                   >
                     {ocrLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                    Auto-detect Details (OCR Demo)
+                    Auto-detect Details
                   </button>
                 </div>
 
@@ -879,7 +879,7 @@ export default function AddDocumentModal({ isOpen, onClose, onSave, isOffline = 
                     Save for Offline Access
                   </span>
                   <span className="text-[10px] text-slate-500">
-                    Encrypted on this device via Web Crypto AES-GCM-256 for offline airport use.
+                    Keep an offline copy accessible without internet.
                   </span>
                 </div>
               </div>

@@ -920,7 +920,7 @@ export default function SearchPage({ token }) {
                               {/* Booking & Search Offer Disclaimer */}
                               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
                                 <p className="text-[11px] text-[#8C8C85]">
-                                  * Live search offer verified via GDS. Final fare confirmed upon booking.
+                                  * Fares confirmed at booking.
                                 </p>
                                 <div className="flex items-center gap-2">
                                   <button

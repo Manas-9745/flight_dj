@@ -216,14 +216,6 @@ export default function LiveAlertsPage({ token }) {
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
           </button>
-
-          <button
-            onClick={() => setShowSetupModal(true)}
-            className="btn-secondary text-xs py-2 px-4 rounded-full flex items-center gap-1.5"
-          >
-            <Sliders className="w-3.5 h-3.5 text-[#52524E]" />
-            <span>Data Sources</span>
-          </button>
         </div>
       </div>
 
@@ -726,12 +718,6 @@ export default function LiveAlertsPage({ token }) {
                     </div>
                   </div>
                 )}
-
-                {/* Crucial Disclaimer */}
-                <div className="p-3 bg-slate-100 rounded-xl text-[11px] text-slate-500 leading-relaxed">
-                  <strong>Regulatory Safety Disclaimer: </strong>
-                  {impactResult.disclaimer}
-                </div>
               </div>
             )}
           </div>
@@ -826,11 +812,6 @@ export default function LiveAlertsPage({ token }) {
                       </a>
                     )}
                   </div>
-
-                  {/* Disclaimer */}
-                  <div className="p-3 bg-slate-100 rounded-xl text-[11px] text-slate-500 leading-relaxed">
-                    <strong>Notice: </strong> {aiSummary.disclaimer}
-                  </div>
                 </div>
               ) : (
                 <p className="text-sm text-slate-500">Summary currently unavailable.</p>
@@ -844,70 +825,6 @@ export default function LiveAlertsPage({ token }) {
                 className="btn-primary text-xs py-2 px-5"
               >
                 Close Breakdown
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ================= MODAL: SETUP & SOURCES ================= */}
-      {showSetupModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-xl w-full border border-slate-200 shadow-2xl overflow-hidden animate-slide-up">
-            <div className="p-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-blue-600" />
-                <h3 className="font-bold text-sm text-slate-900">Aviation Data Providers & Setup Status</h3>
-              </div>
-              <button
-                onClick={() => setShowSetupModal(false)}
-                className="text-slate-400 hover:text-slate-700 text-sm font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4 text-xs">
-              <p className="text-slate-600 leading-relaxed">
-                AeroMate synthesizes bulletins from official civil aviation authorities and optional news APIs:
-              </p>
-
-              <div className="space-y-3">
-                {providerStatus?.providers && Object.entries(providerStatus.providers).map(([key, prov]) => (
-                  <div key={key} className="p-3 rounded-xl border border-slate-200 bg-slate-50/70 flex items-start justify-between gap-3">
-                    <div>
-                      <div className="font-bold text-slate-900">{prov.name}</div>
-                      <p className="text-slate-500 mt-0.5">{prov.description}</p>
-                    </div>
-                    <div>
-                      {prov.configured ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap">
-                          Active
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200 whitespace-nowrap">
-                          Baseline Only
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="bg-blue-50 p-3.5 rounded-xl border border-blue-200 text-blue-900 space-y-1">
-                <div className="font-bold">Adding External Live API Credentials:</div>
-                <p className="leading-relaxed">
-                  Add <code className="bg-blue-100 px-1 py-0.5 rounded font-mono">NEWS_API_KEY</code> and <code className="bg-blue-100 px-1 py-0.5 rounded font-mono">AVIATIONSTACK_API_KEY</code> to your backend <code className="bg-blue-100 px-1 py-0.5 rounded font-mono">.env</code> file. When absent, the system operates on verified official EASA, FAA, and ICAO safety bulletins.
-                </p>
-              </div>
-            </div>
-
-            <div className="p-4 border-t border-slate-100 bg-slate-50 text-right">
-              <button
-                onClick={() => setShowSetupModal(false)}
-                className="btn-primary text-xs py-2 px-5"
-              >
-                Done
               </button>
             </div>
           </div>

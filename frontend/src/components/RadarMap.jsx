@@ -202,13 +202,13 @@ export default function RadarMap({
       <div className="flex items-center justify-between px-5 py-3.5 bg-[#FAFAF7] border-b border-[#E5E5E0]">
         <div className="flex items-center gap-2.5">
           <div className={`w-2.5 h-2.5 rounded-full ${isLive ? 'bg-emerald-500 animate-pulse' : 'bg-blue-500'}`} />
-          <span className="text-[#0D0D0D] text-sm font-semibold font-display">Radar Route Vector</span>
+          <span className="text-[#0D0D0D] text-sm font-semibold font-display">Flight Radar</span>
           <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
             isLive
               ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
               : 'bg-[#E5E5E0] text-[#52524E] border-[#D5D5D0]'
           }`}>
-            {isLive ? 'Live ADS-B Radar' : 'Route Trajectory (Demo Data)'}
+            {isLive ? 'Live Radar' : 'Flight Path'}
           </span>
         </div>
         <div className="flex items-center gap-2 text-xs text-[#52524E] font-medium">

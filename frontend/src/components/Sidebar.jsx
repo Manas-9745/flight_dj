@@ -98,13 +98,13 @@ export default function Sidebar({ user, onLogout }) {
       <div className="px-3 py-4 border-t border-surface-200">
         {user ? (
           <div className={`flex ${collapsed ? 'flex-col items-center gap-2' : 'items-center gap-3'}`}>
-            <div className="w-8 h-8 rounded-full bg-brand-100 border border-brand-200 flex items-center justify-center flex-shrink-0">
-              <User className="w-4 h-4 text-brand-600" />
+            <div className="w-8 h-8 rounded-full bg-brand-100 border border-brand-200 flex items-center justify-center flex-shrink-0 font-bold text-xs text-brand-700">
+              {user?.email ? user.email.charAt(0).toUpperCase() : <User className="w-4 h-4 text-brand-600" />}
             </div>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-navy-700 truncate">{user.email || 'Demo User'}</p>
-                <p className="text-[10px] text-slate-400">Authenticated</p>
+                <p className="text-xs font-semibold text-navy-700 truncate">Account ({user?.email ? user.email.charAt(0).toUpperCase() : 'User'})</p>
+                <p className="text-[10px] text-slate-400">Signed In</p>
               </div>
             )}
             <button

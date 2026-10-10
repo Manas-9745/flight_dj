@@ -231,11 +231,6 @@ export default function CrisisMap({ alerts = [], onSelectAlert }) {
             <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span> ATC Strike / Walkout
           </div>
         </div>
-
-        {/* Disclaimer Note at Bottom Left */}
-        <div className="absolute bottom-2 left-3 text-[10px] text-slate-400/80 hidden lg:block pointer-events-none">
-          * Pin locations reflect official advisory centroids. Exact flight trajectories are determined by operating airlines.
-        </div>
       </div>
     </div>
   )

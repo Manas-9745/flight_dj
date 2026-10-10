@@ -325,16 +325,16 @@ export default function AirportNavigationPage({ token }) {
               </Link>
               <span>/</span>
               <span className="text-[#0D0D0D] font-semibold">
-                {isHi ? 'स्मार्ट एयरपोर्ट नेविगेटर' : 'AeroMate Airport Wayfinding'}
+                {isHi ? 'एयरपोर्ट गाइड' : 'Airport Guide'}
               </span>
             </div>
             <h1 className="font-display font-bold text-3xl sm:text-4xl text-[#0D0D0D] tracking-tight">
-              {isHi ? 'स्मार्ट एयरपोर्ट नेविगेशन व चेक-इन सहायक' : 'Smart Airport Navigation & Check-in Assistant'}
+              {isHi ? 'एयरपोर्ट गाइड' : 'Airport Guide'}
             </h1>
-            <p className="text-sm text-[#52524E] mt-1 max-w-2xl">
+            <p className="text-sm text-[#52524E] mt-1 max-w-xl">
               {isHi
-                ? 'टर्मिनल आगमन से लेकर विमान बोर्डिंग तक चरण-दर-चरण मार्गदर्शन, सुरक्षा जांच, इमिग्रेशन नियम और सत्यापित इनडोर वेफाइंडिंग।'
-                : 'Turn-by-turn passenger walkthrough from terminal arrival to boarding gate. Tailored to your specific flight, baggage, and travel classification.'}
+                ? 'टर्मिनल से बोर्डिंग गेट तक आसान चरण-दर-चरण मार्गदर्शन।'
+                : 'Step-by-step guidance from terminal arrival to your boarding gate.'}
             </p>
           </div>
 
@@ -834,10 +834,10 @@ export default function AirportNavigationPage({ token }) {
                 <div className="mt-4 p-3 rounded-xl bg-purple-50/70 border border-purple-200/70 text-xs text-purple-950 flex items-start gap-2.5">
                   <Info className="w-4 h-4 text-purple-700 shrink-0 mt-0.5" />
                   <div className="leading-relaxed">
-                    <strong>{isHi ? 'अंतरराष्ट्रीय यात्रा सूचना:' : 'International Travel Notice:'}</strong>{' '}
+                    <strong>{isHi ? 'अंतरराष्ट्रीय यात्रा सूचना:' : 'Notice:'}</strong>{' '}
                     {isHi
-                      ? 'वीजा, पासपोर्ट वैधता (कम से कम 6 महीने) और गंतव्य प्रविष्टि आवश्यकताएं आपकी नागरिकता और देश के आधार पर भिन्न होती हैं। प्रस्थान से पहले अपने संबंधित दूतावास या एयरलाइन से नियमों की पुष्टि करें।'
-                      : 'Passport validity (minimum 6 months recommended), transit visas, and destination entry forms vary by nationality and destination country. Definitive immigration eligibility rests with government border agencies.'}
+                      ? 'कृपया प्रस्थान से पहले पासपोर्ट वैधता (कम से कम 6 महीने) और वीजा नियमों की पुष्टि करें।'
+                      : 'Please verify passport validity (6+ months) and required visas before departure.'}
                   </div>
                 </div>
               )}

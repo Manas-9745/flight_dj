@@ -209,7 +209,7 @@ export default function FlightComparisonTable({
       {/* Comparison Matrix Legend / Disclaimer */}
       <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-slate-400">
         <div>
-          * Fares displayed include estimated taxes & fees. Prices verified in real time from airline GDS feeds.
+          * Fares include estimated taxes and fees.
         </div>
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1 font-semibold text-emerald-700">

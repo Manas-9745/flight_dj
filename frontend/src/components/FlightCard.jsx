@@ -37,11 +37,6 @@ export default function FlightCard({ flight }) {
           <div>
             <div className="flex items-center gap-2">
               <span className="font-display font-bold text-lg text-aeromate-text">{flightNumber}</span>
-              {isDemo && (
-                <span className="text-[10px] bg-slate-100 text-slate-500 font-semibold px-2 py-0.5 rounded-full border border-slate-200">
-                  Demo Fixture
-                </span>
-              )}
             </div>
             <p className="text-xs font-medium text-aeromate-muted">{airline}</p>
           </div>

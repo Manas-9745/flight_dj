@@ -127,9 +127,9 @@ export default function WalletLockOverlay({ isOpen, onClose, onUnlocked, isSetti
         </h2>
 
         <p className="text-xs text-slate-500 mb-6">
-          {step === 'unlock' && 'Enter your device PIN to view and decrypt your sensitive travel documents.'}
-          {step === 'set' && 'Create a 4 to 6-digit PIN used to encrypt documents locally on this device with AES-GCM-256.'}
-          {step === 'confirm' && 'Re-enter your PIN to verify device key setup.'}
+          {step === 'unlock' && 'Enter your PIN to access your travel documents.'}
+          {step === 'set' && 'Create a 4-digit PIN to secure documents on this device.'}
+          {step === 'confirm' && 'Re-enter your PIN to confirm.'}
         </p>
 
         {/* PIN Dots Display */}
@@ -227,7 +227,7 @@ export default function WalletLockOverlay({ isOpen, onClose, onUnlocked, isSetti
         )}
 
         <div className="mt-4 pt-4 border-t border-surface-100 text-[11px] text-slate-400">
-          <p>Local Web Crypto AES-GCM-256 • AeroMate Privacy Guard</p>
+          <p>Stored securely on your device</p>
         </div>
       </div>
     </div>

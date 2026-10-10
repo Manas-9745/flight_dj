@@ -64,7 +64,7 @@ export default function ChatWidget({ flightContext, className = '', externalProm
       console.error('Chat error:', err)
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: '⚠️ I couldn\'t connect to the AI engine right now. Please verify backend service availability or try again.'
+        content: '⚠️ I am having trouble connecting right now. Please try again in a moment.'
       }])
     } finally {
       setLoading(false)

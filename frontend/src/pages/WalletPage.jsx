@@ -293,64 +293,34 @@ export default function WalletPage({ user, token }) {
   // Strict Login Gate: If not authenticated, require login to access wallet or options
   if (!user || !token) {
     return (
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-28 pb-16 font-sans">
-        <div className="bg-white border border-[#E5E5E0] rounded-3xl p-8 sm:p-10 shadow-sm text-center space-y-6 animate-slide-up">
-          <div className="w-16 h-16 rounded-2xl bg-[#1A1A1A] text-white mx-auto flex items-center justify-center shadow-md">
-            <Shield className="w-8 h-8 text-blue-400" />
+      <div className="max-w-md mx-auto px-4 sm:px-6 pt-28 pb-16 font-sans">
+        <div className="bg-white border border-[#E5E5E0] rounded-3xl p-8 shadow-sm text-center space-y-5 animate-slide-up">
+          <div className="w-14 h-14 rounded-2xl bg-[#1A1A1A] text-white mx-auto flex items-center justify-center shadow-md">
+            <Shield className="w-7 h-7 text-[#246BFD]" />
           </div>
 
-          <div className="space-y-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
-              <Lock className="w-3.5 h-3.5" /> Authentication Required
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-[#0D0D0D] tracking-tight">
-              Sign In to Access Your Travel Wallet
+          <div className="space-y-1.5">
+            <h1 className="text-2xl font-display font-bold text-[#0D0D0D]">
+              Sign in to Travel Wallet
             </h1>
-            <p className="text-sm font-medium text-[#6B6B6B] max-w-md mx-auto leading-relaxed">
-              Your Travel Wallet stores private travel documents, boarding passes, and IDs. Each passenger has their own isolated, separate wallet.
+            <p className="text-xs text-[#6B6B6B] leading-relaxed">
+              Store and manage your passports, tickets, and boarding passes in one place.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left py-2 border-y border-[#F0F0EB]">
-            <div className="p-3 bg-[#F5F5F0] rounded-xl space-y-1">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-[#0D0D0D]">
-                <UserCheck className="w-4 h-4 text-emerald-600" /> Separate Wallets
-              </div>
-              <p className="text-[11px] text-[#6B6B6B] leading-tight">
-                No user can view or access any other user's wallet documents.
-              </p>
-            </div>
-            <div className="p-3 bg-[#F5F5F0] rounded-xl space-y-1">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-[#0D0D0D]">
-                <KeyRound className="w-4 h-4 text-blue-600" /> Encrypted Vault
-              </div>
-              <p className="text-[11px] text-[#6B6B6B] leading-tight">
-                AES-256 encrypted storage keeps all passports & tickets safe.
-              </p>
-            </div>
-            <div className="p-3 bg-[#F5F5F0] rounded-xl space-y-1">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-[#0D0D0D]">
-                <WifiOff className="w-4 h-4 text-purple-600" /> Offline Ready
-              </div>
-              <p className="text-[11px] text-[#6B6B6B] leading-tight">
-                Instant access at airport gates even without mobile internet.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-3 pt-2">
+          <div className="space-y-2.5 pt-2">
             <Link
               to="/login?redirect=/wallet"
-              className="btn-primary w-full py-3.5 text-sm font-bold flex items-center justify-center gap-2 shadow-sm"
+              className="btn-primary w-full py-3 text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm"
             >
-              Sign In to Your Account
-              <ChevronRight className="w-4 h-4" />
+              Sign In
+              <ChevronRight className="w-3.5 h-3.5" />
             </Link>
             <Link
               to="/signup?redirect=/wallet"
-              className="block w-full py-3 text-xs font-bold text-center border border-[#E5E5E0] bg-[#F5F5F0] hover:bg-[#EBEBE6] rounded-xl text-[#0D0D0D] transition-colors"
+              className="block w-full py-2.5 text-xs font-semibold text-center border border-[#E5E5E0] bg-[#FAFAF7] hover:bg-[#F0F0EB] rounded-xl text-[#0D0D0D] transition-colors"
             >
-              Create Free AeroMate Account
+              Create Account
             </Link>
           </div>
         </div>
@@ -360,19 +330,15 @@ export default function WalletPage({ user, token }) {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 space-y-6 animate-fade-in font-sans">
-      {/* Top Header & Security Controls */}
+      {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-[#0D0D0D]">
-            Secure Travel Wallet
+            Travel Wallet
           </h1>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              Private Vault: Passenger ({(user?.email ? user.email.charAt(0) : (user?.name ? user.name.charAt(0) : 'P')).toUpperCase()})
-            </span>
-            <span className="text-xs text-[#6B6B6B]">| Isolated Storage</span>
-          </div>
+          <p className="text-xs text-[#6B6B6B] mt-1">
+            Store and access your travel passes and documents
+          </p>
         </div>
 
         {/* Action Buttons: Add Document & PIN Lock */}
@@ -448,7 +414,7 @@ export default function WalletPage({ user, token }) {
           </div>
           <div>
             <div className="text-xl font-display font-bold text-navy-800">{counters.total}</div>
-            <div className="text-[11px] text-slate-500">Total Stored Documents</div>
+            <div className="text-[11px] text-slate-500">Total Documents</div>
           </div>
         </div>
 
@@ -468,7 +434,7 @@ export default function WalletPage({ user, token }) {
           </div>
           <div>
             <div className="text-xl font-display font-bold text-navy-800">{counters.travel}</div>
-            <div className="text-[11px] text-slate-500">Flight & Travel Passes</div>
+            <div className="text-[11px] text-slate-500">Travel Passes</div>
           </div>
         </div>
 
@@ -478,7 +444,7 @@ export default function WalletPage({ user, token }) {
           </div>
           <div>
             <div className="text-xl font-display font-bold text-navy-800">{counters.offline}</div>
-            <div className="text-[11px] text-slate-500">Encrypted Offline Ready</div>
+            <div className="text-[11px] text-slate-500">Offline Available</div>
           </div>
         </div>
       </div>
@@ -539,7 +505,7 @@ export default function WalletPage({ user, token }) {
       {loading ? (
         <div className="bg-white border border-surface-200 rounded-3xl p-16 text-center space-y-3 shadow-sm">
           <RefreshCw className="w-8 h-8 text-brand-600 animate-spin mx-auto" />
-          <p className="text-sm font-semibold text-navy-800">Decoupling and verifying secure documents...</p>
+          <p className="text-sm font-semibold text-navy-800">Loading documents...</p>
         </div>
       ) : filteredDocuments.length === 0 ? (
         <div className="bg-white border border-dashed border-surface-300 rounded-3xl p-12 text-center space-y-4 shadow-sm">
@@ -550,8 +516,8 @@ export default function WalletPage({ user, token }) {
             <h3 className="font-display font-bold text-navy-800 text-lg">No Travel Documents Found</h3>
             <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
               {searchQuery || selectedCategory !== 'all' || offlineOnlyFilter
-                ? 'No documents matched your current search filters. Clear filters to see all stored items.'
-                : 'Keep your passport, boarding passes, Aadhaar, visas, and flight tickets secure in one place, ready even with no network connection.'}
+                ? 'No documents matched your filters.'
+                : 'Keep your passport, boarding passes, and tickets handy, even offline.'}
             </p>
           </div>
           <button
