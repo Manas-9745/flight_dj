@@ -1,17 +1,35 @@
-import React from 'react';
+import { useState } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Navbar from './components/Navbar'
+import Dashboard from './pages/Dashboard'
+import SearchPage from './pages/SearchPage'
+import FlightDetails from './pages/FlightDetails'
+import AssistantPage from './pages/AssistantPage'
+import TripsPage from './pages/TripsPage'
+import LoginPage from './pages/LoginPage'
+import SignupPage from './pages/SignupPage'
 
 export default function App() {
+  // Simple auth state — replace with Supabase Auth when keys are added
+  const [user, setUser] = useState(null)
+  const token = 'demo-token'
+
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6">
-      <div className="max-w-xl text-center space-y-4">
-        <div className="inline-block px-3 py-1 bg-sky-500/10 border border-sky-500/20 text-sky-400 rounded-full text-sm font-medium">
-          AeroMate PS-01
-        </div>
-        <h1 className="text-4xl font-bold tracking-tight">AI-Powered Aviation Companion</h1>
-        <p className="text-slate-400">
-          Frontend initialized for Kaustubh. Connect with React Router, Tailwind, and Mapbox GL JS.
-        </p>
+    <BrowserRouter>
+      <div className="min-h-screen bg-[#060d1a] bg-grid-pattern bg-[size:40px_40px]">
+        <Navbar user={user} onLogout={() => setUser(null)} />
+        <main className="pt-16">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/flight/:flightNumber" element={<FlightDetails token={token} />} />
+            <Route path="/assistant" element={<AssistantPage />} />
+            <Route path="/trips" element={<TripsPage token={token} />} />
+            <Route path="/login" element={<LoginPage onLogin={setUser} />} />
+            <Route path="/signup" element={<SignupPage onSignup={setUser} />} />
+          </Routes>
+        </main>
       </div>
-    </div>
-  );
+    </BrowserRouter>
+  )
 }
