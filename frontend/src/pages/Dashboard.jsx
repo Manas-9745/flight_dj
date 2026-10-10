@@ -9,7 +9,15 @@ export default function Dashboard() {
   const handleTrackSubmit = (e) => {
     e.preventDefault()
     const val = flightInput.trim().toUpperCase()
-    if (val) navigate(`/flight/${val}`)
+    if (!val) return
+    if (val.includes(' TO ') || val.includes(' ') || val.includes('-')) {
+      const parts = val.replace(' TO ', ' ').replace('-', ' ').split(/\s+/)
+      if (parts.length >= 2) {
+        navigate(`/search?origin=${parts[0]}&destination=${parts[1]}`)
+        return
+      }
+    }
+    navigate(`/flight/${val}`)
   }
 
   return (

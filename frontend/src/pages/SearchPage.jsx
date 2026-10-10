@@ -57,7 +57,7 @@ export default function SearchPage({ token }) {
   // Filter States
   const [selectedAirlines, setSelectedAirlines] = useState([])
   const [maxStops, setMaxStops] = useState('all') // 'all' | '0' | '1'
-  const [priceMax, setPriceMax] = useState(1500)
+  const [priceMax, setPriceMax] = useState(999999)
   const [filterBaggageOnly, setFilterBaggageOnly] = useState(false)
   const [filterLowRiskOnly, setFilterLowRiskOnly] = useState(false)
   const [sortBy, setSortBy] = useState('best-value') // 'best-value' | 'cheapest' | 'fastest' | 'fewest-stops' | 'earliest'
@@ -449,6 +449,19 @@ export default function SearchPage({ token }) {
                     onClick={() => {
                       setOrigin(from)
                       setDestination(to)
+                      // Trigger search immediately with selected codes
+                      setTimeout(() => {
+                        const evt = { preventDefault: () => {} }
+                        searchFlights({
+                          origin: from,
+                          destination: to,
+                          date: departureDate,
+                          adults: parseInt(adults, 10),
+                          children: parseInt(children, 10),
+                          cabinClass,
+                          currency
+                        }).then(setResultsData).catch(() => {})
+                      }, 50)
                     }}
                     className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-mono text-[11px] font-bold transition-colors"
                   >
