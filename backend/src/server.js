@@ -2,19 +2,19 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 require('dotenv').config();
-
+const arinaRoutes = require('./routes/arinaRoutes');
 // Middlewares
 const { apiLimiter } = require('./middleware/rateLimiter');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 
 // Routes
-const healthRoutes    = require('./routes/healthRoutes');
-const flightRoutes    = require('./routes/flightRoutes');
+const healthRoutes = require('./routes/healthRoutes');
+const flightRoutes = require('./routes/flightRoutes');
 const assistantRoutes = require('./routes/assistantRoutes');
-const tripRoutes      = require('./routes/tripRoutes');
-const statsRoutes     = require('./routes/statsRoutes');
-const journeyRoutes   = require('./routes/journeyRoutes');
-const alertRoutes     = require('./routes/alertRoutes');
+const tripRoutes = require('./routes/tripRoutes');
+const statsRoutes = require('./routes/statsRoutes');
+const journeyRoutes = require('./routes/journeyRoutes');
+const alertRoutes = require('./routes/alertRoutes');
 const disruptionRoutes = require('./routes/disruptionRoutes');
 const quickHelpRoutes = require('./routes/quickHelpRoutes');
 
@@ -43,7 +43,9 @@ app.use('/api/assistant', journeyRoutes); // transfer, impact, baggage, hold-che
 app.use('/api/trips', tripRoutes);
 app.use('/api/alerts', alertRoutes);      // Feature 11: Live Crisis & Aviation Alerts
 app.use('/api/disruptions', disruptionRoutes); // Disruption Manager & Recovery
-app.use('/api/quick-help', quickHelpRoutes);   // Quick-Dial Assistance Pad
+
+app.use('/api/quick-help', quickHelpRoutes);
+app.use('/api/arina', arinaRoutes);
 
 // 404 & Global Error Handling
 app.use(notFoundHandler);

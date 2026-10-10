@@ -11,11 +11,12 @@ try {
 class AssistantService {
   constructor() {
     this.apiKey = process.env.OPENAI_API_KEY;
+    this.elevateKey = process.env.ELEVATE_TEAM_API_KEY;
     this.client = this.apiKey ? new OpenAI({ apiKey: this.apiKey }) : null;
   }
 
   get isConfigured() {
-    return !!this.apiKey && !this.apiKey.includes('your-') && !this.apiKey.includes('placeholder');
+    return (!!this.apiKey && !this.apiKey.includes('your-') && !this.apiKey.includes('placeholder')) || !!this.elevateKey;
   }
 
   async generateTravelGuidance({ message, flightContext, language = 'en', history = [] }) {
@@ -23,29 +24,17 @@ class AssistantService {
       throw new Error('User message is required.');
     }
 
-    // Prioritize Kaustubh's dedicated AI assistant engine (Person 3)
-    if (kaustubhService && typeof kaustubhService.processAssistantChat === 'function') {
+    // 1. Try Elevate Team AI API if configured
+    if (this.elevateKey) {
       try {
-        const result = await kaustubhService.processAssistantChat({
-          message,
-          flightContext,
-          language,
-          history
-        });
-        return {
-          reply: result.reply,
-          language: language || 'en',
-          modelUsed: result.model || 'gpt-4o-mini',
-          mode: result.mode,
-          flightContextApplied: result.flightContextApplied,
-          isAiGenerated: result.mode === 'live_openai'
-        };
+        return await this.callElevateAI({ message, flightContext, language, history });
       } catch (err) {
-        console.warn(`⚠️ [Assistant] Kaustubh AI engine threw error (${err.message}), falling back to internal engine.`);
+        console.warn(`⚠️ [Assistant] Elevate AI request failed (${err.message}). Trying secondary engine.`);
       }
     }
 
-    if (this.isConfigured) {
+    // 2. Try OpenAI if configured
+    if (this.apiKey && !this.apiKey.includes('your-') && !this.apiKey.includes('placeholder')) {
       try {
         return await this.callOpenAI({ message, flightContext, language, history });
       } catch (err) {
@@ -54,9 +43,66 @@ class AssistantService {
       }
     }
 
-    // Deterministic resilient fallback if OPENAI_API_KEY is not configured
+    // Deterministic resilient fallback if neither is configured
     return this.generateOfflineFallback({ message, flightContext, language });
   }
+
+  async callElevateAI({ message, flightContext, language = 'en', history = [] }) {
+    const systemPrompt = `You are AeroMate AI, an empathetic, expert aviation journey companion.
+Explain flight updates, provide clear disruption guidance (delays, cancellations, rebooking), and assist travelers.
+Explain passenger rights (DGCA India, EU261 Europe, US DOT) where applicable.
+Respond politely and clearly in the requested language: "${language}".`;
+
+    const messages = [
+      { role: 'system', content: systemPrompt }
+    ];
+
+    if (flightContext) {
+      messages.push({
+        role: 'system',
+        content: `CURRENT FLIGHT CONTEXT:\n${JSON.stringify(flightContext, null, 2)}`
+      });
+    }
+
+    if (Array.isArray(history) && history.length > 0) {
+      history.slice(-6).forEach(h => {
+        messages.push({
+          role: h.role === 'user' ? 'user' : 'assistant',
+          content: h.content || h.message || ''
+        });
+      });
+    }
+
+    messages.push({ role: 'user', content: message });
+
+    const response = await fetch('https://elevate1-0.vercel.app/api/ai', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.elevateKey}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-5-mini',
+        messages,
+        max_completion_tokens: 3000,
+        stream: false
+      }),
+      signal: AbortSignal.timeout(60000)
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error?.message || data.message || `AI request failed with status ${response.status}`);
+    }
+
+    return {
+      reply: data.choices?.[0]?.message?.content || '',
+      language,
+      modelUsed: 'gpt-5-mini',
+      isAiGenerated: true
+    };
+  }
+
 
   async callOpenAI({ message, flightContext, language, history }) {
     const systemPrompt = `You are AeroMate, an empathetic, expert AI aviation journey companion.
