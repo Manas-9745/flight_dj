@@ -180,7 +180,7 @@ export async function verifyWalletPin(pin) {
  * @param {Object} document - Complete document object including files
  * @param {string} pin - User's wallet security PIN
  */
-export async function saveDocumentOffline(document, pin = '1234') {
+export async function saveDocumentOffline(document, pin = '1234', userId = null) {
   if (!document || !document.id) {
     throw new Error('Valid document with an ID is required.');
   }
@@ -203,6 +203,7 @@ export async function saveDocumentOffline(document, pin = '1234') {
   // Store unencrypted safe summary (no sensitive IDs) for list views, and encrypted payload
   const offlineRecord = {
     id: document.id,
+    user_id: userId || document.user_id || 'anonymous',
     title: document.title,
     category: document.category,
     doc_type: document.doc_type,
@@ -239,9 +240,9 @@ export async function saveDocumentOffline(document, pin = '1234') {
 }
 
 /**
- * Retrieve all offline documents list (metadata)
+ * Retrieve all offline documents list (metadata) strictly for the authenticated user
  */
-export async function getOfflineDocumentsList() {
+export async function getOfflineDocumentsList(userId = null) {
   try {
     const db = await openWalletDB();
     return new Promise((resolve, reject) => {
@@ -250,10 +251,14 @@ export async function getOfflineDocumentsList() {
       const req = store.getAll();
 
       req.onsuccess = () => {
-        const records = req.result || [];
+        let records = req.result || [];
+        if (userId) {
+          records = records.filter(r => r.user_id === userId);
+        }
         // Map to document summary items
         resolve(records.map(r => ({
           id: r.id,
+          user_id: r.user_id,
           title: r.title,
           category: r.category,
           doc_type: r.doc_type,
@@ -275,7 +280,7 @@ export async function getOfflineDocumentsList() {
 /**
  * Decrypt and retrieve a full offline document
  */
-export async function getOfflineDocument(id, pin = '1234') {
+export async function getOfflineDocument(id, pin = '1234', userId = null) {
   const db = await openWalletDB();
   const record = await new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_DOCS, 'readonly');
@@ -287,6 +292,10 @@ export async function getOfflineDocument(id, pin = '1234') {
 
   if (!record || !record.encrypted_payload) {
     throw new Error('Offline document not found on this device.');
+  }
+
+  if (userId && record.user_id && record.user_id !== userId) {
+    throw new Error('Unauthorized: This document belongs to another passenger account.');
   }
 
   const salt = await getDeviceSalt(db);

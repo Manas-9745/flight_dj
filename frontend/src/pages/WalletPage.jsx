@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Shield, Lock, Unlock, Plus, Search, Filter, RefreshCw,
   HardDriveDownload, Wifi, WifiOff, FileText, Plane, Calendar,
@@ -22,7 +23,7 @@ import AddDocumentModal from '../components/wallet/AddDocumentModal'
 import DocumentViewerModal from '../components/wallet/DocumentViewerModal'
 import WalletLockOverlay from '../components/wallet/WalletLockOverlay'
 
-export default function WalletPage({ token }) {
+export default function WalletPage({ user, token }) {
   const [online, setOnline] = useState(navigator.onLine)
   const [documents, setDocuments] = useState([])
   const [offlineDocIds, setOfflineDocIds] = useState(new Set())
@@ -108,13 +109,18 @@ export default function WalletPage({ token }) {
     }
   }, [isPinSetupOnDevice, isLocked])
 
-  // Fetch documents from cloud API or offline IndexedDB
+  // Fetch documents from cloud API or offline IndexedDB strictly for the authenticated user
   const loadDocuments = async () => {
+    if (!user || !token) {
+      setDocuments([])
+      setLoading(false)
+      return
+    }
     setLoading(true)
     setError('')
     try {
-      // 1. Check local IndexedDB offline store
-      const offlineList = await getOfflineDocumentsList()
+      // 1. Check local IndexedDB offline store filtered strictly by authenticated user ID
+      const offlineList = await getOfflineDocumentsList(user.id)
       const offlineIds = new Set(offlineList.map(d => d.id))
       setOfflineDocIds(offlineIds)
 
@@ -140,8 +146,13 @@ export default function WalletPage({ token }) {
   }
 
   useEffect(() => {
-    loadDocuments()
-  }, [token])
+    if (user && token) {
+      loadDocuments()
+    } else {
+      setDocuments([])
+      setLoading(false)
+    }
+  }, [user?.id, token])
 
   // Flash temporary success message
   const showToast = (msg) => {
@@ -178,25 +189,33 @@ export default function WalletPage({ token }) {
     }
   }, [documents, offlineDocIds])
 
-  // Save new document handler
+  // Save new document handler with strict per-user ownership
   const handleSaveDocument = async (docData) => {
+    if (!user || !token) {
+      setError('Please sign in to save documents to your Travel Wallet.')
+      return
+    }
     try {
       let savedDoc = null
+      const docPayload = {
+        ...docData,
+        user_id: user.id
+      }
       if (navigator.onLine) {
-        const res = await saveWalletDocument(docData, token)
+        const res = await saveWalletDocument(docPayload, token)
         savedDoc = res.data
       } else {
         // Save directly to local device offline storage if currently offline
         savedDoc = {
-          ...docData,
+          ...docPayload,
           id: `local-doc-${Date.now()}`,
           created_at: new Date().toISOString()
         }
       }
 
-      // If user enabled offline availability, encrypt and store in IndexedDB
+      // If user enabled offline availability, encrypt and store in IndexedDB strictly with user.id
       if (docData.is_offline_available && savedDoc) {
-        await saveDocumentOffline(savedDoc, activePin || '1234')
+        await saveDocumentOffline(savedDoc, activePin || '1234', user.id)
         setOfflineDocIds(prev => new Set([...prev, savedDoc.id]))
       }
 
@@ -221,7 +240,7 @@ export default function WalletPage({ token }) {
         showToast('Local offline copy removed from device storage.')
       } else {
         // Fetch full document with files if viewingDoc isn't complete
-        await saveDocumentOffline(doc, activePin || '1234')
+        await saveDocumentOffline(doc, activePin || '1234', user?.id)
         setOfflineDocIds(prev => new Set([...prev, doc.id]))
         showToast('Document encrypted and saved for offline access.')
       }
@@ -233,7 +252,7 @@ export default function WalletPage({ token }) {
   // Delete document
   const handleDeleteCloud = async (docId) => {
     try {
-      if (navigator.onLine) {
+      if (navigator.onLine && token) {
         await deleteWalletDocument(docId, token)
       }
       // Also remove local offline copy if present
@@ -261,7 +280,7 @@ export default function WalletPage({ token }) {
     // If offline and file details need decryption
     if (!navigator.onLine || !doc.files || doc.files.length === 0) {
       try {
-        const decryptedOfflineDoc = await getOfflineDocument(doc.id, activePin || '1234')
+        const decryptedOfflineDoc = await getOfflineDocument(doc.id, activePin || '1234', user?.id)
         setViewingDoc(decryptedOfflineDoc)
         return
       } catch (e) {
@@ -269,6 +288,74 @@ export default function WalletPage({ token }) {
       }
     }
     setViewingDoc(doc)
+  }
+
+  // Strict Login Gate: If not authenticated, require login to access wallet or options
+  if (!user || !token) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-28 pb-16 font-sans">
+        <div className="bg-white border border-[#E5E5E0] rounded-3xl p-8 sm:p-10 shadow-sm text-center space-y-6 animate-slide-up">
+          <div className="w-16 h-16 rounded-2xl bg-[#1A1A1A] text-white mx-auto flex items-center justify-center shadow-md">
+            <Shield className="w-8 h-8 text-blue-400" />
+          </div>
+
+          <div className="space-y-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
+              <Lock className="w-3.5 h-3.5" /> Authentication Required
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-[#0D0D0D] tracking-tight">
+              Sign In to Access Your Travel Wallet
+            </h1>
+            <p className="text-sm font-medium text-[#6B6B6B] max-w-md mx-auto leading-relaxed">
+              Your Travel Wallet stores private travel documents, boarding passes, and IDs. Each passenger has their own isolated, separate wallet.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left py-2 border-y border-[#F0F0EB]">
+            <div className="p-3 bg-[#F5F5F0] rounded-xl space-y-1">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-[#0D0D0D]">
+                <UserCheck className="w-4 h-4 text-emerald-600" /> Separate Wallets
+              </div>
+              <p className="text-[11px] text-[#6B6B6B] leading-tight">
+                No user can view or access any other user's wallet documents.
+              </p>
+            </div>
+            <div className="p-3 bg-[#F5F5F0] rounded-xl space-y-1">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-[#0D0D0D]">
+                <KeyRound className="w-4 h-4 text-blue-600" /> Encrypted Vault
+              </div>
+              <p className="text-[11px] text-[#6B6B6B] leading-tight">
+                AES-256 encrypted storage keeps all passports & tickets safe.
+              </p>
+            </div>
+            <div className="p-3 bg-[#F5F5F0] rounded-xl space-y-1">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-[#0D0D0D]">
+                <WifiOff className="w-4 h-4 text-purple-600" /> Offline Ready
+              </div>
+              <p className="text-[11px] text-[#6B6B6B] leading-tight">
+                Instant access at airport gates even without mobile internet.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-2">
+            <Link
+              to="/login?redirect=/wallet"
+              className="btn-primary w-full py-3.5 text-sm font-bold flex items-center justify-center gap-2 shadow-sm"
+            >
+              Sign In to Your Account
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+            <Link
+              to="/signup?redirect=/wallet"
+              className="block w-full py-3 text-xs font-bold text-center border border-[#E5E5E0] bg-[#F5F5F0] hover:bg-[#EBEBE6] rounded-xl text-[#0D0D0D] transition-colors"
+            >
+              Create Free AeroMate Account
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -279,6 +366,13 @@ export default function WalletPage({ token }) {
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-[#0D0D0D]">
             Secure Travel Wallet
           </h1>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Private Vault: {user?.name || user?.email}
+            </span>
+            <span className="text-xs text-[#6B6B6B]">| Isolated Storage</span>
+          </div>
         </div>
 
         {/* Action Buttons: Add Document & PIN Lock */}

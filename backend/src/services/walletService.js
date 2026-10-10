@@ -41,72 +41,10 @@ class WalletService {
       }
     }
 
-    // Mock fallback store for development & prior to Supabase migration
+    // Isolated in-memory store per user ID
     let userDocs = inMemoryWallet.get(userId);
     if (!userDocs) {
-      userDocs = [
-        {
-          id: 'doc-seed-1',
-          user_id: userId,
-          title: 'Republic of India Passport',
-          category: 'identity',
-          doc_type: 'passport',
-          issuing_country: 'IND',
-          expiry_date: '2032-08-20',
-          trip_id: null,
-          masked_number: '•••• 7889',
-          flight_details: null,
-          notes: 'Primary international travel passport. Valid for 6+ months.',
-          is_offline_available: true,
-          files: [
-            {
-              id: 'file-1',
-              name: 'passport_front_page.jpg',
-              type: 'image/jpeg',
-              pageType: 'front',
-              size: 142000,
-              url: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=800&q=80'
-            }
-          ],
-          created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
-          updated_at: new Date().toISOString()
-        },
-        {
-          id: 'doc-seed-2',
-          user_id: userId,
-          title: 'British Airways E-Ticket LHR ➔ JFK',
-          category: 'travel',
-          doc_type: 'flight_ticket',
-          issuing_country: 'GBR',
-          expiry_date: '2026-10-16',
-          trip_id: 'mock-trip-1',
-          masked_number: '•••• 4192',
-          flight_details: {
-            airline: 'British Airways',
-            flightNumber: 'BA142',
-            origin: 'LHR',
-            destination: 'JFK',
-            departureDate: '2026-10-15',
-            pnr: 'BA89LK',
-            seat: '14K',
-            boardingGroup: 'Group 2'
-          },
-          notes: 'Terminal 5 departure. Checked baggage: 2x 23kg included.',
-          is_offline_available: true,
-          files: [
-            {
-              id: 'file-2',
-              name: 'ba142_boarding_pass.png',
-              type: 'image/png',
-              pageType: 'front',
-              size: 98000,
-              url: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800&q=80'
-            }
-          ],
-          created_at: new Date(Date.now() - 86400000).toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ];
+      userDocs = [];
       inMemoryWallet.set(userId, userDocs);
     }
 

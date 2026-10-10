@@ -36,7 +36,14 @@ const supabase = (url && key && !url.includes('your-') && !url.includes('undefin
 export { supabase }
 
 export default function App() {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aeromate_auth_user')
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      return null
+    }
+  })
   const [authLoading, setAuthLoading] = useState(true)
 
   useEffect(() => {
@@ -48,11 +55,20 @@ export default function App() {
       return
     }
 
-    // Get initial session safely
+    // Get initial Supabase session safely
     supabase.auth.getSession()
       .then(({ data }) => {
         clearTimeout(safetyTimer)
-        setUser(data?.session?.user || null)
+        if (data?.session?.user) {
+          const supaUser = {
+            id: data.session.user.id,
+            email: data.session.user.email,
+            name: data.session.user.user_metadata?.name || data.session.user.email.split('@')[0],
+            access_token: data.session.access_token
+          }
+          setUser(supaUser)
+          localStorage.setItem('aeromate_auth_user', JSON.stringify(supaUser))
+        }
         setAuthLoading(false)
       })
       .catch(() => {
@@ -62,7 +78,18 @@ export default function App() {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user || null)
+      if (session?.user) {
+        const supaUser = {
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.user_metadata?.name || session.user.email.split('@')[0],
+          access_token: session.access_token
+        }
+        setUser(supaUser)
+        localStorage.setItem('aeromate_auth_user', JSON.stringify(supaUser))
+      } else if (!session) {
+        // Only clear if Supabase was the authority
+      }
     })
 
     return () => {
@@ -71,13 +98,33 @@ export default function App() {
     }
   }, [])
 
-  const handleLogin  = (u) => setUser(u)
+  const handleLogin = (u) => {
+    setUser(u)
+    try {
+      localStorage.setItem('aeromate_auth_user', JSON.stringify(u))
+    } catch (e) {
+      console.warn('LocalStorage save error:', e)
+    }
+  }
+
   const handleLogout = async () => {
-    if (supabase) await supabase.auth.signOut()
+    if (supabase) {
+      try {
+        await supabase.auth.signOut()
+      } catch (e) {
+        console.warn('Supabase logout error:', e)
+      }
+    }
+    try {
+      localStorage.removeItem('aeromate_auth_user')
+    } catch (e) {
+      // ignore
+    }
     setUser(null)
   }
 
-  const token = user?.access_token || 'demo-token'
+  // Token is strictly tied to the logged-in user. If not logged in, token is null.
+  const token = user?.access_token || (user?.email ? ('usr_' + btoa(user.email.toLowerCase().trim())) : null)
 
   if (authLoading) {
     return (
@@ -110,12 +157,12 @@ export default function App() {
             <Route path="/alerts"    element={<LiveAlertsPage token={token} />} />
             <Route path="/navigation" element={<AirportNavigationPage token={token} />} />
             <Route path="/airport-navigation" element={<AirportNavigationPage token={token} />} />
-            <Route path="/trips"     element={<TripsPage token={token} />} />
+            <Route path="/trips"     element={<TripsPage user={user} token={token} />} />
             <Route path="/impact"    element={<JourneyImpact />} />
             <Route path="/transfer"  element={<TransferGuide />} />
             <Route path="/baggage"   element={<BaggagePage />} />
             <Route path="/hold"      element={<HoldCheckPage />} />
-            <Route path="/wallet"    element={<WalletPage token={token} />} />
+            <Route path="/wallet"    element={<WalletPage user={user} token={token} />} />
             <Route path="/settings"  element={<SettingsPage user={user} />} />
             <Route path="/login"     element={<LoginPage onLogin={handleLogin} />} />
             <Route path="/signup"    element={<SignupPage onSignup={handleLogin} />} />

@@ -4,60 +4,28 @@ import { Bookmark, Trash2, Plane, Loader2, ArrowRight, Sparkles, ShieldAlert, Co
 import { getTrips, deleteTrip } from '../services/api'
 import StatusBadge from '../components/StatusBadge'
 
-export default function TripsPage({ token }) {
+export default function TripsPage({ user, token }) {
   const [trips, setTrips] = useState([])
   const [loading, setLoading] = useState(true)
   const [deletingId, setDeletingId] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
+    if (!user || !token) {
+      setTrips([])
+      setLoading(false)
+      return
+    }
+    setLoading(true)
     getTrips(token)
       .then(res => {
-        const fetched = res.data || []
-        if (fetched.length === 0) {
-          setTrips([
-            {
-              id: 'demo-trip-1',
-              flight_number: 'AI645',
-              airline: 'Air India',
-              origin: 'BOM',
-              destination: 'DEL',
-              travel_date: '2026-10-10',
-              status: 'scheduled',
-              metadata: { terminal: 'T2', gate: '15A' }
-            },
-            {
-              id: 'demo-trip-2',
-              flight_number: 'BA142',
-              airline: 'British Airways',
-              origin: 'LHR',
-              destination: 'JFK',
-              travel_date: '2026-10-10',
-              status: 'delayed',
-              delayMinutes: 210,
-              metadata: { terminal: 'T5', gate: 'B42' }
-            }
-          ])
-        } else {
-          setTrips(fetched)
-        }
+        setTrips(res.data || [])
       })
       .catch(() => {
-        setTrips([
-          {
-            id: 'demo-trip-1',
-            flight_number: 'AI645',
-            airline: 'Air India',
-            origin: 'BOM',
-            destination: 'DEL',
-            travel_date: '2026-10-10',
-            status: 'scheduled',
-            metadata: { terminal: 'T2', gate: '15A' }
-          }
-        ])
+        setTrips([])
       })
       .finally(() => setLoading(false))
-  }, [token])
+  }, [user?.id, token])
 
   const handleDelete = async (id) => {
     setDeletingId(id)
@@ -75,6 +43,37 @@ export default function TripsPage({ token }) {
       <Loader2 className="w-8 h-8 text-aeromate-blue animate-spin" />
     </div>
   )
+
+  if (!user || !token) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-28 pb-16 font-sans">
+        <div className="bg-white border border-[#E5E5E0] rounded-3xl p-8 sm:p-10 shadow-sm text-center space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-[#1A1A1A] text-white mx-auto flex items-center justify-center shadow-md">
+            <Bookmark className="w-8 h-8 text-[#246BFD]" />
+          </div>
+
+          <div className="space-y-2">
+            <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-[#0D0D0D] tracking-tight">
+              Sign In to View Saved Journeys
+            </h1>
+            <p className="text-sm font-medium text-[#6B6B6B] max-w-md mx-auto leading-relaxed">
+              Sign in to your AeroMate account to save flights, monitor terminal gates, and sync alerts.
+            </p>
+          </div>
+
+          <div className="space-y-3 pt-2">
+            <button
+              onClick={() => navigate('/login?redirect=/trips')}
+              className="btn-primary w-full py-3.5 text-sm font-bold flex items-center justify-center gap-2 shadow-sm"
+            >
+              Sign In to AeroMate
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 space-y-8">
