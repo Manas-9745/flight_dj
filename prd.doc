@@ -1,0 +1,240 @@
+AeroMate (PS-01) — Product Requirements Document
+Version 1.0 · Hackathon MVP · Responsive Web Application
+1. Product overview
+Product name: AeroMate
+Product concept: An AI-powered aviation journey companion that helps travelers search for flights, track flight status, view live aircraft positions, and receive personalized travel guidance when disruptions occur.
+Platform: Responsive web application.
+Primary objective: Provide flight information and useful travel assistance in one place through a simple interface and an AI assistant.
+2. Problem statement
+Travelers often need multiple applications to search for flights, check flight status, track aircraft, and understand what to do when a flight is delayed or cancelled. This creates confusion, especially when travel plans change unexpectedly.
+AeroMate aims to simplify this experience by combining flight information, interactive tracking, and multilingual AI assistance in one application.
+3. Product goals
+Enable users to search for available flights.
+Display flight status and scheduled or estimated times when available.
+Show aircraft positions on an interactive map when live-position data is available.
+Provide AI-generated explanations and practical disruption guidance.
+Support multilingual conversations.
+Allow users to save and revisit trips.
+Deliver a responsive, reliable, and accessible experience.
+4. Target users
+Regular travelers: Want to check flight details quickly.
+Frequent flyers: Need convenient access to upcoming trips.
+Disrupted travelers: Want guidance when a flight is delayed or cancelled.
+International travelers: Prefer travel assistance in their chosen language.
+5. Technology stack
+Layer
+Technology
+Frontend
+React.js, Vite
+Styling
+Tailwind CSS
+Routing
+React Router
+Icons
+Lucide React
+Backend
+Node.js, Express.js, REST APIs
+Database
+Supabase PostgreSQL
+Authentication
+Supabase Auth
+File storage
+Supabase Storage, if needed
+Flight search
+Amadeus for Developers
+Flight status
+Aviationstack or another verified provider
+Aircraft tracking
+Live aircraft-position API
+Maps
+Mapbox GL JS
+AI assistant
+OpenAI API
+Frontend deployment
+Vercel
+Backend deployment
+Render
+Development
+VS Code, Git, GitHub, Postman, npm
+
+6. Feature requirements
+
+6.1 Flight search
+Core feature
+Users can enter origin, destination, and travel date to search available flight offers.
+Display airline, flight number, departure and arrival details, duration, and price when provided.
+Use the Amadeus API for supported flight searches.
+Handle invalid inputs, empty results, and API failures.
+
+6.2 Flight status
+Core feature
+Users can enter a flight number to view the latest available flight information.
+Flight number, airline, origin, and destination.
+Scheduled and estimated departure and arrival times.
+Status such as scheduled, active, delayed, or cancelled when supplied by the provider.
+Last-updated information where available.
+
+6.3 Live aircraft tracking
+Core feature
+Users can view aircraft locations on an interactive map.
+Display aircraft markers from actual latitude and longitude data.
+Show relevant flight details when a marker is selected.
+Display the data's last-update time when available.
+Show an explicit unavailable state if position data cannot be retrieved.
+
+6.4 AI travel assistant
+Core feature
+Users can ask questions about their flight and receive practical travel guidance.
+Multilingual input and responses.
+Explain flight updates in simple language.
+Suggest next steps for delays, cancellations, and missed connections.
+Use available flight data as context.
+Clearly distinguish verified information from general advice.
+
+6.5 Authentication and saved trips
+Supporting feature
+Sign up, log in, and log out using Supabase Auth.
+Save flights to a user's account.
+View and remove saved trips.
+Restrict private trip records to their owner.
+7. User flow
+Open AeroMate
+Dashboard and flight search
+Search for a flight
+Enter flight number or search route
+View flight information
+Status, times, and aircraft position if available
+Ask the AI assistant
+Understand updates and get next-step guidance
+Save the trip
+Optional, for authenticated users
+8. Application pages
+Page
+Route
+Purpose
+Dashboard
+/
+Main dashboard and flight-number search
+Flight search
+/search
+Search and view flight offers
+Flight details
+/flight/:flightId
+Status, times, and aircraft map
+AI assistant
+/assistant
+Chat-based travel assistance
+Saved trips
+/trips
+View saved journeys
+Login
+/login
+User authentication
+Signup
+/signup
+Create an account
+
+9. System architecture
+React + Vite frontend
+Dashboard · Search · Map · Chat
+Node.js + Express backend
+Validation · REST APIs · Provider integration
+Supabase
+PostgreSQL, Auth, Storage
+Flight APIs
+Search, status, live positions
+OpenAI API
+Context-aware, multilingual travel assistance
+Mapbox renders the interactive map in the frontend. Vercel hosts the frontend, Render hosts the Express backend, and Supabase manages the database and authentication.
+Important: Flight search, flight status, and live aircraft positions may require separate API products or providers. Verify access, coverage, rate limits, and available data before promising a feature as live.
+10. REST API requirements
+Method
+Endpoint
+Description
+GET
+/api/health
+Check backend health
+GET
+/api/flights/search
+Search available flights
+GET
+/api/flights/:flightNumber/status
+Retrieve flight status
+GET
+/api/flights/:flightNumber/position
+Retrieve aircraft position
+POST
+/api/assistant/chat
+Send a message to the AI assistant
+GET
+/api/trips
+List the authenticated user's trips
+POST
+/api/trips
+Save a trip
+DELETE
+/api/trips/:id
+Delete a saved trip
+
+All endpoints should return consistent JSON responses and handle validation errors, missing data, provider failures, and rate limits.
+11. Database requirements
+Use Supabase PostgreSQL with the following initial tables:
+profiles — user profile and preferred language.
+saved_trips — flight number, origin, destination, travel date, user ID, and optional JSONB metadata.
+chat_history — optional persistent conversations if required.
+Enable Row Level Security for private records. Use the authenticated user's identity to enforce ownership.
+12. Non-functional requirements
+Responsive design: Usable on mobile, tablet, and desktop.
+Performance: Load the dashboard quickly and fetch data only when needed.
+Security: Store secret API keys in backend environment variables.
+Reliability: Handle timeouts and API errors gracefully.
+Accuracy: Do not invent flight status or aircraft positions.
+Privacy: Keep saved trips private and minimize stored personal data.
+Accessibility: Use readable contrast, labels, keyboard-accessible controls, and clear status text.
+Maintainability: Separate flight-provider logic, AI logic, REST routes, and UI components.
+13. MVP priorities
+P0
+Must be completed
+Flight-number lookup, real flight status, aircraft position integration, map display, AI chat, responsive dashboard, loading and error states.
+P1
+Complete if time permits
+Flight-offer search, Supabase authentication, saved trips, language selection.
+P2
+Future scope
+Automated notifications, airport assistance, offline access, and personalized recommendations.
+14. Team responsibilities
+Team member
+Responsibility
+Person 1
+React UI, dashboard, search forms, map interface, responsive design
+Person 2
+Express backend, flight APIs, Supabase, REST endpoints
+Person 3
+OpenAI assistant, multilingual support, integration testing, demo preparation
+
+All team members should agree on the API response formats early. The frontend can use mock responses while backend integrations are being developed, then switch to the real endpoints.
+15. Testing and acceptance criteria
+The MVP is ready when:
+Users can search for a flight and view returned status data.
+Live aircraft coordinates display on the map when available.
+Missing position data produces a clear fallback.
+The AI assistant responds to questions using relevant flight context.
+Multilingual responses work for the selected test languages.
+Invalid searches and API failures do not crash the application.
+Authentication and saved trips work if included.
+Users cannot access other users' private trip records.
+Secret keys are not exposed in frontend code or the GitHub repository.
+The application works on desktop and mobile.
+The demo clearly distinguishes real API data from mock data.
+16. Demo plan
+Open the AeroMate dashboard.
+Search for a flight and show its status.
+Open the aircraft tracking map and show a live position if available.
+Ask the AI assistant to explain a delay.
+Switch the response language.
+Show saved trips if implemented.
+Explain the architecture and demonstrate graceful handling of unavailable data.
+17. Definition of done
+AeroMate PS-01 is complete for the MVP when a traveler can search for a flight, view its latest available status, see aircraft position when supported, and receive practical AI travel guidance through a responsive web application.
+The key priority is a working end-to-end experience, not the largest number of features. Build and test flight status first, connect aircraft tracking next, and then integrate the AI assistant. Add authentication and saved trips after the core flow is reliable.
+

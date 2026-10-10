@@ -1,0 +1,34 @@
+[
+  {
+    "scenarioId": "demo-01-on-time",
+    "title": "On-Time Domestic Flight",
+    "flightNumber": "AI645",
+    "airline": "Air India",
+    "origin": "BOM",
+    "destination": "DEL",
+    "status": "scheduled",
+    "delayMinutes": 0,
+    "userQuery": "What gate does my flight depart from and when is boarding?",
+    "expectedBehavior": "Provides gate information and calm, clear pre-boarding advice."
+  },
+  {
+    "scenarioId": "demo-02-delayed-disruption",
+    "title": "International Severe Delay (Disruption Flow)",
+    "flightNumber": "BA142",
+    "airline": "British Airways",
+    "origin": "LHR",
+    "destination": "JFK",
+    "status": "delayed",
+    "delayMinutes": 210,
+    "userQuery": "My flight is delayed by over 3 hours! What are my rights?",
+    "expectedBehavior": "Explains EU261 compensation, right to refreshments/vouchers, and contact points."
+  },
+  {
+    "scenarioId": "demo-03-multilingual",
+    "title": "Multilingual Query (Hindi / Spanish)",
+    "flightNumber": "AI645",
+    "language": "hi",
+    "userQuery": "Kya meri flight samay par hai aur mujhe kya karna chahiye?",
+    "expectedBehavior": "Accurate Hindi response with aviation terms preserved."
+  }
+]
