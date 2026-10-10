@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, ArrowRight, Plane, Bot, Shield, Sparkles } from 'lucide-react'
+import { Search, ArrowRight, Plane, Bot, Shield, Sparkles, Flame, AlertTriangle } from 'lucide-react'
 
 export default function Dashboard() {
   const [flightInput, setFlightInput] = useState('')
@@ -15,85 +15,130 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen flex flex-col">
 
-      {/* ===== HERO SECTION — Hyer-style Full Viewport ===== */}
-      <section className="relative min-h-screen flex flex-col justify-between overflow-hidden bg-gradient-to-b from-[#F5F5F0] via-[#E8EDF5] to-[#D9E4F0]">
+      {/* ===== HERO SECTION — Clean, Balanced Aviation Showcase ===== */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#F5F5F0] via-[#E8EDF5] to-[#D9E4F0] pt-28 pb-16">
 
         {/* Decorative soft blurs */}
-        <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-blue-100/30 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-100/40 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-sky-100/40 rounded-full blur-[100px] pointer-events-none" />
 
         {/* Main Hero Content */}
-        <div className="relative z-10 flex-1 flex flex-col lg:flex-row items-center max-w-[1400px] mx-auto w-full px-6 sm:px-8 lg:px-12 pt-28 sm:pt-32">
-
-          {/* Left — Giant Typography */}
-          <div className="flex-1 space-y-6 lg:space-y-8 animate-fade-in">
-            <h1 className="font-display font-extrabold text-[clamp(4rem,12vw,9rem)] leading-[0.9] tracking-[-0.03em] text-aeromate-ink">
-              Aero
-              <br />
-              Mate
-            </h1>
+        <div className="relative z-10 max-w-[1400px] mx-auto w-full px-6 sm:px-8 lg:px-12 flex flex-col items-center text-center">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 border border-black/10 backdrop-blur-sm text-xs font-semibold text-aeromate-ink mb-6 shadow-subtle">
+            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+            <span>Next-Generation Flight Intelligence & Travel Concierge</span>
           </div>
 
-          {/* Right — Tagline */}
-          <div className="flex-shrink-0 lg:max-w-md mt-8 lg:mt-0 space-y-4 animate-slide-up">
-            <h2 className="font-display font-bold text-3xl sm:text-4xl lg:text-5xl text-aeromate-ink leading-[1.1]">
-              Beyond
-              <br />
-              Flight.
-            </h2>
-            <p className="text-base text-aeromate-muted leading-relaxed max-w-sm">
-              Real-time tracking, AI disruption guidance, and personalised aviation experiences.
-            </p>
+          <h1 className="font-display font-extrabold text-4xl sm:text-6xl lg:text-7xl text-aeromate-ink tracking-tight leading-[1.1] max-w-4xl">
+            AeroMate
+            <span className="block text-aeromate-muted text-2xl sm:text-4xl lg:text-5xl font-semibold mt-2">
+              Beyond Flight.
+            </span>
+          </h1>
+
+          <p className="text-base sm:text-lg text-aeromate-muted leading-relaxed max-w-2xl mt-5">
+            Real-time radar tracking, AI disruption guidance, and passenger rights protection across global airlines.
+          </p>
+
+          <div className="flex items-center gap-3 mt-8">
+            <button
+              onClick={() => navigate('/search')}
+              className="btn-primary text-sm px-6 py-3"
+            >
+              Search Flights <ArrowRight className="w-4 h-4 ml-1" />
+            </button>
+            <button
+              onClick={() => navigate('/assistant')}
+              className="btn-secondary text-sm px-6 py-3"
+            >
+              Ask AI Concierge
+            </button>
           </div>
         </div>
 
-        {/* Hero Airplane Image — Full Width Dramatic */}
-        <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12 -mb-8 lg:-mb-16 animate-float">
+        {/* Hero Airplane Image */}
+        <div className="relative z-10 w-full max-w-[1100px] mx-auto px-6 sm:px-8 lg:px-12 mt-8 lg:mt-10 animate-float">
           <img
             src="/hero-jet.jpg"
             alt="Premium private jet in flight"
-            className="w-full max-w-5xl mx-auto object-contain drop-shadow-2xl"
-            style={{ filter: 'drop-shadow(0 32px 64px rgba(0,0,0,0.15))' }}
+            className="w-full max-w-4xl mx-auto object-contain drop-shadow-2xl"
+            style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.12))' }}
           />
         </div>
 
-        {/* Bottom Bar — Subtitle + CTA Pills */}
-        <div className="relative z-20 max-w-[1400px] mx-auto w-full px-6 sm:px-8 lg:px-12 pb-8 sm:pb-12">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
-            <p className="text-sm sm:text-base text-aeromate-muted font-medium">
-              Flights, tracking and personalised experiences.
-            </p>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate('/search')}
-                className="btn-primary text-sm"
-              >
-                AeroMate® Search
-              </button>
-              <button
-                onClick={() => navigate('/assistant')}
-                className="btn-primary text-sm"
-              >
-                AeroMate® AI
-              </button>
+        {/* Live Crisis & Airspace Safety Ticker */}
+        <div className="relative z-20 max-w-[1200px] mx-auto w-full px-6 sm:px-8 lg:px-12 mt-6">
+          <div
+            onClick={() => navigate('/alerts')}
+            className="surface-card bg-white/90 backdrop-blur-md p-4 sm:p-5 border border-rose-200/80 shadow-card hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping absolute"></span>
+                <Flame className="w-5 h-5 text-rose-600 relative z-10" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">
+                    Live Airspace Alert
+                  </span>
+                  <span className="text-xs text-slate-500 font-medium">Middle East & Eastern Europe FIRs Active</span>
+                </div>
+                <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors mt-0.5">
+                  Heightened vigilance bulletins active for FIR Tehran & Baghdad · Ukraine civil airspace closed
+                </h3>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs font-bold text-blue-600 group-hover:translate-x-1 transition-transform whitespace-nowrap self-end sm:self-auto">
+              <span>View Global Crisis Radar</span>
+              <ArrowRight className="w-4 h-4" />
+            </div>
+          </div>
+
+          {/* AI Disruption Recovery Alert Banner */}
+          <div
+            onClick={() => navigate('/disruption')}
+            className="surface-card bg-white/90 backdrop-blur-md p-4 sm:p-5 border border-amber-300 shadow-card hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group mt-3"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                <AlertTriangle className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                    AI Journey Disruption Manager
+                  </span>
+                  <span className="text-xs text-slate-500 font-medium">Automatic Flight & Downstream Monitoring</span>
+                </div>
+                <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors mt-0.5">
+                  Proactive rebooking alternatives, missed connection protection, and hotel impact recovery
+                </h3>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs font-bold text-amber-700 group-hover:translate-x-1 transition-transform whitespace-nowrap self-end sm:self-auto">
+              <span>Open Recovery Center</span>
+              <ArrowRight className="w-4 h-4" />
             </div>
           </div>
         </div>
       </section>
 
       {/* ===== FLIGHT TRACKER SECTION ===== */}
-      <section className="bg-white py-20 sm:py-28">
+      <section className="bg-white py-16 sm:py-24">
         <div className="max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12">
-          <div className="max-w-3xl mx-auto text-center space-y-6 mb-16">
+          <div className="max-w-3xl mx-auto text-center space-y-4 mb-12">
             <span className="inline-block text-xs font-semibold uppercase tracking-[0.2em] text-aeromate-muted">
               Live Tracking
             </span>
-            <h2 className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl text-aeromate-ink tracking-tight leading-[1.05]">
+            <h2 className="font-display font-extrabold text-3xl sm:text-4xl lg:text-5xl text-aeromate-ink tracking-tight leading-[1.1]">
               Track any flight,
               <br />
               <span className="text-aeromate-muted">anywhere.</span>
             </h2>
-            <p className="text-base sm:text-lg text-aeromate-muted leading-relaxed max-w-lg mx-auto">
+            <p className="text-base text-aeromate-muted leading-relaxed max-w-lg mx-auto">
               Enter your flight number for instant real-time status, gate info, delay predictions, and AI-powered disruption guidance.
             </p>
           </div>
@@ -142,7 +187,7 @@ export default function Dashboard() {
             <span className="inline-block text-xs font-semibold uppercase tracking-[0.2em] text-aeromate-muted">
               Our Solutions
             </span>
-            <h2 className="font-display font-extrabold text-4xl sm:text-5xl text-aeromate-ink tracking-tight">
+            <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-aeromate-ink tracking-tight">
               Everything you need
             </h2>
           </div>
@@ -193,7 +238,7 @@ export default function Dashboard() {
               <span className="inline-block text-xs font-semibold uppercase tracking-[0.2em] text-aeromate-muted">
                 Global Coverage
               </span>
-              <h2 className="font-display font-extrabold text-4xl sm:text-5xl text-aeromate-ink tracking-tight leading-[1.1]">
+              <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-aeromate-ink tracking-tight leading-[1.1]">
                 Know your rights,
                 <br />
                 <span className="text-aeromate-muted">globally.</span>
@@ -232,7 +277,7 @@ export default function Dashboard() {
       {/* ===== CTA FOOTER SECTION ===== */}
       <section className="bg-aeromate-ink py-20 sm:py-28">
         <div className="max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12 text-center space-y-8">
-          <h2 className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-[1.05]">
+          <h2 className="font-display font-extrabold text-3xl sm:text-4xl lg:text-5xl text-white tracking-tight leading-[1.1]">
             Ready to fly smarter?
           </h2>
           <p className="text-base sm:text-lg text-white/60 max-w-lg mx-auto">

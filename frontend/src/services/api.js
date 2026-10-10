@@ -7,8 +7,13 @@ const api = axios.create({
 
 // ── Flights ───────────────────────────────────────────────────────────────────
 
-export const searchFlights = ({ origin, destination, date, adults = 1 }) =>
-  api.get('/flights/search', { params: { origin, destination, date, adults } }).then(r => r.data)
+export const searchAirports = (q) =>
+  api.get('/flights/airports', { params: { q } }).then(r => r.data)
+
+export const searchFlights = ({ origin, destination, date, returnDate, adults = 1, children = 0, cabinClass = 'ECONOMY', currency = 'USD' }) =>
+  api.get('/flights/search', {
+    params: { origin, destination, date, returnDate: returnDate || undefined, adults, children, cabinClass, currency }
+  }).then(r => r.data)
 
 export const getFlightStatus = (flightNumber) =>
   api.get(`/flights/${flightNumber}/status`).then(r => r.data)
@@ -59,7 +64,56 @@ export const saveTrip = (tripData, token) =>
 export const deleteTrip = (id, token) =>
   api.delete(`/trips/${id}`, authHeader(token)).then(r => r.data)
 
+// ── Live Crisis & Aviation Alerts (Feature 11) ────────────────────────────────
+
+export const getAlerts = (params = {}) =>
+  api.get('/alerts', { params }).then(r => r.data)
+
+export const getAlertsStatus = () =>
+  api.get('/alerts/status').then(r => r.data)
+
+export const getAlertById = (id) =>
+  api.get(`/alerts/${id}`).then(r => r.data)
+
+export const checkRouteImpact = ({ flightNumber, origin, destination, connectingAirports, date }) =>
+  api.post('/alerts/impact', { flightNumber, origin, destination, connectingAirports, date }).then(r => r.data)
+
+export const getAlertAiSummary = (id) =>
+  api.post(`/alerts/${id}/ai-summary`).then(r => r.data)
+
+// ── Airport Navigation & Check-in Assistant ───────────────────────────────────
+
+export const getAirportNavigationGuide = (params) =>
+  api.post('/assistant/navigation/guide', params).then(r => r.data)
+
+export const getTerminalRegistry = () =>
+  api.get('/assistant/navigation/terminals').then(r => r.data)
+
+// ── AI Disruption Manager & Whole-Journey Recovery ─────────────────────────────
+
+export const getDisruptionMonitoring = (token) =>
+  api.get('/disruptions/monitoring', authHeader(token)).then(r => r.data)
+
+export const findAlternativeFlights = (params, token) =>
+  api.post('/disruptions/alternatives', params, authHeader(token)).then(r => r.data)
+
+export const getDisruptionImpact = (params, token) =>
+  api.post('/disruptions/impact', params, authHeader(token)).then(r => r.data)
+
+export const proposeItineraryRecovery = (params, token) =>
+  api.post('/disruptions/propose', params, authHeader(token)).then(r => r.data)
+
+export const applyItineraryUpdate = (params, token) =>
+  api.post('/disruptions/apply', params, authHeader(token)).then(r => r.data)
+
+export const dismissDisruptionAlert = (alertId, token) =>
+  api.post('/disruptions/dismiss', { alertId }, authHeader(token)).then(r => r.data)
+
+export const getDisruptionHotelRecommendations = (params, token) =>
+  api.post('/disruptions/hotels', params, authHeader(token)).then(r => r.data)
+
 // ── Health ────────────────────────────────────────────────────────────────────
 
 export const getHealth = () =>
   api.get('/health').then(r => r.data)
+

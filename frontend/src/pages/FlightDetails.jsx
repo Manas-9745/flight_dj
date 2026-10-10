@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Loader2, AlertCircle, ArrowLeft, Bot, Bookmark, CheckCircle2, Plane, Navigation, Sparkles } from 'lucide-react'
-import { getFlightStatus, getFlightPosition, saveTrip } from '../services/api'
+import { Loader2, AlertCircle, ArrowLeft, Bot, Bookmark, CheckCircle2, Plane, Navigation, Sparkles, Flame, ShieldAlert, Compass } from 'lucide-react'
+import { getFlightStatus, getFlightPosition, saveTrip, checkRouteImpact } from '../services/api'
 import StatusBadge from '../components/StatusBadge'
 import RadarMap from '../components/RadarMap'
 import ChatWidget from '../components/ChatWidget'
@@ -10,11 +10,12 @@ export default function FlightDetails({ token }) {
   const { flightNumber } = useParams()
   const navigate = useNavigate()
 
-  const [status, setStatus]     = useState(null)
-  const [position, setPosition] = useState(null)
-  const [loading, setLoading]   = useState(true)
-  const [saved, setSaved]       = useState(false)
-  const [showChat, setShowChat] = useState(true)
+  const [status, setStatus]         = useState(null)
+  const [position, setPosition]     = useState(null)
+  const [crisisImpact, setCrisisImpact] = useState(null)
+  const [loading, setLoading]       = useState(true)
+  const [saved, setSaved]           = useState(false)
+  const [showChat, setShowChat]     = useState(true)
 
   useEffect(() => {
     const fn = (flightNumber || 'AI645').toUpperCase()
@@ -50,6 +51,13 @@ export default function FlightDetails({ token }) {
 
       setStatus(flightData)
       setPosition(posData)
+
+      // Query Crisis & Airspace Corridors
+      const origCode = typeof flightData.origin === 'string' ? flightData.origin : flightData.origin?.iata || 'BOM'
+      const destCode = typeof flightData.destination === 'string' ? flightData.destination : flightData.destination?.iata || 'DEL'
+      checkRouteImpact({ flightNumber: fn, origin: origCode, destination: destCode })
+        .then(res => setCrisisImpact(res.impact))
+        .catch(() => {})
     }).finally(() => setLoading(false))
   }, [flightNumber])
 
@@ -145,6 +153,14 @@ export default function FlightDetails({ token }) {
             <Bot className="w-4 h-4" />
             <span>{showChat ? 'Hide AI Concierge' : 'Open AI Concierge'}</span>
           </button>
+
+          <button
+            onClick={() => navigate(`/navigation?flight=${fnUpper}&from=${originCode}&to=${destCode}`)}
+            className="btn-secondary text-xs py-2 px-4 flex items-center gap-2 hover:border-[#1A1A1A] transition-colors"
+          >
+            <Compass className="w-4 h-4 text-blue-600" />
+            <span>Airport Wayfinding</span>
+          </button>
         </div>
       </div>
 
@@ -184,7 +200,7 @@ export default function FlightDetails({ token }) {
           {/* Departure */}
           <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-1">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Origin</span>
-            <div className="font-display font-black text-4xl text-aeromate-text">{originCode}</div>
+            <div className="font-mono font-bold text-3xl text-aeromate-text tracking-wider">{originCode}</div>
             <p className="text-xs font-semibold text-slate-700">Scheduled: {depTime}</p>
             <p className="text-xs font-medium text-slate-500">Terminal {depTerminal} · Gate {depGate}</p>
           </div>
@@ -205,7 +221,7 @@ export default function FlightDetails({ token }) {
           {/* Arrival */}
           <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-1 text-right">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Destination</span>
-            <div className="font-display font-black text-4xl text-aeromate-text">{destCode}</div>
+            <div className="font-mono font-bold text-3xl text-aeromate-text tracking-wider">{destCode}</div>
             <p className="text-xs font-semibold text-slate-700">Est Arrival: {arrTime}</p>
             <p className="text-xs font-medium text-slate-500">Terminal {arrTerminal}</p>
           </div>
@@ -244,6 +260,51 @@ export default function FlightDetails({ token }) {
               </div>
             </div>
           </div>
+
+          {/* Airspace & Crisis Safety Status Card */}
+          {crisisImpact && (
+            <div className="surface-card p-6 border border-slate-200 shadow-subtle space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <ShieldAlert className="w-5 h-5 text-slate-700" />
+                  <h3 className="font-display font-bold text-base text-slate-900">
+                    Route Airspace & Conflict Check
+                  </h3>
+                </div>
+                <div>
+                  {crisisImpact.impactLevel === 'Confirmed' && (
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-700 border border-rose-200">
+                      Confirmed Advisory
+                    </span>
+                  )}
+                  {crisisImpact.impactLevel === 'Potential Risk' && (
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200">
+                      Potential Corridor Detour
+                    </span>
+                  )}
+                  {crisisImpact.impactLevel === 'No Known Direct Impact' && (
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                      ✓ Normal Clear Airspace
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                {crisisImpact.evidence}
+              </p>
+
+              <div className="flex items-center justify-between pt-2 text-xs">
+                <span className="text-slate-400">Official Safety Bulletins: {crisisImpact.matchedAlerts?.length || 0} active</span>
+                <button
+                  onClick={() => navigate('/alerts')}
+                  className="text-blue-600 hover:underline font-bold flex items-center gap-1"
+                >
+                  Open Live Alerts Center →
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Column: AI Assistant Chat */}

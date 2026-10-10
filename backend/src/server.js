@@ -14,6 +14,8 @@ const assistantRoutes = require('./routes/assistantRoutes');
 const tripRoutes      = require('./routes/tripRoutes');
 const statsRoutes     = require('./routes/statsRoutes');
 const journeyRoutes   = require('./routes/journeyRoutes');
+const alertRoutes     = require('./routes/alertRoutes');
+const disruptionRoutes = require('./routes/disruptionRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -38,6 +40,8 @@ app.use('/api/flights', flightRoutes);
 app.use('/api/assistant', assistantRoutes);
 app.use('/api/assistant', journeyRoutes); // transfer, impact, baggage, hold-check
 app.use('/api/trips', tripRoutes);
+app.use('/api/alerts', alertRoutes);      // Feature 11: Live Crisis & Aviation Alerts
+app.use('/api/disruptions', disruptionRoutes); // Disruption Manager & Recovery
 
 // 404 & Global Error Handling
 app.use(notFoundHandler);

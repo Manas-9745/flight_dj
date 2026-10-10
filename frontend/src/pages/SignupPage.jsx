@@ -28,9 +28,12 @@ export default function SignupPage({ onSignup }) {
     <div className="min-h-screen flex items-center justify-center px-4 py-12 pt-28">
       <div className="w-full max-w-md animate-slide-up space-y-8">
         <div className="text-center space-y-3">
-          <span className="font-display font-extrabold text-5xl text-aeromate-ink tracking-tight">
-            AeroMate®
-          </span>
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-aeromate-ink text-white font-bold text-xl mb-1 shadow-sm">
+            ✈
+          </div>
+          <h1 className="font-display font-extrabold text-3xl text-aeromate-ink tracking-tight">
+            AeroMate<span className="text-blue-600 text-lg">®</span>
+          </h1>
           <p className="text-sm font-medium text-aeromate-muted">
             Create your account to start tracking flights.
           </p>

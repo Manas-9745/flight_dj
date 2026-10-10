@@ -101,4 +101,57 @@ router.post('/hold-check', aiAssistantLimiter, async (req, res, next) => {
   }
 });
 
+const airportNavigationService = require('../services/airportNavigationService');
+
+/**
+ * POST /api/assistant/navigation/guide
+ * Airport wayfinding and step-by-step passenger navigation guide
+ */
+router.post('/navigation/guide', aiAssistantLimiter, async (req, res, next) => {
+  try {
+    const {
+      flightNumber,
+      airline,
+      origin,
+      destination,
+      departureDate,
+      terminal,
+      gate,
+      hasOnlineBoardingPass,
+      hasCheckedBags,
+      needsAssistance,
+      language
+    } = req.body;
+
+    const result = await airportNavigationService.getAirportNavigationGuide({
+      flightNumber,
+      airline,
+      origin,
+      destination,
+      date: departureDate,
+      terminal,
+      gate,
+      hasOnlineBoardingPass: !!hasOnlineBoardingPass,
+      hasCheckedBags: hasCheckedBags !== false,
+      needsAssistance: !!needsAssistance,
+      language: language || 'en'
+    });
+
+    res.status(200).json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * GET /api/assistant/navigation/terminals
+ * Retrieve verified terminal architecture registry
+ */
+router.get('/navigation/terminals', (req, res) => {
+  res.status(200).json({
+    success: true,
+    data: airportNavigationService.TERMINAL_REGISTRY
+  });
+});
+
 module.exports = router;

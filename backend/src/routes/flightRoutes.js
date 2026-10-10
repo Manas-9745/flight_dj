@@ -4,16 +4,28 @@ const amadeusService = require('../services/amadeusService');
 const aviationstackService = require('../services/aviationstackService');
 const trackingService = require('../services/trackingService');
 
+const { searchAirports, getAirportByIata } = require('../services/airportsData');
+
 const IATA_REGEX = /^[A-Za-z]{3}$/;
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
+ * GET /api/flights/airports
+ * Autocomplete search for global airports and cities
+ */
+router.get('/airports', (req, res) => {
+  const { q } = req.query;
+  const results = searchAirports(q);
+  res.json({ success: true, count: results.length, airports: results });
+});
+
+/**
  * GET /api/flights/search
- * Search available flight offers
+ * Search available flight offers with AI recommendations and crisis risk awareness
  */
 router.get('/search', async (req, res, next) => {
   try {
-    const { origin, destination, date, adults } = req.query;
+    const { origin, destination, date, returnDate, adults, children, cabinClass, currency } = req.query;
 
     if (!origin || !destination || !date) {
       return res.status(400).json({
@@ -31,26 +43,69 @@ router.get('/search', async (req, res, next) => {
       });
     }
 
+    if (origin.trim().toUpperCase() === destination.trim().toUpperCase()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: 'Origin and destination airports must be different.'
+      });
+    }
+
     if (!DATE_REGEX.test(date.trim())) {
       return res.status(400).json({
         success: false,
         error: 'Validation Error',
-        message: 'Date must be formatted as YYYY-MM-DD (e.g. 2026-10-15).'
+        message: 'Departure date must be formatted as YYYY-MM-DD (e.g. 2026-10-15).'
       });
     }
 
-    const offers = await amadeusService.searchFlights({
+    if (returnDate && !DATE_REGEX.test(returnDate.trim())) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: 'Return date must be formatted as YYYY-MM-DD.'
+      });
+    }
+
+    if (returnDate && new Date(returnDate.trim()) < new Date(date.trim())) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: 'Return date cannot precede departure date.'
+      });
+    }
+
+    const searchResult = await amadeusService.searchFlights({
       origin: origin.trim(),
       destination: destination.trim(),
       date: date.trim(),
-      adults: adults ? parseInt(adults, 10) : 1
+      returnDate: returnDate ? returnDate.trim() : null,
+      adults: adults ? parseInt(adults, 10) : 1,
+      children: children ? parseInt(children, 10) : 0,
+      cabinClass: cabinClass || 'ECONOMY',
+      currency: currency || 'USD'
     });
 
     res.status(200).json({
       success: true,
-      count: offers.length,
-      params: { origin: origin.toUpperCase(), destination: destination.toUpperCase(), date },
-      data: offers
+      count: searchResult.offers.length,
+      source: searchResult.source,
+      isLiveProvider: searchResult.isLiveProvider,
+      lastVerified: searchResult.lastVerified,
+      currency: searchResult.currency,
+      originAirport: getAirportByIata(origin),
+      destinationAirport: getAirportByIata(destination),
+      params: {
+        origin: origin.toUpperCase(),
+        destination: destination.toUpperCase(),
+        date,
+        returnDate: returnDate || null,
+        adults: parseInt(adults, 10) || 1,
+        children: parseInt(children, 10) || 0,
+        cabinClass: cabinClass || 'ECONOMY',
+        currency: currency || 'USD'
+      },
+      data: searchResult.offers
     });
   } catch (err) {
     next(err);

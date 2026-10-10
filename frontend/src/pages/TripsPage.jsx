@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bookmark, Trash2, Plane, Loader2, ArrowRight, Sparkles } from 'lucide-react'
+import { Bookmark, Trash2, Plane, Loader2, ArrowRight, Sparkles, ShieldAlert, Compass } from 'lucide-react'
 import { getTrips, deleteTrip } from '../services/api'
 import StatusBadge from '../components/StatusBadge'
 
@@ -152,6 +152,22 @@ export default function TripsPage({ token }) {
                   className="btn-secondary text-xs py-1.5 px-3"
                 >
                   <Sparkles className="w-3.5 h-3.5" /> Ask AI
+                </button>
+
+                <button
+                  onClick={() => navigate(`/alerts`, { state: { checkTrip: trip } })}
+                  className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1 text-slate-700"
+                  title="Check live conflict zones and airspace notices for this flight"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5 text-rose-600" /> Advisories
+                </button>
+
+                <button
+                  onClick={() => navigate(`/navigation?flight=${trip.flight_number}&from=${trip.origin}&to=${trip.destination}&airline=${encodeURIComponent(trip.airline || '')}`)}
+                  className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1 text-slate-700"
+                  title="Step-by-step airport wayfinding and departure guide"
+                >
+                  <Compass className="w-3.5 h-3.5 text-blue-600" /> Airport Guide
                 </button>
 
                 <button

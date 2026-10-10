@@ -18,6 +18,8 @@ import WalletPage     from './pages/WalletPage'
 import SettingsPage   from './pages/SettingsPage'
 import LoginPage      from './pages/LoginPage'
 import SignupPage     from './pages/SignupPage'
+import LiveAlertsPage from './pages/LiveAlertsPage'
+import AirportNavigationPage from './pages/AirportNavigationPage'
 
 import { createClient } from '@supabase/supabase-js'
 
@@ -83,7 +85,10 @@ export default function App() {
             <Route path="/search"    element={<SearchPage />} />
             <Route path="/flight/:flightNumber" element={<FlightDetails token={token} />} />
             <Route path="/assistant" element={<AssistantPage />} />
-            <Route path="/disruption" element={<DisruptionCenter />} />
+            <Route path="/disruption" element={<DisruptionCenter token={token} />} />
+            <Route path="/alerts"    element={<LiveAlertsPage token={token} />} />
+            <Route path="/navigation" element={<AirportNavigationPage token={token} />} />
+            <Route path="/airport-navigation" element={<AirportNavigationPage token={token} />} />
             <Route path="/trips"     element={<TripsPage token={token} />} />
             <Route path="/impact"    element={<JourneyImpact />} />
             <Route path="/transfer"  element={<TransferGuide />} />

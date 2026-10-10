@@ -1,19 +1,29 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
+import NotificationCenter from './NotificationCenter'
+import { getAlerts } from '../services/api'
 
 export default function Navbar({ user, onLogout }) {
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [alerts, setAlerts] = useState([])
+
+  useEffect(() => {
+    getAlerts().then(res => {
+      if (res?.alerts) setAlerts(res.alerts)
+    }).catch(() => {})
+  }, [])
 
   const navLinks = [
+    { name: 'Live Alerts', path: '/alerts' },
+    { name: 'Disruptions', path: '/disruption' },
+    { name: 'Airport Guide', path: '/navigation' },
     { name: 'Search & Flights', path: '/search' },
     { name: 'AI Assistant', path: '/assistant' },
-    { name: 'Disruptions', path: '/disruption' },
     { name: 'Global Map', path: '/map' },
     { name: 'My Journeys', path: '/trips' },
     { name: 'Baggage', path: '/baggage' },
-    { name: 'Wallet', path: '/wallet' },
   ]
 
   const isActive = (path) => location.pathname === path
@@ -23,12 +33,17 @@ export default function Navbar({ user, onLogout }) {
       <div className="max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12">
         <div className="flex items-center justify-between h-20">
 
-          {/* Brand — Bold Wordmark like Hyer */}
-          <Link to="/" className="flex items-center gap-1 group">
-            <span className="font-display font-extrabold text-3xl sm:text-4xl text-[#0D0D0D] tracking-tight leading-none">
-              AeroMate
-            </span>
-            <span className="text-[#0D0D0D] font-display text-lg align-super leading-none -ml-0.5 mt-0.5">®</span>
+          {/* Brand — Refined, Clean Wordmark */}
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="w-8 h-8 rounded-lg bg-[#1A1A1A] text-white flex items-center justify-center font-bold text-sm shadow-sm group-hover:bg-blue-600 transition-colors">
+              ✈
+            </div>
+            <div className="flex items-baseline">
+              <span className="font-display font-bold text-xl sm:text-2xl text-[#0D0D0D] tracking-tight leading-none">
+                AeroMate
+              </span>
+              <span className="text-blue-600 font-semibold text-xs ml-0.5">®</span>
+            </div>
           </Link>
 
           {/* Desktop Nav — Clean, Minimal */}
@@ -48,8 +63,9 @@ export default function Navbar({ user, onLogout }) {
             ))}
           </nav>
 
-          {/* Right Side — Auth & Mobile Hamburger */}
-          <div className="flex items-center gap-4">
+          {/* Right Side — Notifications, Auth & Mobile Hamburger */}
+          <div className="flex items-center gap-3 sm:gap-4">
+            <NotificationCenter alerts={alerts} />
             {user ? (
               <div className="hidden md:flex items-center gap-3">
                 <span className="text-xs font-medium text-[#6B6B6B]">{user.email || 'Passenger'}</span>
@@ -90,8 +106,8 @@ export default function Navbar({ user, onLogout }) {
                   key={link.path}
                   to={link.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`block text-3xl sm:text-4xl font-display font-bold py-2.5 transition-all duration-300 ${
-                    isActive(link.path) ? 'text-[#0D0D0D]' : 'text-[#6B6B6B] hover:text-[#0D0D0D]'
+                  className={`block text-lg sm:text-xl font-semibold py-2 transition-all duration-200 ${
+                    isActive(link.path) ? 'text-[#0D0D0D] font-bold' : 'text-[#6B6B6B] hover:text-[#0D0D0D]'
                   }`}
                 >
                   {link.name}

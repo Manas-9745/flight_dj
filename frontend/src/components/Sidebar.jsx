@@ -19,11 +19,11 @@ const NAV_ITEMS = [
     { to: '/impact',    label: 'Journey Impact',    icon: Zap },
     { to: '/transfer',  label: 'Transfer Guide',    icon: ArrowLeftRight },
     { to: '/baggage',   label: 'Baggage Checker',   icon: Luggage },
-    { to: '/hold',      label: 'Hold-Trip Checker', icon: Archive },
+    { to: '/disruption', label: 'Disruption Recovery', icon: Zap },
+    { to: '/navigation', label: 'Airport Navigation', icon: Map },
   ]},
-  { group: 'AI & Wallet', items: [
+  { group: 'AI Copilot', items: [
     { to: '/assistant', label: 'AI Travel Copilot', icon: Bot },
-    { to: '/wallet',    label: 'Offline Wallet',    icon: Archive },
   ]},
   { group: 'Account', items: [
     { to: '/settings',  label: 'Settings',          icon: Settings },

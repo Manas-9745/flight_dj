@@ -20,20 +20,25 @@ class TripsService {
     }
 
     // Mock fallback
-    return inMemoryTrips.get(userId) || [
-      {
-        id: 'mock-trip-1',
-        user_id: userId,
-        flight_number: 'BA142',
-        airline: 'British Airways',
-        origin: 'LHR',
-        destination: 'JFK',
-        travel_date: '2026-10-15',
-        status: 'delayed',
-        metadata: { terminal: '5', gate: 'B36' },
-        created_at: new Date().toISOString()
-      }
-    ];
+    let userList = inMemoryTrips.get(userId);
+    if (!userList || userList.length === 0) {
+      userList = [
+        {
+          id: 'mock-trip-1',
+          user_id: userId,
+          flight_number: 'BA142',
+          airline: 'British Airways',
+          origin: 'LHR',
+          destination: 'JFK',
+          travel_date: '2026-10-15',
+          status: 'delayed',
+          metadata: { terminal: '5', gate: 'B36' },
+          created_at: new Date().toISOString()
+        }
+      ];
+      inMemoryTrips.set(userId, userList);
+    }
+    return userList;
   }
 
   async saveTrip(userId, tripData) {
@@ -107,6 +112,56 @@ class TripsService {
     const filtered = userList.filter(t => t.id !== tripId);
     inMemoryTrips.set(userId, filtered);
     return { success: true, id: tripId };
+  }
+
+  async updateTrip(userId, tripId, updateData) {
+    if (isConfigured) {
+      const { data, error } = await supabase
+        .from('saved_trips')
+        .update({
+          ...updateData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', tripId)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Supabase error updating trip:', error.message);
+        throw new Error(error.message);
+      }
+      return data;
+    }
+
+    let userList = inMemoryTrips.get(userId);
+    if (!userList || userList.length === 0) {
+      userList = await this.getUserTrips(userId);
+    }
+    const tripIndex = userList.findIndex(t => t.id === tripId);
+    if (tripIndex === -1) {
+      const newMock = {
+        id: tripId,
+        user_id: userId,
+        flight_number: updateData.flight_number || 'AI161',
+        airline: updateData.airline || 'Air India',
+        status: updateData.status || 'rebooked',
+        ...updateData,
+        updated_at: new Date().toISOString()
+      };
+      userList.unshift(newMock);
+      inMemoryTrips.set(userId, userList);
+      return newMock;
+    }
+
+    const updated = {
+      ...userList[tripIndex],
+      ...updateData,
+      updated_at: new Date().toISOString()
+    };
+    userList[tripIndex] = updated;
+    inMemoryTrips.set(userId, userList);
+    return updated;
   }
 }
 
