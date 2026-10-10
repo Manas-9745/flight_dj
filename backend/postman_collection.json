@@ -1,0 +1,151 @@
+{
+  "info": {
+    "name": "AeroMate API Collection",
+    "description": "Collection of all AeroMate (PS-01) backend endpoints for hackathon testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "demo-token",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health Check",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "2. Flight Search (Amadeus)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/flights/search?origin=JFK&destination=LHR&date=2026-10-15&adults=1",
+          "host": ["{{baseUrl}}"],
+          "path": ["flights", "search"],
+          "query": [
+            { "key": "origin", "value": "JFK" },
+            { "key": "destination", "value": "LHR" },
+            { "key": "date", "value": "2026-10-15" },
+            { "key": "adults", "value": "1" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "3. Flight Status - Delayed (BA142)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/flights/BA142/status",
+          "host": ["{{baseUrl}}"],
+          "path": ["flights", "BA142", "status"]
+        }
+      }
+    },
+    {
+      "name": "4. Flight Status - On Time (AI645)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/flights/AI645/status",
+          "host": ["{{baseUrl}}"],
+          "path": ["flights", "AI645", "status"]
+        }
+      }
+    },
+    {
+      "name": "5. Live Aircraft Position (BA142)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/flights/BA142/position",
+          "host": ["{{baseUrl}}"],
+          "path": ["flights", "BA142", "position"]
+        }
+      }
+    },
+    {
+      "name": "6. AI Assistant Chat - Delay Guidance (EN)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"My flight is delayed by over 3 hours! What are my passenger rights?\",\n  \"language\": \"en\",\n  \"flightContext\": {\n    \"flightNumber\": \"BA142\",\n    \"airline\": \"British Airways\",\n    \"status\": \"delayed\",\n    \"delayMinutes\": 210,\n    \"departure\": { \"iata\": \"LHR\", \"terminal\": \"5\", \"gate\": \"B36\" }\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/assistant/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["assistant", "chat"]
+        }
+      }
+    },
+    {
+      "name": "7. AI Assistant Chat - Multilingual (Hindi)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"Kya meri flight samay par hai aur mujhe kya karna chahiye?\",\n  \"language\": \"hi\",\n  \"flightContext\": {\n    \"flightNumber\": \"AI645\",\n    \"airline\": \"Air India\",\n    \"status\": \"scheduled\",\n    \"delayMinutes\": 0\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/assistant/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["assistant", "chat"]
+        }
+      }
+    },
+    {
+      "name": "8. Get User Saved Trips",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{authToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/trips",
+          "host": ["{{baseUrl}}"],
+          "path": ["trips"]
+        }
+      }
+    },
+    {
+      "name": "9. Save New Trip",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{authToken}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"flightNumber\": \"AI645\",\n  \"airline\": \"Air India\",\n  \"origin\": \"BOM\",\n  \"destination\": \"DEL\",\n  \"travelDate\": \"2026-10-18\",\n  \"status\": \"scheduled\",\n  \"metadata\": { \"gate\": \"48\", \"terminal\": \"2\" }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/trips",
+          "host": ["{{baseUrl}}"],
+          "path": ["trips"]
+        }
+      }
+    }
+  ]
+}
