@@ -1,23 +1,23 @@
-import { CheckCircle2, Clock, AlertTriangle, XCircle, Info } from 'lucide-react'
+import { CheckCircle2, Clock, AlertTriangle, XCircle, Plane } from 'lucide-react'
 
 const STATUS_CONFIG = {
-  scheduled: { label: 'Scheduled', color: 'text-sky-400 bg-sky-400/10 border-sky-400/20', Icon: Clock },
-  active:    { label: 'In Flight',  color: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20', Icon: CheckCircle2 },
-  delayed:   { label: 'Delayed',   color: 'text-amber-400 bg-amber-400/10 border-amber-400/20', Icon: AlertTriangle },
-  cancelled: { label: 'Cancelled', color: 'text-red-400 bg-red-400/10 border-red-400/20', Icon: XCircle },
-  landed:    { label: 'Landed',    color: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20', Icon: CheckCircle2 },
+  scheduled: { label: 'Scheduled', bg: 'bg-blue-50',   text: 'text-blue-700',   border: 'border-blue-200',   Icon: Clock },
+  active:    { label: 'In Flight', bg: 'bg-green-50',  text: 'text-green-700',  border: 'border-green-200',  Icon: Plane },
+  delayed:   { label: 'Delayed',   bg: 'bg-amber-50',  text: 'text-amber-700',  border: 'border-amber-200',  Icon: AlertTriangle },
+  cancelled: { label: 'Cancelled', bg: 'bg-red-50',    text: 'text-red-700',    border: 'border-red-200',    Icon: XCircle },
+  landed:    { label: 'Landed',    bg: 'bg-green-50',  text: 'text-green-700',  border: 'border-green-200',  Icon: CheckCircle2 },
 }
 
 export default function StatusBadge({ status = 'scheduled', delayMinutes }) {
-  const config = STATUS_CONFIG[status?.toLowerCase()] || STATUS_CONFIG.scheduled
-  const { label, color, Icon } = config
+  const cfg = STATUS_CONFIG[status?.toLowerCase()] || STATUS_CONFIG.scheduled
+  const { label, bg, text, border, Icon } = cfg
 
   return (
-    <span className={`status-badge border ${color}`}>
+    <span className={`status-badge border ${bg} ${text} ${border}`}>
       <Icon className="w-3 h-3" />
       {label}
       {status === 'delayed' && delayMinutes > 0 && (
-        <span className="ml-1 opacity-80">+{delayMinutes}m</span>
+        <span className="ml-0.5 opacity-80">+{delayMinutes}m</span>
       )}
     </span>
   )

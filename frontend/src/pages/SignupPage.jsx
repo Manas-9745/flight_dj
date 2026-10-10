@@ -14,7 +14,7 @@ export default function SignupPage({ onSignup }) {
     if (form.password.length < 6) return setError('Password must be at least 6 characters.')
     setLoading(true)
     try {
-      await new Promise(r => setTimeout(r, 800))
+      await new Promise(r => setTimeout(r, 600))
       onSignup({ email: form.email, name: form.name })
       navigate('/')
     } catch {
@@ -25,57 +25,87 @@ export default function SignupPage({ onSignup }) {
   }
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4">
-      <div className="w-full max-w-md animate-slide-up">
+    <div className="min-h-[75vh] flex items-center justify-center px-4 animate-fade-in">
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-sky-500/15 border border-sky-500/25 flex items-center justify-center mx-auto mb-4">
-            <Plane className="w-7 h-7 text-sky-400" />
+          <div className="w-14 h-14 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center mx-auto mb-4 shadow-sm">
+            <Plane className="w-7 h-7 text-brand-500" />
           </div>
-          <h1 className="text-3xl font-display font-bold text-white">Create your account</h1>
-          <p className="text-slate-400 mt-1">Start tracking your flights with AI guidance.</p>
+          <h1 className="text-2xl font-display font-bold text-navy-700">Create an Account</h1>
+          <p className="text-slate-500 text-sm mt-1">Get real-time flight telemetry, transfer guidance & AI copilot</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="card space-y-4">
+        <form onSubmit={handleSubmit} className="card space-y-4 shadow-card">
           {error && (
-            <div className="flex items-center gap-2 text-red-400 bg-red-400/10 border border-red-400/20 rounded-xl px-4 py-3 text-sm">
+            <div className="flex items-center gap-2 text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm">
               <AlertCircle className="w-4 h-4 flex-shrink-0" /> {error}
             </div>
           )}
+
           <div>
-            <label className="text-xs text-slate-400 mb-1.5 block font-medium">Full Name</label>
+            <label className="label-field" htmlFor="signup-name">Full Name</label>
             <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <input id="signup-name" type="text" placeholder="Manas Parekar" value={form.name}
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                id="signup-name"
+                type="text"
+                placeholder="Captain John Doe"
+                value={form.name}
                 onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-                className="input-field pl-11" required />
+                className="input-field pl-11"
+                required
+              />
             </div>
           </div>
+
           <div>
-            <label className="text-xs text-slate-400 mb-1.5 block font-medium">Email</label>
+            <label className="label-field" htmlFor="signup-email">Email Address</label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <input id="signup-email" type="email" placeholder="you@example.com" value={form.email}
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                id="signup-email"
+                type="email"
+                placeholder="name@example.com"
+                value={form.email}
                 onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
-                className="input-field pl-11" required />
+                className="input-field pl-11"
+                required
+              />
             </div>
           </div>
+
           <div>
-            <label className="text-xs text-slate-400 mb-1.5 block font-medium">Password</label>
+            <label className="label-field" htmlFor="signup-password">Password</label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <input id="signup-password" type="password" placeholder="Min. 6 characters" value={form.password}
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                id="signup-password"
+                type="password"
+                placeholder="Min. 6 characters"
+                value={form.password}
                 onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-                className="input-field pl-11" required />
+                className="input-field pl-11"
+                required
+              />
             </div>
           </div>
-          <button id="signup-submit" type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2">
+
+          <button
+            id="signup-submit"
+            type="submit"
+            disabled={loading}
+            className="btn-primary w-full flex items-center justify-center gap-2 mt-2"
+          >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-            {loading ? 'Creating account...' : 'Create account'}
+            {loading ? 'Creating Account...' : 'Get Started'}
           </button>
-          <p className="text-center text-sm text-slate-400">
+
+          <div className="text-center text-xs text-slate-500 pt-2 border-t border-surface-200">
             Already have an account?{' '}
-            <Link to="/login" className="text-sky-400 hover:text-sky-300 font-medium">Sign in</Link>
-          </p>
+            <Link to="/login" className="text-brand-600 hover:text-brand-700 font-semibold">
+              Sign in
+            </Link>
+          </div>
         </form>
       </div>
     </div>

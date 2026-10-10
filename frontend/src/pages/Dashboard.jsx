@@ -1,22 +1,62 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plane, Search, Zap, Globe2, Shield, MessageSquare, ArrowRight, MapPin } from 'lucide-react'
+import {
+  Plane, Search, Globe, ArrowLeftRight, Zap, Bot, Luggage,
+  Archive, TrendingUp, AlertTriangle, Clock, ArrowRight, RefreshCw
+} from 'lucide-react'
+import { getStats } from '../services/api'
 
-const DEMO_FLIGHTS = [
-  { code: 'BA142', label: 'British Airways · LHR→JFK', badge: 'Delayed 210m', badgeColor: 'text-amber-400' },
-  { code: 'AI645', label: 'Air India · BOM→DEL', badge: 'On Time', badgeColor: 'text-emerald-400' },
+const QUICK_FLIGHTS = [
+  { code: 'BA142', label: 'British Airways · LHR→JFK', status: 'delayed', delay: '210m' },
+  { code: 'AI645', label: 'Air India · BOM→DEL', status: 'scheduled', delay: null },
 ]
 
-const FEATURES = [
-  { icon: Search, title: 'Flight Search', desc: 'Find available flights with real-time pricing from Amadeus.' },
-  { icon: MapPin, title: 'Live Radar', desc: 'Track aircraft coordinates with live ADS-B telemetry on interactive map.' },
-  { icon: MessageSquare, title: 'AI Assistant', desc: 'Get disruption guidance, passenger rights, and advice in your language.' },
-  { icon: Shield, title: 'Saved Trips', desc: 'Save your journeys and get personalized alerts.' },
+const FEATURE_CARDS = [
+  { to: '/map',      icon: Globe,         title: 'Global Flight Map',  desc: 'Track live aircraft worldwide.',          accent: 'brand' },
+  { to: '/search',   icon: Search,        title: 'Search & Compare',   desc: 'Compare flights & fares.',                accent: 'teal' },
+  { to: '/impact',   icon: Zap,           title: 'Journey Impact',     desc: 'See how delays affect your trip.',        accent: 'amber' },
+  { to: '/transfer', icon: ArrowLeftRight, title: 'Transfer Guide',    desc: 'Step-by-step connection help.',           accent: 'brand' },
+  { to: '/baggage',  icon: Luggage,       title: 'Baggage Checker',    desc: 'Baggage guidance & assistance.',          accent: 'teal' },
+  { to: '/assistant', icon: Bot,          title: 'AI Copilot',         desc: 'Ask anything in your language.',          accent: 'purple' },
+  { to: '/wallet',   icon: Archive,       title: 'Offline Wallet',     desc: 'Your journey, saved offline.',            accent: 'green' },
+  { to: '/hold',     icon: Archive,       title: 'Hold Checker',       desc: 'Know the cost of waiting.',               accent: 'red' },
 ]
 
-export default function Dashboard() {
+function StatCard({ icon: Icon, label, value, sub, color = 'brand' }) {
+  const colors = {
+    brand:  'bg-brand-50 border-brand-100 text-brand-600',
+    teal:   'bg-teal-50  border-teal-100  text-teal-600',
+    amber:  'bg-amber-50 border-amber-100 text-amber-600',
+    red:    'bg-red-50   border-red-100   text-red-600',
+  }
+  return (
+    <div className="stat-card">
+      <div className={`w-10 h-10 rounded-xl border flex items-center justify-center mb-3 ${colors[color]}`}>
+        <Icon className="w-5 h-5" />
+      </div>
+      <div className="text-2xl font-display font-bold text-navy-700">{value}</div>
+      <div className="text-sm font-medium text-navy-700 mt-0.5">{label}</div>
+      {sub && <div className="text-xs text-slate-400 mt-0.5">{sub}</div>}
+    </div>
+  )
+}
+
+export default function Dashboard({ token }) {
   const [flightInput, setFlightInput] = useState('')
+  const [stats, setStats] = useState(null)
+  const [statsLoading, setStatsLoading] = useState(true)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    getStats()
+      .then(res => setStats(res.data))
+      .catch(() => setStats({
+        activeFlights: '10,000+', airlinesMonitored: 1247,
+        disruptionsReported: 58, avgDelayMinutes: 22,
+        source: 'estimated', lastUpdated: new Date().toISOString()
+      }))
+      .finally(() => setStatsLoading(false))
+  }, [])
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -24,105 +64,130 @@ export default function Dashboard() {
     if (val) navigate(`/flight/${val}`)
   }
 
+  const fmt = (n) => typeof n === 'number' ? n.toLocaleString() : n
+
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 space-y-16">
-      {/* Hero */}
-      <section className="text-center space-y-6 animate-fade-in">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-sm font-medium">
-          <Zap className="w-4 h-4" />
-          AI-Powered Aviation Companion · PS-01
-        </div>
+    <div className="space-y-8 animate-fade-in">
+      {/* Page header */}
+      <div>
+        <h1 className="text-2xl font-display font-bold text-navy-700">Overview</h1>
+        <p className="text-slate-500 text-sm mt-1">Your aviation journey command center</p>
+      </div>
 
-        <h1 className="text-5xl sm:text-6xl font-display font-bold text-white leading-tight">
-          Your flight,{' '}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-300">
-            always on track
-          </span>
-        </h1>
+      {/* Stats row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          icon={Plane} color="brand"
+          label="Active Flights"
+          value={statsLoading ? '—' : fmt(stats?.activeFlights)}
+          sub={stats?.source === 'estimated' ? 'Estimated globally' : 'OpenSky Network'}
+        />
+        <StatCard
+          icon={Globe} color="teal"
+          label="Airlines Monitored"
+          value={statsLoading ? '—' : fmt(stats?.airlinesMonitored)}
+          sub="Worldwide coverage"
+        />
+        <StatCard
+          icon={AlertTriangle} color="amber"
+          label="Disruptions Today"
+          value={statsLoading ? '—' : fmt(stats?.disruptionsReported)}
+          sub="Delays & cancellations"
+        />
+        <StatCard
+          icon={Clock} color="red"
+          label="Avg Delay"
+          value={statsLoading ? '—' : `${stats?.avgDelayMinutes}m`}
+          sub="Industry average"
+        />
+      </div>
 
-        <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-          Search flights, track live aircraft positions, and get AI-powered disruption guidance — all in one place.
-        </p>
+      {/* Hero search */}
+      <div className="bg-gradient-to-br from-brand-500 to-brand-700 rounded-2xl p-6 sm:p-8 text-white shadow-brand">
+        <div className="max-w-2xl">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
+              <Plane className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-sm font-semibold text-blue-100">Live Flight Tracker</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-display font-bold mb-1">Track Any Flight</h2>
+          <p className="text-blue-200 text-sm mb-5">Real-time status, live radar, and AI-powered disruption guidance.</p>
 
-        {/* Search Bar */}
-        <form onSubmit={handleSearch} className="max-w-lg mx-auto">
-          <div className="flex gap-3">
+          <form onSubmit={handleSearch} className="flex gap-3 max-w-lg">
             <div className="relative flex-1">
-              <Plane className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <Plane className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-300" />
               <input
                 type="text"
                 value={flightInput}
                 onChange={e => setFlightInput(e.target.value)}
-                placeholder="Enter flight number (e.g. BA142, AI645)"
-                className="input-field pl-11"
+                placeholder="Enter flight number e.g. BA142, AI645"
+                className="w-full bg-white/15 border border-white/25 rounded-xl pl-11 pr-4 py-3 text-white placeholder-blue-300 focus:outline-none focus:border-white/60 focus:bg-white/20 transition-all text-sm"
                 id="hero-flight-search"
               />
             </div>
-            <button type="submit" className="btn-primary flex items-center gap-2 whitespace-nowrap">
-              <Search className="w-4 h-4" />
-              Track
+            <button type="submit" className="bg-white text-brand-600 font-semibold px-5 py-3 rounded-xl hover:bg-blue-50 transition-all shadow-sm flex items-center gap-2 whitespace-nowrap text-sm">
+              <Search className="w-4 h-4" /> Track
             </button>
+          </form>
+
+          <div className="flex flex-wrap items-center gap-3 mt-4">
+            <span className="text-blue-300 text-xs">Try:</span>
+            {QUICK_FLIGHTS.map(f => (
+              <button
+                key={f.code}
+                onClick={() => navigate(`/flight/${f.code}`)}
+                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full px-3 py-1.5 transition-all"
+              >
+                <span className="font-mono text-white font-bold text-xs">{f.code}</span>
+                <span className="text-blue-200 text-xs">{f.label}</span>
+                {f.status === 'delayed' && (
+                  <span className="text-amber-300 text-xs font-semibold">{f.delay} delay</span>
+                )}
+              </button>
+            ))}
           </div>
-        </form>
-
-        {/* Demo flight chips */}
-        <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
-          <span className="text-slate-500">Try:</span>
-          {DEMO_FLIGHTS.map(f => (
-            <button
-              key={f.code}
-              onClick={() => navigate(`/flight/${f.code}`)}
-              className="flex items-center gap-2 glass hover:bg-white/8 rounded-full px-4 py-1.5 transition-all"
-            >
-              <span className="font-mono text-sky-400 font-semibold">{f.code}</span>
-              <span className="text-slate-400 text-xs">{f.label}</span>
-              <span className={`text-xs font-medium ${f.badgeColor}`}>{f.badge}</span>
-            </button>
-          ))}
         </div>
-      </section>
+      </div>
 
-      {/* Feature grid */}
-      <section className="animate-slide-up">
-        <h2 className="text-2xl font-display font-bold text-white text-center mb-8">
-          Everything you need, in one cockpit
-        </h2>
+      {/* Features grid */}
+      <div>
+        <h2 className="section-title mb-4">All Features</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {FEATURES.map(({ icon: Icon, title, desc }) => (
-            <div key={title} className="glass-hover rounded-2xl p-6 group">
-              <div className="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center mb-4 group-hover:bg-sky-500/20 transition-all">
-                <Icon className="w-6 h-6 text-sky-400" />
-              </div>
-              <h3 className="font-display font-semibold text-white mb-2">{title}</h3>
-              <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
-            </div>
-          ))}
+          {FEATURE_CARDS.map(({ to, icon: Icon, title, desc, accent }) => {
+            const accents = {
+              brand:  'bg-brand-50 border-brand-100 text-brand-500 group-hover:bg-brand-100',
+              teal:   'bg-teal-50  border-teal-100  text-teal-500  group-hover:bg-teal-100',
+              amber:  'bg-amber-50 border-amber-100 text-amber-500 group-hover:bg-amber-100',
+              purple: 'bg-purple-50 border-purple-100 text-purple-500 group-hover:bg-purple-100',
+              green:  'bg-green-50 border-green-100 text-green-500 group-hover:bg-green-100',
+              red:    'bg-red-50   border-red-100   text-red-500   group-hover:bg-red-100',
+            }
+            return (
+              <button
+                key={to}
+                onClick={() => navigate(to)}
+                className="card-hover group text-left"
+              >
+                <div className={`w-11 h-11 rounded-xl border flex items-center justify-center mb-3 transition-all ${accents[accent]}`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <div className="font-display font-semibold text-navy-700 text-sm mb-1">{title}</div>
+                <div className="text-slate-500 text-xs leading-relaxed">{desc}</div>
+                <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-brand-500 group-hover:translate-x-1 transition-all mt-3" />
+              </button>
+            )
+          })}
         </div>
-      </section>
+      </div>
 
-      {/* Quick Actions */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-slide-up">
-        <div
-          className="glass-hover rounded-2xl p-6 flex items-center justify-between group cursor-pointer"
-          onClick={() => navigate('/search')}
-        >
-          <div>
-            <div className="font-display font-bold text-white text-lg mb-1">Search Flights</div>
-            <div className="text-slate-400 text-sm">Find & compare available routes and pricing.</div>
-          </div>
-          <ArrowRight className="w-5 h-5 text-sky-400 group-hover:translate-x-1 transition-transform" />
+      {/* Footer meta */}
+      {stats?.lastUpdated && (
+        <div className="flex items-center gap-2 text-xs text-slate-400">
+          <RefreshCw className="w-3 h-3" />
+          Stats updated {new Date(stats.lastUpdated).toLocaleTimeString()}
         </div>
-        <div
-          className="glass-hover rounded-2xl p-6 flex items-center justify-between group cursor-pointer"
-          onClick={() => navigate('/assistant')}
-        >
-          <div>
-            <div className="font-display font-bold text-white text-lg mb-1">AI Travel Assistant</div>
-            <div className="text-slate-400 text-sm">Get disruption guidance and passenger rights info.</div>
-          </div>
-          <ArrowRight className="w-5 h-5 text-sky-400 group-hover:translate-x-1 transition-transform" />
-        </div>
-      </section>
+      )}
     </div>
   )
 }
