@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 require('dotenv').config();
-const arinaRoutes = require('./routes/arinaRoutes');
+
 // Middlewares
 const { apiLimiter } = require('./middleware/rateLimiter');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
@@ -16,18 +16,46 @@ const statsRoutes = require('./routes/statsRoutes');
 const journeyRoutes = require('./routes/journeyRoutes');
 const alertRoutes = require('./routes/alertRoutes');
 const disruptionRoutes = require('./routes/disruptionRoutes');
-const quickHelpRoutes = require('./routes/quickHelpRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Security & Parsing
-app.use(helmet());
-app.use(cors({
-  origin: '*', // Adjust in production to frontend domain
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
+
+// CORS configuration supporting local machine, LAN mobile devices, and production
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:4173',
+  'http://127.0.0.1:4173',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true; // Mobile apps, Postman, server-to-server, or same-origin
+  if (allowedOrigins.includes(origin)) return true;
+  // Allow any LAN subnet for phone development over Wi-Fi
+  // 10.x.x.x, 192.168.x.x, 172.16.x.x - 172.31.x.x
+  const lanRegex = /^https?:\/\/(localhost|127\.0\.0\.1|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})(:\d+)?$/;
+  return lanRegex.test(origin);
+};
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (isAllowedOrigin(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS blocked for origin: ${origin}`));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -44,20 +72,18 @@ app.use('/api/trips', tripRoutes);
 app.use('/api/alerts', alertRoutes);      // Feature 11: Live Crisis & Aviation Alerts
 app.use('/api/disruptions', disruptionRoutes); // Disruption Manager & Recovery
 
-app.use('/api/quick-help', quickHelpRoutes);
-app.use('/api/arina', arinaRoutes);
-
 // 404 & Global Error Handling
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`
 =============================================================
   ✈️  AeroMate (PS-01) Backend Service Active
 =============================================================
-  Port:        http://localhost:${PORT}
+  Network:     http://0.0.0.0:${PORT} (LAN accessible)
+  Local:       http://localhost:${PORT}
   Health:      http://localhost:${PORT}/api/health
   Stats:       http://localhost:${PORT}/api/flights/stats
   Live Map:    http://localhost:${PORT}/api/flights/live

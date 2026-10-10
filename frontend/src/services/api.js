@@ -1,9 +1,34 @@
 import axios from 'axios'
 
+/**
+ * Resolve API Base URL:
+ * - If VITE_API_BASE_URL is set (e.g., http://10.42.113.149:5000 in LAN mode or https://api.domain.com in production), use it.
+ * - Otherwise in browser development, default to '/api' which Vite proxies to backend:5000.
+ */
+const getBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim()) {
+    const clean = envUrl.trim().replace(/\/$/, '')
+    return clean.endsWith('/api') ? clean : `${clean}/api`
+  }
+  return '/api'
+}
+
 const api = axios.create({
-  baseURL: '/api',
-  timeout: 12000,
+  baseURL: getBaseUrl(),
+  timeout: 15000,
 })
+
+// Request & Response Interceptors for debugging network & mobile CORS issues
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (!error.response) {
+      console.warn(`[AeroMate API Network Error]: Cannot reach backend at ${api.defaults.baseURL}. Ensure your backend server is running and accessible on your Wi-Fi network.`)
+    }
+    return Promise.reject(error)
+  }
+)
 
 // ── Flights ───────────────────────────────────────────────────────────────────
 

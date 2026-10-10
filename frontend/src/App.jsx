@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
+import OfflineBanner from './components/OfflineBanner'
+import InstallPrompt from './components/InstallPrompt'
 
 // Pages
 import Dashboard      from './pages/Dashboard'
@@ -94,6 +96,7 @@ export default function App() {
     <BrowserRouter>
       <div className="min-h-screen bg-[#F5F5F0] text-[#0D0D0D] flex flex-col font-sans">
         <Navbar user={user} onLogout={handleLogout} />
+        <OfflineBanner />
         <main className="flex-1">
           <Routes>
             <Route path="/"          element={<Dashboard token={token} />} />
@@ -119,6 +122,7 @@ export default function App() {
             <Route path="*"          element={<Navigate to="/" replace />} />
           </Routes>
         </main>
+        <InstallPrompt />
       </div>
     </BrowserRouter>
   )
