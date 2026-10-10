@@ -133,31 +133,31 @@ export default function FlightComparisonTable({
                         {offer.recommendations.map((rec, i) => (
                           <span
                             key={i}
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold border inline-block ${rec.color}`}
+                            className="px-2 py-0.5 rounded-full text-[10px] font-medium border bg-[#FAFAF7] text-[#52524E] border-[#E5E5E0] inline-block"
                             title={rec.reason}
                           >
-                            🏷️ {rec.type}
+                            {rec.type}
                           </span>
                         ))}
                       </div>
                     ) : (
-                      <span className="text-slate-400 text-[11px]">Standard Option</span>
+                      <span className="text-[#8C8C85] text-[11px]">Standard</span>
                     )}
                   </td>
 
-                  {/* Aviation Risk & Crisis Awareness */}
+                  {/* Aviation Risk & Airspace */}
                   <td className="p-3.5 whitespace-nowrap">
                     {offer.aviationRisk?.impactLevel === 'Confirmed' ? (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-300 flex items-center gap-1">
-                        <Flame className="w-3 h-3 text-rose-600" /> Confirmed Advisory
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#FAFAF7] text-[#1A1A1A] border border-[#E5E5E0] inline-block">
+                        Advisory Active
                       </span>
                     ) : offer.aviationRisk?.impactLevel === 'Potential Risk' ? (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-300 flex items-center gap-1">
-                        <AlertTriangle className="w-3 h-3 text-amber-600" /> Corridor Detour
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#FAFAF7] text-[#52524E] border border-[#E5E5E0] inline-block">
+                        Corridor Note
                       </span>
                     ) : (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Normal Clear Route
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#FAFAF7] text-[#6B6B6B] border border-[#E5E5E0] inline-block">
+                        Clear Route
                       </span>
                     )}
                   </td>

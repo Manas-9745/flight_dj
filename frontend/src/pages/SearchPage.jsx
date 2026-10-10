@@ -222,23 +222,23 @@ export default function SearchPage({ token }) {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 space-y-8">
 
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E5E5E0] pb-6">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold uppercase tracking-wider mb-2">
-            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-            Amadeus Multi-GDS Flight Comparison & Airspace Safety
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAFAF7] border border-[#E5E5E0] text-[#6B6B6B] text-xs font-semibold uppercase tracking-wider mb-2">
+            <Plane className="w-3.5 h-3.5 text-[#1A1A1A]" />
+            <span>Flight Search & Comparison</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-display font-extrabold text-aeromate-ink tracking-tight">
-            Search & Compare Flights
+          <h1 className="text-3xl sm:text-4xl font-display font-extrabold text-[#0D0D0D] tracking-tight">
+            Search Flights
           </h1>
-          <p className="text-sm font-medium text-aeromate-muted mt-1">
-            Real-time fares, verified baggage inclusions, transparent AI value rankings, and live airspace risk checks.
+          <p className="text-sm font-medium text-[#6B6B6B] mt-1">
+            Compare verified fares, schedules, and cabin baggage inclusions.
           </p>
         </div>
 
         {/* Currency Switcher */}
-        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-slate-200 text-xs font-bold shadow-subtle">
-          <span className="text-slate-400">Currency:</span>
+        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-[#E5E5E0] text-xs font-semibold shadow-subtle">
+          <span className="text-[#8C8C85]">Currency:</span>
           {['USD', 'EUR', 'GBP', 'INR'].map((curr) => (
             <button
               key={curr}
@@ -247,7 +247,7 @@ export default function SearchPage({ token }) {
                 if (resultsData) handleSearch()
               }}
               className={`px-2.5 py-1 rounded-full transition-all ${
-                currency === curr ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'
+                currency === curr ? 'bg-[#1A1A1A] text-white' : 'text-[#6B6B6B] hover:bg-[#FAFAF7]'
               }`}
             >
               {curr}
@@ -258,29 +258,29 @@ export default function SearchPage({ token }) {
 
       {/* Save Notification Banner */}
       {saveSuccessMsg && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-2xl text-xs font-bold flex items-center justify-between animate-slide-up shadow-sm">
+        <div className="bg-[#FAFAF7] border border-[#E5E5E0] text-[#0D0D0D] px-4 py-3 rounded-2xl text-xs font-semibold flex items-center justify-between shadow-subtle">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <CheckCircle2 className="w-4 h-4 text-blue-600" />
             <span>{saveSuccessMsg}</span>
           </div>
-          <button onClick={() => navigate('/trips')} className="underline hover:text-emerald-900">
+          <button onClick={() => navigate('/trips')} className="underline hover:text-black">
             View My Journeys →
           </button>
         </div>
       )}
 
       {/* ================= SEARCH FORM CARD ================= */}
-      <div className="surface-card p-6 sm:p-8 border border-aeromate-border shadow-card space-y-6">
+      <div className="surface-card p-6 sm:p-8 border border-[#E5E5E0] shadow-card space-y-6">
 
         {/* Trip Type Tabs */}
-        <div className="flex items-center gap-2 border-b border-slate-100 pb-4">
+        <div className="flex items-center gap-2 border-b border-[#E5E5E0] pb-4">
           <button
             type="button"
             onClick={() => setTripType('one-way')}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
               tripType === 'one-way'
-                ? 'bg-slate-900 text-white shadow-sm'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                ? 'bg-[#1A1A1A] text-white shadow-xs'
+                : 'bg-[#FAFAF7] text-[#6B6B6B] hover:text-[#0D0D0D]'
             }`}
           >
             One-Way
@@ -288,10 +288,10 @@ export default function SearchPage({ token }) {
           <button
             type="button"
             onClick={() => setTripType('round-trip')}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
               tripType === 'round-trip'
-                ? 'bg-slate-900 text-white shadow-sm'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                ? 'bg-[#1A1A1A] text-white shadow-xs'
+                : 'bg-[#FAFAF7] text-[#6B6B6B] hover:text-[#0D0D0D]'
             }`}
           >
             Round-Trip
@@ -299,10 +299,10 @@ export default function SearchPage({ token }) {
           <button
             type="button"
             onClick={() => setTripType('multi-city')}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
               tripType === 'multi-city'
-                ? 'bg-slate-900 text-white shadow-sm'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                ? 'bg-[#1A1A1A] text-white shadow-xs'
+                : 'bg-[#FAFAF7] text-[#6B6B6B] hover:text-[#0D0D0D]'
             }`}
           >
             Multi-City
@@ -561,19 +561,19 @@ export default function SearchPage({ token }) {
 
               {/* Sort By Dropdown */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block">
+                <label className="text-xs font-semibold text-[#52524E] uppercase tracking-wider block">
                   Sort Results By
                 </label>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none"
+                  className="w-full bg-[#FAFAF7] border border-[#E5E5E0] rounded-xl px-3 py-2 text-xs font-semibold text-[#0D0D0D] outline-none"
                 >
-                  <option value="best-value">⭐ Best Value Ranking</option>
-                  <option value="cheapest">💰 Lowest Fare First</option>
-                  <option value="fastest">⚡ Shortest Duration First</option>
-                  <option value="fewest-stops">🛫 Fewest Stops First</option>
-                  <option value="earliest">🌅 Earliest Departure</option>
+                  <option value="best-value">Best Value</option>
+                  <option value="cheapest">Lowest Fare</option>
+                  <option value="fastest">Shortest Duration</option>
+                  <option value="fewest-stops">Fewest Stops</option>
+                  <option value="earliest">Earliest Departure</option>
                 </select>
               </div>
 
@@ -731,33 +731,29 @@ export default function SearchPage({ token }) {
                               </div>
                             </div>
 
-                            {/* Recommendation Badges & Crisis Risk Pill */}
+                            {/* Recommendation Badges & Airspace Note */}
                             <div className="flex flex-wrap items-center gap-2">
                               {offer.recommendations?.map((rec, i) => (
                                 <span
                                   key={i}
-                                  className={`px-2.5 py-1 rounded-full text-xs font-bold border flex items-center gap-1 ${rec.color}`}
+                                  className="px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#FAFAF7] text-[#52524E] border-[#E5E5E0]"
                                   title={rec.reason}
                                 >
-                                  <Sparkles className="w-3 h-3" />
                                   {rec.type}
                                 </span>
                               ))}
 
                               {/* Aviation Risk Flag */}
                               {offer.aviationRisk?.impactLevel === 'Confirmed' ? (
-                                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700 border border-rose-300 flex items-center gap-1">
-                                  <Flame className="w-3.5 h-3.5 text-rose-600" />
+                                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#FAFAF7] text-[#1A1A1A] border border-[#E5E5E0]">
                                   Advisory Active
                                 </span>
                               ) : offer.aviationRisk?.impactLevel === 'Potential Risk' ? (
-                                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-300 flex items-center gap-1">
-                                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                                  Corridor Detour
+                                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#FAFAF7] text-[#52524E] border border-[#E5E5E0]">
+                                  Corridor Note
                                 </span>
                               ) : (
-                                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#FAFAF7] text-[#6B6B6B] border border-[#E5E5E0]">
                                   Clear Airspace
                                 </span>
                               )}

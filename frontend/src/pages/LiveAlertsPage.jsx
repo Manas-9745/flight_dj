@@ -192,121 +192,121 @@ export default function LiveAlertsPage({ token }) {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 space-y-8">
 
       {/* Top Banner & Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-slate-200 pb-6">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-[#E5E5E0] pb-6">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold uppercase tracking-wider mb-2">
-            <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-            AeroMate Live Aviation Crisis & Airspace Safety System
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#E5E5E0] text-[#52524E] text-xs font-semibold uppercase tracking-wider mb-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            Aviation Safety & Airspace Advisories
           </div>
-          <h1 className="text-3xl sm:text-4xl font-display font-extrabold text-aeromate-ink tracking-tight">
-            Live Global Aviation Alerts
+          <h1 className="text-3xl sm:text-4xl font-display font-semibold text-[#0D0D0D] tracking-tight">
+            Airspace & Safety Advisories
           </h1>
-          <p className="text-sm font-medium text-aeromate-muted mt-1 max-w-2xl">
-            Real-time monitoring of armed conflicts, NOTAMs, prohibited airspace, airport closures, strikes, and severe weather impacts.
+          <p className="text-sm text-[#52524E] mt-1 max-w-xl">
+            Real-time monitoring of airspace restrictions, NOTAMs, weather advisories, and route impacts.
           </p>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <button
             onClick={() => loadData(true)}
             disabled={refreshing}
-            className="btn-secondary text-xs py-2.5 px-4"
+            className="btn-secondary text-xs py-2 px-4 rounded-full"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-            <span>{refreshing ? 'Refreshing...' : 'Refresh Feeds'}</span>
+            <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
           </button>
 
           <button
             onClick={() => setShowSetupModal(true)}
-            className="btn-secondary text-xs py-2.5 px-4 flex items-center gap-1.5"
+            className="btn-secondary text-xs py-2 px-4 rounded-full flex items-center gap-1.5"
           >
-            <Sliders className="w-3.5 h-3.5 text-slate-600" />
-            <span>Sources & Providers</span>
+            <Sliders className="w-3.5 h-3.5 text-[#52524E]" />
+            <span>Data Sources</span>
           </button>
         </div>
       </div>
 
-      {/* Data Freshness & Critical Metric Bar */}
+      {/* Data Freshness & Metric Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="surface-card p-4 border border-slate-200 shadow-subtle flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-center font-bold">
-            <Flame className="w-5 h-5" />
+        <div className="surface-card p-4 border border-[#E5E5E0] shadow-subtle flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-[#FAFAF7] border border-[#E5E5E0] text-[#0D0D0D] flex items-center justify-center font-bold">
+            <ShieldAlert className="w-4 h-4 text-[#0D0D0D]" />
           </div>
           <div>
-            <div className="text-xl font-bold font-display text-slate-900">{criticalCount}</div>
-            <div className="text-xs font-semibold text-slate-500">Critical Prohibitions</div>
+            <div className="text-lg font-semibold font-display text-[#0D0D0D]">{criticalCount}</div>
+            <div className="text-xs text-[#6B6B6B]">Prohibitions</div>
           </div>
         </div>
 
-        <div className="surface-card p-4 border border-slate-200 shadow-subtle flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center font-bold">
-            <AlertTriangle className="w-5 h-5" />
+        <div className="surface-card p-4 border border-[#E5E5E0] shadow-subtle flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-[#FAFAF7] border border-[#E5E5E0] text-[#0D0D0D] flex items-center justify-center font-bold">
+            <AlertTriangle className="w-4 h-4 text-[#0D0D0D]" />
           </div>
           <div>
-            <div className="text-xl font-bold font-display text-slate-900">{warningCount}</div>
-            <div className="text-xs font-semibold text-slate-500">Airspace Advisories</div>
+            <div className="text-lg font-semibold font-display text-[#0D0D0D]">{warningCount}</div>
+            <div className="text-xs text-[#6B6B6B]">Advisories</div>
           </div>
         </div>
 
-        <div className="surface-card p-4 border border-slate-200 shadow-subtle flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center font-bold">
-            <Globe className="w-5 h-5" />
+        <div className="surface-card p-4 border border-[#E5E5E0] shadow-subtle flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-[#FAFAF7] border border-[#E5E5E0] text-[#0D0D0D] flex items-center justify-center font-bold">
+            <Globe className="w-4 h-4 text-[#0D0D0D]" />
           </div>
           <div>
-            <div className="text-xl font-bold font-display text-slate-900">{alerts.length}</div>
-            <div className="text-xs font-semibold text-slate-500">Monitored Bulletins</div>
+            <div className="text-lg font-semibold font-display text-[#0D0D0D]">{alerts.length}</div>
+            <div className="text-xs text-[#6B6B6B]">Active Bulletins</div>
           </div>
         </div>
 
-        <div className="surface-card p-4 border border-slate-200 shadow-subtle flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center font-bold">
-            <CheckCircle2 className="w-5 h-5" />
+        <div className="surface-card p-4 border border-[#E5E5E0] shadow-subtle flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-[#FAFAF7] border border-[#E5E5E0] text-[#0D0D0D] flex items-center justify-center font-bold">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           </div>
           <div>
-            <div className="text-xs font-bold text-slate-900 truncate">
+            <div className="text-xs font-semibold text-[#0D0D0D] truncate">
               {lastUpdated ? new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Live'}
             </div>
-            <div className="text-xs font-semibold text-slate-500">Cache Active (10m TTL)</div>
+            <div className="text-xs text-[#6B6B6B]">Cache Active</div>
           </div>
         </div>
       </div>
 
       {/* Main Feature Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+      <div className="flex items-center gap-2 border-b border-[#E5E5E0] pb-3">
         <button
           onClick={() => setActiveTab('feed')}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+          className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
             activeTab === 'feed'
-              ? 'bg-aeromate-ink text-white shadow-sm'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              ? 'bg-[#1A1A1A] text-white shadow-subtle'
+              : 'bg-white text-[#52524E] border border-[#E5E5E0] hover:bg-[#FAFAF7]'
           }`}
         >
-          Alerts Feed ({alerts.length})
+          Advisories Feed ({alerts.length})
         </button>
 
         <button
           onClick={() => setActiveTab('map')}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
+          className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
             activeTab === 'map'
-              ? 'bg-aeromate-ink text-white shadow-sm'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              ? 'bg-[#1A1A1A] text-white shadow-subtle'
+              : 'bg-white text-[#52524E] border border-[#E5E5E0] hover:bg-[#FAFAF7]'
           }`}
         >
-          <Layers className="w-4 h-4" />
-          Interactive Crisis Map
+          <Layers className="w-3.5 h-3.5" />
+          Airspace Map
         </button>
 
         <button
           onClick={() => setActiveTab('simulator')}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
+          className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
             activeTab === 'simulator'
-              ? 'bg-aeromate-ink text-white shadow-sm'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              ? 'bg-[#1A1A1A] text-white shadow-subtle'
+              : 'bg-white text-[#52524E] border border-[#E5E5E0] hover:bg-[#FAFAF7]'
           }`}
         >
-          <PlaneTakeoff className="w-4 h-4" />
-          Flight Route Impact Checker
+          <PlaneTakeoff className="w-3.5 h-3.5" />
+          Route Impact Checker
         </button>
       </div>
 

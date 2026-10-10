@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, Plane } from 'lucide-react'
 import NotificationCenter from './NotificationCenter'
 import { getAlerts } from '../services/api'
 
@@ -35,14 +35,14 @@ export default function Navbar({ user, onLogout }) {
 
           {/* Brand — Refined, Clean Wordmark */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-[#1A1A1A] text-white flex items-center justify-center font-bold text-sm shadow-sm group-hover:bg-blue-600 transition-colors">
-              ✈
+            <div className="w-8 h-8 rounded-lg bg-[#1A1A1A] text-white flex items-center justify-center font-bold text-sm shadow-sm group-hover:bg-[#246BFD] transition-colors">
+              <Plane className="w-4 h-4 text-white" />
             </div>
             <div className="flex items-baseline">
-              <span className="font-display font-bold text-xl sm:text-2xl text-[#0D0D0D] tracking-tight leading-none">
+              <span className="font-display font-semibold text-xl sm:text-2xl text-[#0D0D0D] tracking-tight leading-none">
                 AeroMate
               </span>
-              <span className="text-blue-600 font-semibold text-xs ml-0.5">®</span>
+              <span className="text-[#246BFD] font-medium text-xs ml-0.5">®</span>
             </div>
           </Link>
 

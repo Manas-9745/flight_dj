@@ -79,33 +79,33 @@ export default function TripsPage({ token }) {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E5E5E0] pb-6">
         <div>
-          <h1 className="text-3xl font-display font-extrabold text-aeromate-text tracking-tight flex items-center gap-3">
-            <Bookmark className="w-7 h-7 text-aeromate-blue" />
-            My Saved Journeys
+          <h1 className="text-3xl font-display font-semibold text-[#0D0D0D] tracking-tight flex items-center gap-2.5">
+            <Bookmark className="w-6 h-6 text-[#246BFD]" />
+            Saved Journeys
           </h1>
-          <p className="text-sm font-medium text-aeromate-muted mt-1">
-            Track your upcoming flights and receive instant delay alerts.
+          <p className="text-sm text-[#52524E] mt-1">
+            Monitor saved itineraries, terminal gates, and real-time status.
           </p>
         </div>
 
         <button
           onClick={() => navigate('/search')}
-          className="btn-primary text-xs py-2.5 px-5"
+          className="btn-primary text-xs py-2 px-4 rounded-full"
         >
-          <Plane className="w-4 h-4" /> Add New Flight
+          <Plane className="w-3.5 h-3.5" /> Add Flight
         </button>
       </div>
 
       {trips.length === 0 ? (
-        <div className="surface-card text-center py-16 space-y-4 border border-slate-200 shadow-subtle">
-          <Plane className="w-14 h-14 text-slate-300 mx-auto" />
-          <h2 className="text-aeromate-text font-display font-bold text-lg">No Saved Journeys Yet</h2>
-          <p className="text-aeromate-muted text-xs max-w-sm mx-auto">
-            Search for any flight and click "Save Trip" to track status, gate updates, and AI disruption alerts.
+        <div className="surface-card text-center py-16 space-y-4 border border-[#E5E5E0] shadow-subtle">
+          <Plane className="w-12 h-12 text-[#A8A8A3] mx-auto" />
+          <h2 className="text-[#0D0D0D] font-display font-semibold text-lg">No Saved Journeys Yet</h2>
+          <p className="text-[#52524E] text-xs max-w-sm mx-auto">
+            Search for any flight and save it to monitor real-time updates and disruption alerts.
           </p>
-          <button onClick={() => navigate('/search')} className="btn-primary text-xs py-2.5 px-6">
+          <button onClick={() => navigate('/search')} className="btn-primary text-xs py-2 px-5 rounded-full">
             Search Flights
           </button>
         </div>
@@ -114,65 +114,65 @@ export default function TripsPage({ token }) {
           {trips.map(trip => (
             <div
               key={trip.id}
-              className="surface-card-hover p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-slate-200 shadow-subtle"
+              className="surface-card-hover p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-[#E5E5E0] shadow-subtle"
             >
               <div
                 className="flex items-center gap-4 cursor-pointer flex-1"
                 onClick={() => navigate(`/flight/${trip.flight_number}`)}
               >
-                <div className="w-12 h-12 rounded-2xl bg-aeromate-paleBlue border border-blue-200 text-aeromate-blue font-black flex items-center justify-center font-display">
+                <div className="w-10 h-10 rounded-xl bg-[#FAFAF7] border border-[#E5E5E0] text-[#1A1A1A] font-bold flex items-center justify-center font-display text-sm">
                   {trip.flight_number.slice(0, 2)}
                 </div>
 
                 <div className="space-y-1">
                   <div className="flex items-center gap-2.5 flex-wrap">
-                    <span className="font-display font-extrabold text-lg text-aeromate-text">{trip.flight_number}</span>
-                    <span className="text-xs font-semibold text-aeromate-muted">{trip.airline}</span>
+                    <span className="font-display font-semibold text-base text-[#0D0D0D]">{trip.flight_number}</span>
+                    <span className="text-xs text-[#6B6B6B]">{trip.airline}</span>
                     <StatusBadge status={trip.status} delayMinutes={trip.delayMinutes || 0} />
                   </div>
 
-                  <div className="text-xs font-semibold text-slate-700 flex items-center gap-2">
+                  <div className="text-xs font-medium text-[#52524E] flex items-center gap-2">
                     <span>{trip.origin}</span>
-                    <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+                    <ArrowRight className="w-3 h-3 text-[#A8A8A3]" />
                     <span>{trip.destination}</span>
-                    <span className="text-slate-400 font-normal">· Date: {trip.travel_date}</span>
+                    <span className="text-[#6B6B6B] font-normal">· {trip.travel_date}</span>
                   </div>
 
                   {trip.metadata?.gate && (
-                    <div className="text-[11px] text-aeromate-muted font-medium">
+                    <div className="text-[11px] text-[#6B6B6B]">
                       Terminal {trip.metadata.terminal} · Gate {trip.metadata.gate}
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+              <div className="flex items-center gap-2 justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-[#E5E5E0]">
                 <button
                   onClick={() => navigate(`/assistant`, { state: { flightContext: trip } })}
-                  className="btn-secondary text-xs py-1.5 px-3"
+                  className="btn-secondary text-xs py-1.5 px-3 rounded-full"
                 >
-                  <Sparkles className="w-3.5 h-3.5" /> Ask AI
+                  <Sparkles className="w-3 h-3 text-[#246BFD]" /> Ask AI
                 </button>
 
                 <button
                   onClick={() => navigate(`/alerts`, { state: { checkTrip: trip } })}
-                  className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1 text-slate-700"
-                  title="Check live conflict zones and airspace notices for this flight"
+                  className="btn-secondary text-xs py-1.5 px-3 rounded-full flex items-center gap-1 text-[#1A1A1A]"
+                  title="Check live advisories"
                 >
-                  <ShieldAlert className="w-3.5 h-3.5 text-rose-600" /> Advisories
+                  <ShieldAlert className="w-3 h-3 text-[#52524E]" /> Advisories
                 </button>
 
                 <button
                   onClick={() => navigate(`/navigation?flight=${trip.flight_number}&from=${trip.origin}&to=${trip.destination}&airline=${encodeURIComponent(trip.airline || '')}`)}
-                  className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1 text-slate-700"
-                  title="Step-by-step airport wayfinding and departure guide"
+                  className="btn-secondary text-xs py-1.5 px-3 rounded-full flex items-center gap-1 text-[#1A1A1A]"
+                  title="Airport guide"
                 >
-                  <Compass className="w-3.5 h-3.5 text-blue-600" /> Airport Guide
+                  <Compass className="w-3 h-3 text-[#52524E]" /> Guide
                 </button>
 
                 <button
                   onClick={() => navigate(`/flight/${trip.flight_number}`)}
-                  className="btn-primary text-xs py-1.5 px-3"
+                  className="btn-primary text-xs py-1.5 px-3.5 rounded-full"
                 >
                   Details
                 </button>
@@ -180,12 +180,12 @@ export default function TripsPage({ token }) {
                 <button
                   onClick={() => handleDelete(trip.id)}
                   disabled={deletingId === trip.id}
-                  className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all border border-transparent hover:border-rose-200"
+                  className="p-1.5 rounded-full text-[#6B6B6B] hover:text-[#0D0D0D] hover:bg-[#FAFAF7] transition-all"
                   title="Remove saved trip"
                 >
                   {deletingId === trip.id
-                    ? <Loader2 className="w-4 h-4 animate-spin text-rose-600" />
-                    : <Trash2 className="w-4 h-4" />
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#1A1A1A]" />
+                    : <Trash2 className="w-3.5 h-3.5" />
                   }
                 </button>
               </div>

@@ -95,13 +95,13 @@ export default function NotificationCenter({ alerts = [] }) {
   const getSeverityBadge = (severity) => {
     switch (severity) {
       case 'CRITICAL':
-        return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">CRITICAL</span>
+        return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FAFAF7] text-[#0D0D0D] border border-[#E5E5E0]">Notice</span>
       case 'WARNING':
-        return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">WARNING</span>
+        return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FAFAF7] text-[#52524E] border border-[#E5E5E0]">Advisory</span>
       case 'ADVISORY':
-        return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">ADVISORY</span>
+        return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FAFAF7] text-[#52524E] border border-[#E5E5E0]">Update</span>
       default:
-        return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">INFO</span>
+        return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FAFAF7] text-[#6B6B6B] border border-[#E5E5E0]">Info</span>
     }
   }
 
@@ -116,12 +116,12 @@ export default function NotificationCenter({ alerts = [] }) {
       {/* Notification Bell Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-all duration-200"
-        aria-label="Crisis & Aviation Alerts Notifications"
+        className="relative w-9 h-9 rounded-full bg-white hover:bg-[#FAFAF7] border border-[#E5E5E0] text-[#1A1A1A] flex items-center justify-center transition-all duration-200 shadow-subtle"
+        aria-label="Aviation Safety Advisories"
       >
         <Bell className="w-4 h-4" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-600 text-white text-[10px] font-extrabold flex items-center justify-center shadow-md animate-pulse">
+          <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#1A1A1A] text-white text-[9px] font-bold flex items-center justify-center">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -129,12 +129,12 @@ export default function NotificationCenter({ alerts = [] }) {
 
       {/* Notification Drawer / Popover */}
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white rounded-2xl border border-slate-200 shadow-2xl z-50 animate-slide-up overflow-hidden text-slate-900">
+        <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white rounded-2xl border border-[#E5E5E0] shadow-xl z-50 overflow-hidden text-[#0D0D0D]">
           {/* Header */}
-          <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+          <div className="p-4 border-b border-[#E5E5E0] bg-[#FAFAF7] flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 text-rose-600" />
-              <h3 className="font-bold text-sm text-slate-900">Crisis & Safety Alerts</h3>
+              <ShieldAlert className="w-4 h-4 text-[#246BFD]" />
+              <h3 className="font-semibold text-sm text-[#0D0D0D]">Airspace Advisories</h3>
             </div>
             {unreadCount > 0 && (
               <button

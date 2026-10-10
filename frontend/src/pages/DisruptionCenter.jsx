@@ -428,87 +428,87 @@ export default function DisruptionCenter({ token }) {
         {/* Top Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-[#E5E5E0]">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold uppercase tracking-wider mb-2">
-              <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
-              <span>AI Disruption Manager & Whole-Journey Recovery</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#E5E5E0] text-[#52524E] text-xs font-semibold uppercase tracking-wider mb-2">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#246BFD]" />
+              <span>Disruption Management</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-display font-extrabold text-[#0D0D0D] tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-display font-semibold text-[#0D0D0D] tracking-tight">
               Disruption Recovery Center
             </h1>
-            <p className="text-sm font-medium text-[#52524E] mt-1 max-w-2xl">
-              Proactive flight disruption monitoring, multi-airline rebooking alternatives, whole-journey downstream impact analysis (hotels, ground transfers, connecting flights), and user-approved recovery workflows.
+            <p className="text-sm text-[#52524E] mt-1 max-w-xl">
+              Proactive flight monitoring, automated rebooking alternatives, downstream impact analysis, and accommodation support.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             <button
               onClick={() => handleLoadCancelledFlightDemo('DEL')}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white text-xs font-bold transition-all shadow-sm"
-              title="Click to simulate a cancelled flight and immediately view matching nearby demo hotels"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1A1A1A] hover:bg-black text-white text-xs font-semibold transition-all shadow-subtle"
+              title="Simulate a cancelled flight with nearby demo hotels"
             >
-              <AlertOctagon className="w-4 h-4 text-white" />
-              <span>Demo: Cancelled Flight & Hotels</span>
+              <AlertOctagon className="w-3.5 h-3.5 text-white" />
+              <span>Demo: Disrupted Flight & Hotels</span>
             </button>
 
             <button
               onClick={fetchMonitoring}
               disabled={loadingMonitoring}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#D5D5D0] text-xs font-semibold text-[#1A1A1A] hover:bg-[#FAF9F5] hover:border-[#1A1A1A] transition-all shadow-xs"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#E5E5E0] text-xs font-semibold text-[#1A1A1A] hover:bg-[#FAFAF7] transition-all shadow-subtle"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${loadingMonitoring ? 'animate-spin text-blue-600' : 'text-[#6B6B6B]'}`} />
-              <span>{loadingMonitoring ? 'Checking Telemetry...' : 'Refresh Flight Radar'}</span>
+              <RefreshCw className={`w-3.5 h-3.5 ${loadingMonitoring ? 'animate-spin text-[#246BFD]' : 'text-[#6B6B6B]'}`} />
+              <span>{loadingMonitoring ? 'Updating...' : 'Refresh Status'}</span>
             </button>
 
             <button
               onClick={() => navigate('/assistant')}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1A1A1A] text-white text-xs font-semibold hover:bg-black transition-all shadow-xs"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#E5E5E0] text-[#1A1A1A] text-xs font-semibold hover:bg-[#FAFAF7] transition-all shadow-subtle"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>AI Disruption Advisor</span>
+              <Sparkles className="w-3.5 h-3.5 text-[#246BFD]" />
+              <span>AI Advisor</span>
             </button>
           </div>
         </div>
 
         {/* Section 1: Saved Trips Disruption Monitoring Feed */}
-        <div className="bg-white rounded-2xl border border-[#E5E5E0] p-5 sm:p-6 shadow-xs space-y-4">
+        <div className="bg-white rounded-2xl border border-[#E5E5E0] p-5 sm:p-6 shadow-subtle space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2.5">
-              <h2 className="font-display font-bold text-lg text-[#0D0D0D] flex items-center gap-2">
-                <Plane className="w-4 h-4 text-blue-600" />
-                <span>1. Active Flight Disruption Monitoring Feed</span>
+              <h2 className="font-display font-semibold text-lg text-[#0D0D0D] flex items-center gap-2">
+                <Plane className="w-4 h-4 text-[#246BFD]" />
+                <span>Monitored Flights</span>
               </h2>
               {activeDisruptionsCount > 0 ? (
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200 animate-pulse">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#FAFAF7] text-[#0D0D0D] border border-[#E5E5E0]">
                   {activeDisruptionsCount} Disruption Detected
                 </span>
               ) : (
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  All Saved Itineraries On-Time
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#FAFAF7] text-[#52524E] border border-[#E5E5E0]">
+                  All Monitored Flights On Time
                 </span>
               )}
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-semibold text-[#8C8C85]">Quick Simulation:</span>
+              <span className="text-[11px] font-medium text-[#6B6B6B]">Simulate Disruption:</span>
               <button
                 onClick={() => handleLoadCancelledFlightDemo('DEL')}
-                className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-800 text-[11px] font-bold transition-all flex items-center gap-1.5"
-                title="Simulate cancelled flight at Delhi (DEL) and show nearby Aerocity hotels"
+                className="px-3 py-1 rounded-full bg-white hover:bg-[#FAFAF7] border border-[#E5E5E0] text-[#1A1A1A] text-[11px] font-medium transition-all flex items-center gap-1.5"
+                title="Simulate cancelled flight at Delhi (DEL) with nearby Aerocity hotels"
               >
-                <Building className="w-3 h-3 text-rose-600" />
-                <span>Delhi Cancelled (DEL)</span>
+                <Building className="w-3 h-3 text-[#52524E]" />
+                <span>Delhi (DEL)</span>
               </button>
               <button
                 onClick={() => handleLoadCancelledFlightDemo('SXR')}
-                className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 text-[11px] font-bold transition-all flex items-center gap-1.5"
-                title="Simulate cancelled flight at Srinagar (SXR) and show nearby Srinagar hotels"
+                className="px-3 py-1 rounded-full bg-white hover:bg-[#FAFAF7] border border-[#E5E5E0] text-[#1A1A1A] text-[11px] font-medium transition-all flex items-center gap-1.5"
+                title="Simulate cancelled flight at Srinagar (SXR) with nearby Srinagar hotels"
               >
-                <Building className="w-3 h-3 text-amber-700" />
-                <span>Srinagar Cancelled (SXR)</span>
+                <Building className="w-3 h-3 text-[#52524E]" />
+                <span>Srinagar (SXR)</span>
               </button>
               {lastChecked && (
-                <span className="text-[11px] text-[#8C8C85] pl-1">
-                  Last checked: {new Date(lastChecked).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                <span className="text-[11px] text-[#6B6B6B] pl-1">
+                  Updated: {new Date(lastChecked).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               )}
             </div>
@@ -679,19 +679,19 @@ export default function DisruptionCenter({ token }) {
         )}
 
         {/* Section 2: Five Navigation Tabs */}
-        <div className="flex items-center gap-2 border-b border-[#E5E5E0] pb-2 overflow-x-auto scrollbar-none">
+        <div className="flex items-center gap-2 border-b border-[#E5E5E0] pb-3 overflow-x-auto scrollbar-none">
           <button
             onClick={() => setActiveTab('impact')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 shrink-0 ${
+            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 shrink-0 ${
               activeTab === 'impact'
-                ? 'bg-[#1A1A1A] text-white shadow-xs'
-                : 'text-[#52524E] hover:text-[#0D0D0D] hover:bg-white'
+                ? 'bg-[#1A1A1A] text-white shadow-subtle'
+                : 'bg-white text-[#52524E] border border-[#E5E5E0] hover:bg-[#FAFAF7]'
             }`}
           >
-            <Clock className="w-4 h-4" />
-            <span>Whole-Journey Impact Engine</span>
+            <Clock className="w-3.5 h-3.5" />
+            <span>Impact Analysis</span>
             {impactData?.criticalItemsCount > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-rose-500 text-white font-bold">
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-white text-[#0D0D0D] font-bold border border-[#E5E5E0]">
                 {impactData.criticalItemsCount}
               </span>
             )}
@@ -699,16 +699,16 @@ export default function DisruptionCenter({ token }) {
 
           <button
             onClick={() => setActiveTab('alternatives')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 shrink-0 ${
+            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 shrink-0 ${
               activeTab === 'alternatives'
-                ? 'bg-[#1A1A1A] text-white shadow-xs'
-                : 'text-[#52524E] hover:text-[#0D0D0D] hover:bg-white'
+                ? 'bg-[#1A1A1A] text-white shadow-subtle'
+                : 'bg-white text-[#52524E] border border-[#E5E5E0] hover:bg-[#FAFAF7]'
             }`}
           >
-            <Plane className="w-4 h-4" />
-            <span>Alternative Flight Search</span>
+            <Plane className="w-3.5 h-3.5" />
+            <span>Alternative Flights</span>
             {alternativesData?.alternatives?.length > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-blue-500 text-white font-bold">
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-white text-[#0D0D0D] font-bold border border-[#E5E5E0]">
                 {alternativesData.alternatives.length}
               </span>
             )}
@@ -716,16 +716,16 @@ export default function DisruptionCenter({ token }) {
 
           <button
             onClick={() => setActiveTab('hotels')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 shrink-0 ${
+            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 shrink-0 ${
               activeTab === 'hotels'
-                ? 'bg-[#1A1A1A] text-white shadow-xs'
-                : 'text-[#52524E] hover:text-[#0D0D0D] hover:bg-white'
+                ? 'bg-[#1A1A1A] text-white shadow-subtle'
+                : 'bg-white text-[#52524E] border border-[#E5E5E0] hover:bg-[#FAFAF7]'
             }`}
           >
-            <Building className="w-4 h-4" />
-            <span>Nearby Hotels for Your Disruption</span>
+            <Building className="w-3.5 h-3.5" />
+            <span>Nearby Hotels</span>
             {hotelData?.recommendations?.length > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-amber-500 text-white font-bold">
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-white text-[#0D0D0D] font-bold border border-[#E5E5E0]">
                 {hotelData.recommendations.length}
               </span>
             )}
@@ -733,26 +733,26 @@ export default function DisruptionCenter({ token }) {
 
           <button
             onClick={() => setActiveTab('recovery')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 shrink-0 ${
+            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 shrink-0 ${
               activeTab === 'recovery'
-                ? 'bg-[#1A1A1A] text-white shadow-xs'
-                : 'text-[#52524E] hover:text-[#0D0D0D] hover:bg-white'
+                ? 'bg-[#1A1A1A] text-white shadow-subtle'
+                : 'bg-white text-[#52524E] border border-[#E5E5E0] hover:bg-[#FAFAF7]'
             }`}
           >
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-            <span>Proposed Itinerary Recovery</span>
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Proposed Recovery</span>
           </button>
 
           <button
             onClick={() => setActiveTab('rights')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 shrink-0 ${
+            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 shrink-0 ${
               activeTab === 'rights'
-                ? 'bg-[#1A1A1A] text-white shadow-xs'
-                : 'text-[#52524E] hover:text-[#0D0D0D] hover:bg-white'
+                ? 'bg-[#1A1A1A] text-white shadow-subtle'
+                : 'bg-white text-[#52524E] border border-[#E5E5E0] hover:bg-[#FAFAF7]'
             }`}
           >
-            <Calculator className="w-4 h-4" />
-            <span>Passenger Rights & Legal Entitlements</span>
+            <Calculator className="w-3.5 h-3.5" />
+            <span>Passenger Rights</span>
           </button>
         </div>
 

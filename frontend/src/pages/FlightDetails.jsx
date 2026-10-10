@@ -137,59 +137,59 @@ export default function FlightDetails({ token }) {
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard
         </button>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={handleSave}
-            className="btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5"
+            className="btn-secondary text-xs py-2 px-3.5 rounded-full flex items-center gap-1.5"
           >
             {saved ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Bookmark className="w-4 h-4" />}
-            <span>{saved ? 'Trip Saved!' : 'Save to My Journeys'}</span>
+            <span>{saved ? 'Saved' : 'Save Flight'}</span>
           </button>
           
           <button
             onClick={() => setShowChat(!showChat)}
-            className={`btn-primary text-xs py-2 px-4 flex items-center gap-2 ${showChat ? 'bg-aeromate-blueHover' : ''}`}
+            className="btn-secondary text-xs py-2 px-4 rounded-full flex items-center gap-2"
           >
             <Bot className="w-4 h-4" />
-            <span>{showChat ? 'Hide AI Concierge' : 'Open AI Concierge'}</span>
+            <span>{showChat ? 'Hide Concierge' : 'Ask Concierge'}</span>
           </button>
 
           <button
             onClick={() => navigate(`/navigation?flight=${fnUpper}&from=${originCode}&to=${destCode}`)}
-            className="btn-secondary text-xs py-2 px-4 flex items-center gap-2 hover:border-[#1A1A1A] transition-colors"
+            className="btn-primary text-xs py-2 px-4 rounded-full flex items-center gap-2"
           >
-            <Compass className="w-4 h-4 text-blue-600" />
-            <span>Airport Wayfinding</span>
+            <Compass className="w-4 h-4 text-white" />
+            <span>Airport Guide</span>
           </button>
         </div>
       </div>
 
       {/* Main Flight Overview Banner */}
-      <div className="surface-card p-6 border border-slate-200 shadow-card space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+      <div className="surface-card p-6 border border-[#E5E5E0] shadow-subtle space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E5E5E0] pb-5">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-aeromate-paleBlue border border-blue-200 text-aeromate-blue font-black text-xl flex items-center justify-center font-display">
+            <div className="w-12 h-12 rounded-xl bg-[#FAFAF7] border border-[#E5E5E0] text-[#1A1A1A] font-bold text-lg flex items-center justify-center font-display">
               {fnUpper.slice(0, 2)}
             </div>
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="font-display font-black text-3xl text-aeromate-text tracking-tight">
+                <h1 className="font-display font-semibold text-2xl sm:text-3xl text-[#0D0D0D] tracking-tight">
                   Flight {fnUpper}
                 </h1>
                 <StatusBadge status={status?.status} delayMinutes={status?.delayMinutes} />
               </div>
-              <p className="text-sm font-semibold text-aeromate-muted mt-0.5">
+              <p className="text-sm text-[#52524E] mt-0.5">
                 {status?.airline || 'Air India'} · {aircraftStr}
               </p>
             </div>
           </div>
 
           {status?.delayMinutes > 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+            <div className="bg-[#FAFAF7] border border-[#E5E5E0] rounded-xl p-3 text-xs text-[#0D0D0D] flex items-center gap-3">
+              <AlertCircle className="w-4 h-4 text-[#246BFD] flex-shrink-0" />
               <div>
-                <span className="font-bold">Disruption Notice ({status.delayMinutes} min delay):</span>
-                <p className="text-[11px] text-amber-800">You may be eligible for complimentary meals, refreshments, or ticket rebooking.</p>
+                <span className="font-semibold">Schedule Advisory:</span>
+                <p className="text-[11px] text-[#52524E]">Departure delayed by {status.delayMinutes} minutes.</p>
               </div>
             </div>
           )}
@@ -198,32 +198,32 @@ export default function FlightDetails({ token }) {
         {/* Airport Route Display */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center py-2">
           {/* Departure */}
-          <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-1">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Origin</span>
-            <div className="font-mono font-bold text-3xl text-aeromate-text tracking-wider">{originCode}</div>
-            <p className="text-xs font-semibold text-slate-700">Scheduled: {depTime}</p>
-            <p className="text-xs font-medium text-slate-500">Terminal {depTerminal} · Gate {depGate}</p>
+          <div className="bg-[#FAFAF7] p-5 rounded-2xl border border-[#E5E5E0] space-y-1">
+            <span className="text-[10px] font-semibold text-[#6B6B6B] uppercase tracking-wider">Origin</span>
+            <div className="font-mono font-bold text-3xl text-[#0D0D0D] tracking-wider">{originCode}</div>
+            <p className="text-xs font-semibold text-[#0D0D0D]">Scheduled: {depTime}</p>
+            <p className="text-xs text-[#52524E]">Terminal {depTerminal} · Gate {depGate}</p>
           </div>
 
           {/* Route Connection */}
           <div className="flex flex-col items-center justify-center text-center space-y-2">
-            <span className="text-xs font-bold text-aeromate-blue bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
-              Direct Route
+            <span className="text-[11px] font-medium text-[#52524E] bg-[#FAFAF7] px-3 py-1 rounded-full border border-[#E5E5E0]">
+              Non-Stop Route
             </span>
             <div className="w-full flex items-center gap-2 px-4">
-              <div className="h-0.5 flex-1 bg-slate-200"></div>
-              <Plane className="w-5 h-5 text-aeromate-blue rotate-90" />
-              <div className="h-0.5 flex-1 bg-slate-200"></div>
+              <div className="h-px flex-1 bg-[#E5E5E0]"></div>
+              <Plane className="w-4 h-4 text-[#246BFD] rotate-90" />
+              <div className="h-px flex-1 bg-[#E5E5E0]"></div>
             </div>
-            <span className="text-xs font-medium text-slate-400">Duration: ~2h 15m</span>
+            <span className="text-xs text-[#6B6B6B]">Estimated duration: ~2h 15m</span>
           </div>
 
           {/* Arrival */}
-          <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-1 text-right">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Destination</span>
-            <div className="font-mono font-bold text-3xl text-aeromate-text tracking-wider">{destCode}</div>
-            <p className="text-xs font-semibold text-slate-700">Est Arrival: {arrTime}</p>
-            <p className="text-xs font-medium text-slate-500">Terminal {arrTerminal}</p>
+          <div className="bg-[#FAFAF7] p-5 rounded-2xl border border-[#E5E5E0] space-y-1 text-right">
+            <span className="text-[10px] font-semibold text-[#6B6B6B] uppercase tracking-wider">Destination</span>
+            <div className="font-mono font-bold text-3xl text-[#0D0D0D] tracking-wider">{destCode}</div>
+            <p className="text-xs font-semibold text-[#0D0D0D]">Est Arrival: {arrTime}</p>
+            <p className="text-xs text-[#52524E]">Terminal {arrTerminal}</p>
           </div>
         </div>
       </div>
@@ -232,30 +232,30 @@ export default function FlightDetails({ token }) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Live Radar Map */}
         <div className={`space-y-6 ${showChat ? 'lg:col-span-7' : 'lg:col-span-12'}`}>
-          <div className="space-y-2">
-            <h2 className="font-display font-bold text-xl text-aeromate-text flex items-center gap-2">
-              <Navigation className="w-5 h-5 text-aeromate-blue" />
+          <div className="space-y-1">
+            <h2 className="font-display font-semibold text-lg text-[#0D0D0D] flex items-center gap-2">
+              <Navigation className="w-4 h-4 text-[#246BFD]" />
               Live Aircraft Position & Telemetry
             </h2>
-            <p className="text-xs text-aeromate-muted">Real-time ADS-B altitude, speed, and heading coordinates.</p>
+            <p className="text-xs text-[#52524E]">Real-time ADS-B altitude, speed, and heading coordinates.</p>
           </div>
 
           <RadarMap position={position} flightNumber={fnUpper} />
 
           {/* Journey Timeline */}
-          <div className="surface-card p-6 border border-slate-200 space-y-4">
-            <h3 className="font-display font-bold text-base text-aeromate-text">Journey Progress Timeline</h3>
+          <div className="surface-card p-6 border border-[#E5E5E0] space-y-4 shadow-subtle">
+            <h3 className="font-display font-semibold text-base text-[#0D0D0D]">Journey Progress</h3>
             <div className="grid grid-cols-4 gap-2 text-center text-xs">
-              <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-aeromate-blue font-bold">
+              <div className="p-3 rounded-xl bg-[#FAFAF7] border border-[#E5E5E0] text-[#0D0D0D] font-medium">
                 Check-in Done
               </div>
-              <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-aeromate-blue font-bold">
+              <div className="p-3 rounded-xl bg-[#FAFAF7] border border-[#E5E5E0] text-[#0D0D0D] font-medium">
                 Boarding Complete
               </div>
-              <div className="p-3 rounded-xl bg-emerald-100 border border-emerald-200 text-emerald-800 font-bold animate-pulse">
+              <div className="p-3 rounded-xl bg-[#1A1A1A] border border-[#1A1A1A] text-white font-medium">
                 In Flight
               </div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-400 font-medium">
+              <div className="p-3 rounded-xl bg-white border border-[#E5E5E0] text-[#6B6B6B]">
                 Landing
               </div>
             </div>

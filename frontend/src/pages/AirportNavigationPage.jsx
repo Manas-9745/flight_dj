@@ -336,12 +336,12 @@ export default function AirportNavigationPage({ token }) {
           </div>
 
           {/* Quick Actions: Language & Offline Save */}
-          <div className="flex items-center gap-2.5 self-start md:self-auto">
+          <div className="flex items-center gap-2 self-start md:self-auto">
             {/* Language Switcher */}
-            <div className="flex items-center p-1 rounded-xl bg-white border border-[#E5E5E0] shadow-xs">
+            <div className="flex items-center p-0.5 rounded-full bg-white border border-[#E5E5E0] shadow-subtle">
               <button
                 onClick={() => setLanguage('en')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
                   language === 'en'
                     ? 'bg-[#1A1A1A] text-white'
                     : 'text-[#6B6B6B] hover:text-[#0D0D0D]'
@@ -351,7 +351,7 @@ export default function AirportNavigationPage({ token }) {
               </button>
               <button
                 onClick={() => setLanguage('hi')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
                   language === 'hi'
                     ? 'bg-[#1A1A1A] text-white'
                     : 'text-[#6B6B6B] hover:text-[#0D0D0D]'
@@ -365,17 +365,17 @@ export default function AirportNavigationPage({ token }) {
             <button
               onClick={handleSaveOffline}
               title="Save itinerary & map for offline access"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#D5D5D0] text-xs font-semibold text-[#1A1A1A] hover:bg-[#FAF9F5] hover:border-[#1A1A1A] transition-all shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white border border-[#E5E5E0] text-xs font-semibold text-[#1A1A1A] hover:bg-[#FAFAF7] transition-all shadow-subtle"
             >
               <Download className="w-3.5 h-3.5 text-[#6B6B6B]" />
-              <span className="hidden sm:inline">{isHi ? 'ऑफ़लाइन सेव करें' : 'Save Offline'}</span>
+              <span className="hidden sm:inline">{isHi ? 'ऑफ़लाइन सेव' : 'Save Offline'}</span>
             </button>
 
             {/* Load Offline */}
             <button
               onClick={handleLoadOffline}
               title="Load saved offline version"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#F5F5F0] border border-[#E5E5E0] text-xs font-medium text-[#6B6B6B] hover:text-[#0D0D0D] transition-all"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[#E5E5E0] text-xs font-medium text-[#6B6B6B] hover:text-[#0D0D0D] transition-all shadow-subtle"
             >
               <WifiOff className="w-3.5 h-3.5" />
             </button>
@@ -384,11 +384,11 @@ export default function AirportNavigationPage({ token }) {
 
         {/* Offline Notice Banner if in Offline Mode */}
         {isOfflineView && (
-          <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex items-center justify-between text-xs sm:text-sm">
+          <div className="p-4 rounded-xl bg-[#FAFAF7] border border-[#E5E5E0] text-[#0D0D0D] flex items-center justify-between text-xs sm:text-sm">
             <div className="flex items-center gap-2.5">
-              <WifiOff className="w-4 h-4 text-amber-700 shrink-0" />
+              <WifiOff className="w-4 h-4 text-[#52524E] shrink-0" />
               <div>
-                <span className="font-bold">{isHi ? 'ऑफ़लाइन मोड सक्रिय:' : 'Offline Mode Active:'}</span>{' '}
+                <span className="font-semibold">{isHi ? 'ऑफ़लाइन मोड सक्रिय:' : 'Offline Mode Active:'}</span>{' '}
                 {isHi
                   ? `स्थानीय रूप से सहेजा गया डेटा (${savedTimestamp || 'सहेजा गया'}) देखा जा रहा है। लाइव गेट अपडेट के लिए FIDS स्क्रीन देखें।`
                   : `Viewing locally saved itinerary and terminal instructions (Saved at: ${savedTimestamp || 'Earlier'}). Please verify gate on physical airport FIDS monitors.`}
@@ -396,7 +396,7 @@ export default function AirportNavigationPage({ token }) {
             </div>
             <button
               onClick={() => fetchGuide(language)}
-              className="px-3 py-1 rounded-lg bg-amber-200 text-amber-950 font-semibold text-xs hover:bg-amber-300 transition-colors shrink-0"
+              className="px-3 py-1 rounded-full bg-white border border-[#E5E5E0] text-[#1A1A1A] font-semibold text-xs hover:bg-[#FAFAF7] transition-colors shrink-0"
             >
               {isHi ? 'पुनः प्रयास करें' : 'Reconnect'}
             </button>
@@ -404,11 +404,11 @@ export default function AirportNavigationPage({ token }) {
         )}
 
         {/* Section 1: Personalized Flight Setup Form & Presets */}
-        <div className="bg-white rounded-2xl border border-[#E5E5E0] p-5 sm:p-6 shadow-xs space-y-5">
+        <div className="bg-white rounded-2xl border border-[#E5E5E0] p-5 sm:p-6 shadow-subtle space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="font-display font-bold text-lg text-[#0D0D0D] flex items-center gap-2">
-                <Plane className="w-4 h-4 text-blue-600" />
+              <h2 className="font-display font-semibold text-lg text-[#0D0D0D] flex items-center gap-2">
+                <Plane className="w-4 h-4 text-[#246BFD]" />
                 {isHi ? '1. व्यक्तिगत उड़ान सेटअप' : '1. Personalized Flight Setup'}
               </h2>
               <p className="text-xs text-[#6B6B6B] mt-0.5">
@@ -420,17 +420,17 @@ export default function AirportNavigationPage({ token }) {
 
             {/* Preset Selector Dropdown / Chips */}
             <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1">
-              <span className="text-[11px] font-semibold text-[#8C8C85] uppercase tracking-wider shrink-0 mr-1">
+              <span className="text-[11px] font-medium text-[#6B6B6B] uppercase tracking-wider shrink-0 mr-1">
                 {isHi ? 'त्वरित उदाहरण:' : 'Presets:'}
               </span>
               {PRESET_FLIGHTS.map((p) => (
                 <button
                   key={p.id}
                   onClick={() => handleSelectPreset(p)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all shrink-0 ${
+                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-all shrink-0 ${
                     flightNumber.toUpperCase() === p.flightNumber
                       ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
-                      : 'bg-[#F5F5F0] text-[#52524E] border-[#E5E5E0] hover:bg-white hover:text-[#0D0D0D]'
+                      : 'bg-white text-[#52524E] border-[#E5E5E0] hover:bg-[#FAFAF7] hover:text-[#0D0D0D]'
                   }`}
                 >
                   {p.flightNumber} ({p.origin}→{p.destination})

@@ -67,60 +67,60 @@ export default function Dashboard() {
         </div>
 
         {/* Live Crisis & Airspace Safety Ticker */}
-        <div className="relative z-20 max-w-[1200px] mx-auto w-full px-6 sm:px-8 lg:px-12 mt-6">
+        {/* Live Crisis & Airspace Safety Ticker */}
+        <div className="relative z-20 max-w-[1200px] mx-auto w-full px-6 sm:px-8 lg:px-12 mt-6 space-y-3">
           <div
             onClick={() => navigate('/alerts')}
-            className="surface-card bg-white/90 backdrop-blur-md p-4 sm:p-5 border border-rose-200/80 shadow-card hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group"
+            className="surface-card bg-white/95 p-4 sm:p-5 border border-[#E5E5E0] hover:border-[#1A1A1A] transition-all duration-200 cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group"
           >
             <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping absolute"></span>
-                <Flame className="w-5 h-5 text-rose-600 relative z-10" />
+              <div className="w-9 h-9 rounded-xl bg-[#FAFAF7] border border-[#E5E5E0] text-[#1A1A1A] flex items-center justify-center flex-shrink-0">
+                <Shield className="w-4 h-4 text-[#1A1A1A]" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">
-                    Live Airspace Alert
+                  <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#FAFAF7] text-[#52524E] border border-[#E5E5E0]">
+                    Airspace Advisory
                   </span>
-                  <span className="text-xs text-slate-500 font-medium">Middle East & Eastern Europe FIRs Active</span>
+                  <span className="text-xs text-[#6B6B6B]">Middle East & Eastern Europe FIRs</span>
                 </div>
-                <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors mt-0.5">
+                <h3 className="text-xs sm:text-sm font-semibold text-[#0D0D0D] group-hover:text-blue-600 transition-colors mt-0.5">
                   Heightened vigilance bulletins active for FIR Tehran & Baghdad · Ukraine civil airspace closed
                 </h3>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-xs font-bold text-blue-600 group-hover:translate-x-1 transition-transform whitespace-nowrap self-end sm:self-auto">
-              <span>View Global Crisis Radar</span>
-              <ArrowRight className="w-4 h-4" />
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 whitespace-nowrap self-end sm:self-auto">
+              <span>View Global Radar</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </div>
           </div>
 
           {/* AI Disruption Recovery Alert Banner */}
           <div
             onClick={() => navigate('/disruption')}
-            className="surface-card bg-white/90 backdrop-blur-md p-4 sm:p-5 border border-amber-300 shadow-card hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group mt-3"
+            className="surface-card bg-white/95 p-4 sm:p-5 border border-[#E5E5E0] hover:border-[#1A1A1A] transition-all duration-200 cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group"
           >
             <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                <AlertTriangle className="w-5 h-5 text-amber-600" />
+              <div className="w-9 h-9 rounded-xl bg-[#FAFAF7] border border-[#E5E5E0] text-[#1A1A1A] flex items-center justify-center flex-shrink-0">
+                <Plane className="w-4 h-4 text-[#1A1A1A]" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
-                    AI Journey Disruption Manager
+                  <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#FAFAF7] text-[#52524E] border border-[#E5E5E0]">
+                    Disruption Manager
                   </span>
-                  <span className="text-xs text-slate-500 font-medium">Automatic Flight & Downstream Monitoring</span>
+                  <span className="text-xs text-[#6B6B6B]">Automatic Flight & Journey Monitoring</span>
                 </div>
-                <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors mt-0.5">
-                  Proactive rebooking alternatives, missed connection protection, and hotel impact recovery
+                <h3 className="text-xs sm:text-sm font-semibold text-[#0D0D0D] group-hover:text-blue-600 transition-colors mt-0.5">
+                  Rebooking alternatives, missed connection protection, and nearby hotel assistance
                 </h3>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-xs font-bold text-amber-700 group-hover:translate-x-1 transition-transform whitespace-nowrap self-end sm:self-auto">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 whitespace-nowrap self-end sm:self-auto">
               <span>Open Recovery Center</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </div>
           </div>
         </div>
