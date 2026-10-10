@@ -6,24 +6,29 @@ export default function InstallPrompt() {
   const [showPrompt, setShowPrompt] = useState(false)
   const [isIOS, setIsIOS] = useState(false)
   const [showIOSModal, setShowIOSModal] = useState(false)
-  const [isStandalone, setIsStandalone] = useState(false)
+  const [isStandalone, setIsStandalone] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
+  })
 
   useEffect(() => {
-    // Check if already running as installed PWA
+    // If already running in standalone mode (installed as PWA), do not show any prompt
     const inStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
-    setIsStandalone(inStandalone)
-    if (inStandalone) return
-
-    // Check if dismissed previously during this session
-    if (sessionStorage.getItem('aeromate_pwa_dismissed') === 'true') {
+    if (inStandalone) {
+      setIsStandalone(true)
       return
     }
 
-    // Detect iOS Safari
+    // Check if dismissed previously
+    if (localStorage.getItem('aeromate_pwa_dismissed') === 'true') {
+      return
+    }
+
+    // Detect iOS Safari (not Chrome on iOS, and only when not installed)
     const ua = window.navigator.userAgent.toLowerCase()
     const isIosDevice = /iphone|ipad|ipod/.test(ua) && !window.MSStream
     const isSafari = /safari/.test(ua) && !/chrome|crios|fxios|edgios/.test(ua)
-    if (isIosDevice && isSafari) {
+    if (isIosDevice && isSafari && !inStandalone) {
       setIsIOS(true)
       setShowPrompt(true)
     }
@@ -71,7 +76,7 @@ export default function InstallPrompt() {
 
   const handleDismiss = () => {
     setShowPrompt(false)
-    sessionStorage.setItem('aeromate_pwa_dismissed', 'true')
+    localStorage.setItem('aeromate_pwa_dismissed', 'true')
   }
 
   if (isStandalone || !showPrompt) return null
@@ -79,8 +84,11 @@ export default function InstallPrompt() {
   return (
     <>
       {/* Floating Mobile Install Bar */}
-      <aside aria-label="Install AeroMate App" className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-md z-40 animate-in fade-in slide-in-from-bottom duration-300">
-        <div className="bg-[#1A1A1A]/95 backdrop-blur-md text-white p-3.5 sm:p-4 rounded-2xl shadow-2xl border border-white/10 flex items-center justify-between gap-3">
+      <aside
+        aria-label="Install AeroMate App"
+        className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-md z-40 pointer-events-none animate-in fade-in slide-in-from-bottom duration-300"
+      >
+        <div className="bg-[#1A1A1A]/95 backdrop-blur-md text-white p-3.5 sm:p-4 rounded-2xl shadow-2xl border border-white/10 flex items-center justify-between gap-3 pointer-events-auto">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0D0D0D] to-[#2A2A2A] border border-white/20 flex items-center justify-center shrink-0 shadow-inner">
               <span className="text-white text-base">✈</span>
@@ -100,16 +108,18 @@ export default function InstallPrompt() {
 
           <div className="flex items-center gap-2 shrink-0">
             <button
+              type="button"
               onClick={handleInstallClick}
-              className="bg-white hover:bg-neutral-200 text-[#0D0D0D] font-bold text-xs px-3.5 py-2 rounded-xl transition-all shadow flex items-center gap-1.5 active:scale-95"
+              className="bg-white hover:bg-neutral-200 text-[#0D0D0D] font-bold text-xs min-h-[40px] px-3.5 py-2 rounded-xl transition-all shadow flex items-center gap-1.5 active:scale-95"
             >
               {isIOS ? <Share2 className="w-3.5 h-3.5" /> : <Download className="w-3.5 h-3.5" />}
               <span>{isIOS ? 'Guide' : 'Install'}</span>
             </button>
             <button
+              type="button"
               onClick={handleDismiss}
               aria-label="Dismiss install prompt"
-              className="p-1.5 text-[#888] hover:text-white rounded-lg hover:bg-white/10 transition"
+              className="min-h-[40px] min-w-[40px] p-2 text-[#888] hover:text-white rounded-lg hover:bg-white/10 transition flex items-center justify-center active:scale-95"
             >
               <X className="w-4 h-4" />
             </button>

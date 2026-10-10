@@ -18,7 +18,7 @@ const QUICK_PROMPTS = [
   'What should I do about my connecting flight?',
 ]
 
-export default function ChatWidget({ flightContext, className = '' }) {
+export default function ChatWidget({ flightContext, className = '', externalPrompt = null }) {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -33,6 +33,13 @@ export default function ChatWidget({ flightContext, className = '' }) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
+
+  // Respond to externally selected inquiries (e.g. from AssistantPage)
+  useEffect(() => {
+    if (externalPrompt && typeof externalPrompt === 'string' && externalPrompt.trim()) {
+      sendMessage(externalPrompt.trim())
+    }
+  }, [externalPrompt])
 
   const sendMessage = async (text) => {
     const userMessage = text || input.trim()
@@ -156,12 +163,13 @@ export default function ChatWidget({ flightContext, className = '' }) {
 
       {/* Suggested Prompt Chips */}
       {messages.length <= 2 && (
-        <div className="px-5 py-2.5 bg-slate-50/50 border-t border-slate-100 flex flex-wrap gap-2">
+        <div className="px-4 sm:px-5 py-2.5 bg-slate-50/50 border-t border-slate-100 flex flex-wrap gap-2">
           {QUICK_PROMPTS.map((p, i) => (
             <button
               key={i}
+              type="button"
               onClick={() => sendMessage(p)}
-              className="text-xs text-aeromate-blue border border-blue-200 bg-aeromate-paleBlue/60 hover:bg-blue-100 rounded-full px-3 py-1 font-medium transition-all"
+              className="text-xs text-aeromate-blue border border-blue-200 bg-aeromate-paleBlue/60 hover:bg-blue-100 active:bg-blue-200 rounded-full px-3 py-1.5 font-medium transition-all min-h-[36px] flex items-center"
             >
               {p}
             </button>
@@ -170,20 +178,23 @@ export default function ChatWidget({ flightContext, className = '' }) {
       )}
 
       {/* Input Bar */}
-      <div className="p-4 bg-slate-50 border-t border-slate-200 flex gap-3">
+      <div className="p-3 sm:p-4 bg-slate-50 border-t border-slate-200 flex gap-2.5 sm:gap-3 items-center">
         <input
           type="text"
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
           placeholder="Ask about refunds, delay rules, lounge access, or baggage..."
-          className="input-field flex-1 text-sm py-2.5 bg-white border-slate-200"
+          className="input-field flex-1 text-base sm:text-sm py-2.5 px-3.5 bg-white border-slate-200 min-h-[44px]"
           disabled={loading}
+          autoComplete="off"
         />
         <button
+          type="button"
           onClick={() => sendMessage()}
           disabled={loading || !input.trim()}
-          className="btn-primary px-4 py-2.5 flex items-center justify-center"
+          className="btn-primary min-w-[44px] min-h-[44px] w-11 h-11 px-0 py-0 flex items-center justify-center shrink-0 active:scale-95"
+          aria-label="Send message"
         >
           <Send className="w-4 h-4" />
         </button>

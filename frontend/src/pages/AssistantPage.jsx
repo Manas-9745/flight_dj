@@ -1,7 +1,14 @@
+import { useState } from 'react'
 import ChatWidget from '../components/ChatWidget'
 import { Bot, Sparkles, Shield, Globe, Award, HelpCircle } from 'lucide-react'
 
 export default function AssistantPage() {
+  const [externalPrompt, setExternalPrompt] = useState(null)
+
+  const handleSelectInquiry = (promptText) => {
+    setExternalPrompt(promptText)
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 space-y-8">
       {/* Page Title & Intro */}
@@ -56,7 +63,7 @@ export default function AssistantPage() {
       {/* Main Chat Interface */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         <div className="lg:col-span-8">
-          <ChatWidget flightContext={null} className="h-[620px]" />
+          <ChatWidget flightContext={null} className="h-[620px]" externalPrompt={externalPrompt} />
         </div>
 
         <div className="lg:col-span-4 space-y-4">
@@ -66,19 +73,31 @@ export default function AssistantPage() {
               Popular Inquiries
             </h3>
             <p className="text-xs text-[#6B6B6B] leading-relaxed">
-              Select an inquiry to ask the assistant:
+              Tap an inquiry to ask the assistant directly:
             </p>
 
-            <div className="space-y-2 pt-1 text-xs">
-              <div className="p-3 rounded-xl bg-[#FAFAF7] hover:bg-white border border-[#E5E5E0] hover:border-[#1A1A1A] transition-all cursor-pointer font-medium text-[#0D0D0D]">
+            <div className="space-y-2.5 pt-1 text-xs">
+              <button
+                type="button"
+                onClick={() => handleSelectInquiry("What meals or lounge access am I entitled to for a 4-hour delay in India under DGCA regulations?")}
+                className="w-full text-left p-3.5 rounded-xl bg-[#FAFAF7] hover:bg-white active:bg-slate-100 border border-[#E5E5E0] hover:border-[#1A1A1A] transition-all cursor-pointer font-medium text-[#0D0D0D] active:scale-[0.99] touch-manipulation"
+              >
                 "What meals or lounge access am I entitled to for a 4-hour delay in India?"
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF7] hover:bg-white border border-[#E5E5E0] hover:border-[#1A1A1A] transition-all cursor-pointer font-medium text-[#0D0D0D]">
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectInquiry("Can I claim €600 compensation under EU261 for a missed connecting flight in Frankfurt?")}
+                className="w-full text-left p-3.5 rounded-xl bg-[#FAFAF7] hover:bg-white active:bg-slate-100 border border-[#E5E5E0] hover:border-[#1A1A1A] transition-all cursor-pointer font-medium text-[#0D0D0D] active:scale-[0.99] touch-manipulation"
+              >
                 "Can I claim €600 compensation under EU261 for a missed connecting flight in Frankfurt?"
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF7] hover:bg-white border border-[#E5E5E0] hover:border-[#1A1A1A] transition-all cursor-pointer font-medium text-[#0D0D0D]">
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectInquiry("Hindi me batao: Agar flight cancel ho jaye toh kitna refund milta hai DGCA rules ke mutabik?")}
+                className="w-full text-left p-3.5 rounded-xl bg-[#FAFAF7] hover:bg-white active:bg-slate-100 border border-[#E5E5E0] hover:border-[#1A1A1A] transition-all cursor-pointer font-medium text-[#0D0D0D] active:scale-[0.99] touch-manipulation"
+              >
                 "Hindi me batao: Agar flight cancel ho jaye toh kitna refund milta hai?"
-              </div>
+              </button>
             </div>
           </div>
         </div>

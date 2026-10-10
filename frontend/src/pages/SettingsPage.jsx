@@ -33,7 +33,7 @@ export default function SettingsPage({ user }) {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 space-y-6 animate-fade-in font-sans">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-display font-bold text-navy-700">Application Settings</h1>

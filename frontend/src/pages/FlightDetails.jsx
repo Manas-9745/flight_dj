@@ -129,34 +129,44 @@ export default function FlightDetails({ token }) {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 space-y-8">
       {/* Top Header Navigation */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <button
-          onClick={() => navigate(-1)}
-          className="btn-ghost text-xs font-bold text-aeromate-muted hover:text-aeromate-text flex items-center gap-1.5"
+          type="button"
+          onClick={() => {
+            if (window.history.length > 2) {
+              navigate(-1)
+            } else {
+              navigate('/')
+            }
+          }}
+          className="btn-ghost text-xs font-bold text-aeromate-muted hover:text-aeromate-text flex items-center gap-1.5 min-h-[44px] px-2 active:scale-95 touch-manipulation"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard
         </button>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
           <button
+            type="button"
             onClick={handleSave}
-            className="btn-secondary text-xs py-2 px-3.5 rounded-full flex items-center gap-1.5"
+            className="btn-secondary text-xs min-h-[40px] py-2 px-3.5 rounded-full flex items-center gap-1.5 active:scale-95 touch-manipulation"
           >
             {saved ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Bookmark className="w-4 h-4" />}
             <span>{saved ? 'Saved' : 'Save Flight'}</span>
           </button>
           
           <button
+            type="button"
             onClick={() => setShowChat(!showChat)}
-            className="btn-secondary text-xs py-2 px-4 rounded-full flex items-center gap-2"
+            className="btn-secondary text-xs min-h-[40px] py-2 px-4 rounded-full flex items-center gap-2 active:scale-95 touch-manipulation"
           >
             <Bot className="w-4 h-4" />
             <span>{showChat ? 'Hide Concierge' : 'Ask Concierge'}</span>
           </button>
 
           <button
+            type="button"
             onClick={() => navigate(`/navigation?flight=${fnUpper}&from=${originCode}&to=${destCode}`)}
-            className="btn-primary text-xs py-2 px-4 rounded-full flex items-center gap-2"
+            className="btn-primary text-xs min-h-[40px] py-2 px-4 rounded-full flex items-center gap-2 active:scale-95 touch-manipulation"
           >
             <Compass className="w-4 h-4 text-white" />
             <span>Airport Guide</span>

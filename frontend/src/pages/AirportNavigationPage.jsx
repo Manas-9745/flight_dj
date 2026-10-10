@@ -130,17 +130,22 @@ export default function AirportNavigationPage({ token }) {
   }, [language])
 
   // Fetch or Refresh Guide Data
-  const fetchGuide = async (lang = language) => {
+  const fetchGuide = async (lang = language, overridePreset = null) => {
     setLoading(true)
     setError(null)
     setIsOfflineView(false)
 
+    const fn = overridePreset ? overridePreset.flightNumber : flightNumber
+    const al = overridePreset ? overridePreset.airline : airline
+    const orig = overridePreset ? overridePreset.origin : origin
+    const dest = overridePreset ? overridePreset.destination : destination
+
     try {
       const res = await getAirportNavigationGuide({
-        flightNumber: flightNumber.trim() || 'AI645',
-        airline: airline.trim() || 'Air India',
-        origin: origin.trim() || 'BOM',
-        destination: destination.trim() || 'DEL',
+        flightNumber: (fn || 'AI645').trim(),
+        airline: (al || 'Air India').trim(),
+        origin: (orig || 'BOM').trim(),
+        destination: (dest || 'DEL').trim(),
         departureDate,
         hasOnlineBoardingPass,
         hasCheckedBags,
@@ -168,15 +173,13 @@ export default function AirportNavigationPage({ token }) {
     fetchGuide(language)
   }, [language, hasOnlineBoardingPass, hasCheckedBags, needsAssistance])
 
-  // Load Preset
+  // Load Preset immediately
   const handleSelectPreset = (preset) => {
     setFlightNumber(preset.flightNumber)
     setAirline(preset.airline)
     setOrigin(preset.origin)
     setDestination(preset.destination)
-    setTimeout(() => {
-      fetchGuide(language)
-    }, 50)
+    fetchGuide(language, preset)
   }
 
   // Toggle step completion

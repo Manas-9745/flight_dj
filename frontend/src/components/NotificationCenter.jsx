@@ -38,7 +38,7 @@ export default function NotificationCenter({ alerts = [] }) {
     }
   }, [])
 
-  // Close dropdown on outside click
+  // Close dropdown on outside click (supporting touch on mobile)
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -46,7 +46,11 @@ export default function NotificationCenter({ alerts = [] }) {
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
   }, [])
 
   const markAsRead = (id) => {
@@ -115,13 +119,14 @@ export default function NotificationCenter({ alerts = [] }) {
     <div className="relative" ref={dropdownRef}>
       {/* Notification Bell Button */}
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative w-9 h-9 rounded-full bg-white hover:bg-[#FAFAF7] border border-[#E5E5E0] text-[#1A1A1A] flex items-center justify-center transition-all duration-200 shadow-subtle"
+        className="relative min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-white hover:bg-[#FAFAF7] border border-[#E5E5E0] text-[#1A1A1A] flex items-center justify-center transition-all duration-200 shadow-subtle active:scale-95"
         aria-label="Aviation Safety Advisories"
       >
         <Bell className="w-4 h-4" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#1A1A1A] text-white text-[9px] font-bold flex items-center justify-center">
+          <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#1A1A1A] text-white text-[9px] font-bold flex items-center justify-center">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -129,7 +134,7 @@ export default function NotificationCenter({ alerts = [] }) {
 
       {/* Notification Drawer / Popover */}
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white rounded-2xl border border-[#E5E5E0] shadow-xl z-50 overflow-hidden text-[#0D0D0D]">
+        <div className="absolute right-0 mt-3 w-[calc(100vw-2rem)] max-w-sm sm:w-96 bg-white rounded-2xl border border-[#E5E5E0] shadow-xl z-50 overflow-hidden text-[#0D0D0D]">
           {/* Header */}
           <div className="p-4 border-b border-[#E5E5E0] bg-[#FAFAF7] flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -138,8 +143,9 @@ export default function NotificationCenter({ alerts = [] }) {
             </div>
             {unreadCount > 0 && (
               <button
+                type="button"
                 onClick={markAllAsRead}
-                className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 min-h-[36px] flex items-center gap-1 px-2"
               >
                 <CheckCheck className="w-3.5 h-3.5" /> Mark all read
               </button>

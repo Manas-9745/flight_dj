@@ -84,8 +84,11 @@ export default function Dashboard() {
         {/* Live Crisis & Airspace Safety Ticker */}
         <div className="relative z-20 max-w-[1200px] mx-auto w-full px-6 sm:px-8 lg:px-12 mt-6 space-y-3">
           <div
+            role="button"
+            tabIndex={0}
             onClick={() => navigate('/alerts')}
-            className="surface-card bg-white/95 p-4 sm:p-5 border border-[#E5E5E0] hover:border-[#1A1A1A] transition-all duration-200 cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/alerts') } }}
+            className="surface-card bg-white/95 p-4 sm:p-5 border border-[#E5E5E0] hover:border-[#1A1A1A] transition-all duration-200 cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group active:scale-[0.99] touch-manipulation"
           >
             <div className="flex items-center gap-3.5">
               <div className="w-9 h-9 rounded-xl bg-[#FAFAF7] border border-[#E5E5E0] text-[#1A1A1A] flex items-center justify-center flex-shrink-0">
@@ -112,8 +115,11 @@ export default function Dashboard() {
 
           {/* AI Disruption Recovery Alert Banner */}
           <div
+            role="button"
+            tabIndex={0}
             onClick={() => navigate('/disruption')}
-            className="surface-card bg-white/95 p-4 sm:p-5 border border-[#E5E5E0] hover:border-[#1A1A1A] transition-all duration-200 cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/disruption') } }}
+            className="surface-card bg-white/95 p-4 sm:p-5 border border-[#E5E5E0] hover:border-[#1A1A1A] transition-all duration-200 cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group active:scale-[0.99] touch-manipulation"
           >
             <div className="flex items-center gap-3.5">
               <div className="w-9 h-9 rounded-xl bg-[#FAFAF7] border border-[#E5E5E0] text-[#1A1A1A] flex items-center justify-center flex-shrink-0">

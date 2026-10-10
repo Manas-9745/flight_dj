@@ -3,8 +3,16 @@
 @tailwind utilities;
 
 @layer base {
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
+  * { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+  }
+  html { 
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
   body {
     background-color: #F5F5F0;
     color: #0D0D0D;
@@ -12,12 +20,27 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     letter-spacing: -0.011em;
+    overflow-x: hidden;
   }
   ::selection { background: #0D0D0D; color: #FFFFFF; }
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: #F5F5F0; }
   ::-webkit-scrollbar-thumb { background: #CACAC5; border-radius: 100px; }
   ::-webkit-scrollbar-thumb:hover { background: #999; }
+
+  /* iOS Safari Touch & Tap Responsiveness */
+  button, a, [role="button"], input[type="submit"], input[type="button"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+  }
+
+  /* Prevent iOS Safari auto-zooming into inputs when focused (<16px trigger) */
+  @media screen and (max-width: 768px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+  }
 }
 
 @layer components {

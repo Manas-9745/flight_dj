@@ -60,7 +60,7 @@ export default function BaggagePage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 space-y-6 animate-fade-in font-sans">
       {/* Header */}
       <div>
         <div className="flex items-center gap-2">
