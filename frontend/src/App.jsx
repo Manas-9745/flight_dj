@@ -38,20 +38,35 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true)
 
   useEffect(() => {
+    const safetyTimer = setTimeout(() => setAuthLoading(false), 500)
+
     if (!supabase) {
+      clearTimeout(safetyTimer)
       setAuthLoading(false)
       return
     }
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user || null)
-      setAuthLoading(false)
-    })
+
+    // Get initial session safely
+    supabase.auth.getSession()
+      .then(({ data }) => {
+        clearTimeout(safetyTimer)
+        setUser(data?.session?.user || null)
+        setAuthLoading(false)
+      })
+      .catch(() => {
+        clearTimeout(safetyTimer)
+        setAuthLoading(false)
+      })
+
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user || null)
     })
-    return () => subscription.unsubscribe()
+
+    return () => {
+      clearTimeout(safetyTimer)
+      subscription?.unsubscribe()
+    }
   }, [])
 
   const handleLogin  = (u) => setUser(u)

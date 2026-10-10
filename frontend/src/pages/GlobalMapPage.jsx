@@ -82,37 +82,57 @@ export default function GlobalMapPage() {
     return () => clearInterval(timer)
   }, [])
 
-  // Initialize Leaflet Map (guaranteed 100% visible, never a black screen)
+  // Initialize Leaflet Map safely (handles React 18 Strict Mode and hot reloads)
   useEffect(() => {
     if (!mapContainerRef.current) return
-    if (mapRef.current) return // Already initialized
 
-    // Center over Indian subcontinent & Arabian Sea (like Flightradar24 view)
-    const map = L.map(mapContainerRef.current, {
-      center: [20.5937, 78.9629],
-      zoom: 5,
-      zoomControl: false,
-      minZoom: 2,
-      maxZoom: 18
-    })
+    // Clean up any stale Leaflet instance or ID on this DOM node
+    if (mapRef.current) {
+      try {
+        mapRef.current.remove()
+      } catch (e) {}
+      mapRef.current = null
+    }
+    if (mapContainerRef.current._leaflet_id) {
+      delete mapContainerRef.current._leaflet_id
+    }
 
-    // Custom zoom control in bottom right
-    L.control.zoom({ position: 'bottom-right' }).addTo(map)
+    try {
+      // Center over Indian subcontinent & Arabian Sea (like Flightradar24 view)
+      const map = L.map(mapContainerRef.current, {
+        center: [20.5937, 78.9629],
+        zoom: 5,
+        zoomControl: false,
+        minZoom: 2,
+        maxZoom: 18
+      })
 
-    // Add initial tile layer
-    const provider = TILE_PROVIDERS[activeTheme] || TILE_PROVIDERS.satellite
-    const tileLayer = L.tileLayer(provider.url, provider.options).addTo(map)
-    tileLayerRef.current = tileLayer
+      // Custom zoom control in bottom right
+      L.control.zoom({ position: 'bottom-right' }).addTo(map)
 
-    // Markers layer group
-    const markersLayer = L.layerGroup().addTo(map)
-    markersLayerRef.current = markersLayer
+      // Add initial tile layer
+      const provider = TILE_PROVIDERS[activeTheme] || TILE_PROVIDERS.satellite
+      const tileLayer = L.tileLayer(provider.url, provider.options).addTo(map)
+      tileLayerRef.current = tileLayer
 
-    mapRef.current = map
+      // Markers layer group
+      const markersLayer = L.layerGroup().addTo(map)
+      markersLayerRef.current = markersLayer
+
+      mapRef.current = map
+    } catch (err) {
+      console.warn('Leaflet map initialization:', err.message)
+    }
 
     return () => {
-      map.remove()
-      mapRef.current = null
+      if (mapRef.current) {
+        try {
+          mapRef.current.remove()
+        } catch (e) {}
+        mapRef.current = null
+        tileLayerRef.current = null
+        markersLayerRef.current = null
+      }
     }
   }, [])
 
