@@ -1,0 +1,86 @@
+[
+  {
+    "testId": "multi-01-hindi",
+    "language": "hi",
+    "flightNumber": "AI645",
+    "airline": "Air India",
+    "origin": "BOM",
+    "destination": "DEL",
+    "status": "delayed",
+    "delayMinutes": 120,
+    "userQuery": "क्या मेरी फ़्लाइट लेट है और मुझे भोजन मिलेगा?",
+    "expectedLanguage": "Hindi",
+    "keyPreservation": ["AI645", "BOM", "DEL"]
+  },
+  {
+    "testId": "multi-02-spanish",
+    "language": "es",
+    "flightNumber": "IB3166",
+    "airline": "Iberia",
+    "origin": "MAD",
+    "destination": "LHR",
+    "status": "delayed",
+    "delayMinutes": 180,
+    "userQuery": "¿Mi vuelo está retrasado 3 horas, qué derechos tengo para la comida y compensación?",
+    "expectedLanguage": "Spanish",
+    "keyPreservation": ["IB3166", "MAD", "LHR"]
+  },
+  {
+    "testId": "multi-03-french",
+    "language": "fr",
+    "flightNumber": "AF1234",
+    "airline": "Air France",
+    "origin": "CDG",
+    "destination": "JFK",
+    "status": "cancelled",
+    "delayMinutes": 0,
+    "userQuery": "Mon vol a été annulé à Paris. Puis-je avoir un remboursement complet?",
+    "expectedLanguage": "French",
+    "keyPreservation": ["AF1234", "CDG", "JFK"]
+  },
+  {
+    "testId": "multi-04-german",
+    "language": "de",
+    "flightNumber": "LH400",
+    "airline": "Lufthansa",
+    "origin": "FRA",
+    "destination": "JFK",
+    "status": "delayed",
+    "delayMinutes": 210,
+    "userQuery": "Mein Flug ist stark verspätet. Bekomme ich Verpflegungsgutscheine am Flughafen?",
+    "expectedLanguage": "German",
+    "keyPreservation": ["LH400", "FRA", "JFK"]
+  },
+  {
+    "testId": "multi-05-japanese",
+    "language": "ja",
+    "flightNumber": "JL006",
+    "airline": "Japan Airlines",
+    "origin": "HND",
+    "destination": "JFK",
+    "status": "scheduled",
+    "delayMinutes": 0,
+    "gate": "112",
+    "terminal": "T3",
+    "userQuery": "搭乗ゲートとターミナルの場所を教えてください。",
+    "expectedLanguage": "Japanese",
+    "keyPreservation": ["JL006", "HND", "JFK", "112", "T3"]
+  },
+  {
+    "testId": "multi-06-language-switch",
+    "language": "auto",
+    "flightNumber": "AI645",
+    "airline": "Air India",
+    "origin": "BOM",
+    "destination": "DEL",
+    "status": "delayed",
+    "delayMinutes": 90,
+    "history": [
+      { "role": "user", "content": "What is the status of my flight AI645?" },
+      { "role": "assistant", "content": "Your flight AI645 is delayed by 90 minutes." }
+    ],
+    "userQuery": "क्या बोर्डिंग गेट बदल गया है?",
+    "expectedLanguage": "Hindi (Auto-detected from Hindi query despite English history)",
+    "keyPreservation": ["AI645"]
+  }
+]
