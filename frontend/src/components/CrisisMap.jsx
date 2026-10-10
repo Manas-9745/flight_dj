@@ -15,9 +15,12 @@ export default function CrisisMap({ alerts = [], onSelectAlert }) {
     accident: { icon: PlaneTakeoff, color: '#6B7280', bg: 'bg-gray-500', label: 'Safety Investigation' },
   }
 
-  // Filtered alerts that have coordinates
+  // Filtered alerts that have verified valid coordinates (excluding null/undefined or (0,0))
   const filteredAlerts = alerts.filter(a => {
     if (!a.coordinates) return false
+    const { lat, lng } = a.coordinates
+    if (typeof lat !== 'number' || typeof lng !== 'number' || isNaN(lat) || isNaN(lng)) return false
+    if (lat === 0 && lng === 0) return false
     if (activeCategoryFilter !== 'all' && a.category !== activeCategoryFilter) return false
     return true
   })

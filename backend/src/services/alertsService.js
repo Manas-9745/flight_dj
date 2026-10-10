@@ -5,7 +5,7 @@ const crypto = require('crypto');
 // In-memory cache
 let alertsCache = null;
 let lastCacheUpdate = null;
-const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const CACHE_TTL_MS = 120 * 1000; // 120 seconds (2 minutes) shared cache
 
 // Verified Baseline Official Advisories (FAA SFAR, EASA CZIB, ICAO, Eurocontrol)
 // These represent verified real-world baseline civil aviation security and safety notices
@@ -255,6 +255,36 @@ async function fetchLiveNewsAlerts() {
           severity = 'ADVISORY';
         }
 
+        // Accurately geolocate alert based on mentioned airports or geography
+        const { AIRPORTS } = require('./airportsData');
+        const matchedAirport = AIRPORTS.find(ap =>
+          titleLower.includes(ap.city.toLowerCase()) ||
+          titleLower.includes(ap.iata.toLowerCase()) ||
+          titleLower.includes(ap.country.toLowerCase())
+        );
+
+        let coords = { lat: 50.4501, lng: 30.5234 }; // Default Eastern Europe / Ukraine corridor
+        let affectedRegion = 'Global';
+        let affectedAirports = [];
+
+        if (matchedAirport) {
+          coords = { lat: matchedAirport.lat, lng: matchedAirport.lng };
+          affectedRegion = matchedAirport.country;
+          affectedAirports = [matchedAirport.iata];
+        } else if (titleLower.includes('middle east') || titleLower.includes('iran') || titleLower.includes('israel') || titleLower.includes('gaza')) {
+          coords = { lat: 33.3152, lng: 44.3661 };
+          affectedRegion = 'Middle East';
+        } else if (titleLower.includes('europe') || titleLower.includes('germany') || titleLower.includes('uk')) {
+          coords = { lat: 51.4700, lng: -0.4543 };
+          affectedRegion = 'Europe';
+        } else if (titleLower.includes('america') || titleLower.includes('united states') || titleLower.includes('faa')) {
+          coords = { lat: 40.6413, lng: -73.7781 };
+          affectedRegion = 'North America';
+        } else if (titleLower.includes('asia') || titleLower.includes('india')) {
+          coords = { lat: 28.5562, lng: 77.1000 };
+          affectedRegion = 'Asia Pacific';
+        }
+
         return {
           id,
           headline: art.title,
@@ -262,11 +292,11 @@ async function fetchLiveNewsAlerts() {
           category,
           severity,
           status: 'monitoring',
-          affectedRegion: 'Global',
-          affectedCountries: [],
-          affectedAirports: [],
+          affectedRegion,
+          affectedCountries: matchedAirport ? [matchedAirport.country] : [],
+          affectedAirports,
           affectedAirspace: [],
-          coordinates: { lat: 25.0, lng: 55.0 }, // General fallback
+          coordinates: coords,
           publishedAt: art.publishedAt || new Date().toISOString(),
           occurredAt: art.publishedAt || new Date().toISOString(),
           lastVerifiedAt: new Date().toISOString(),
@@ -555,6 +585,7 @@ module.exports = {
   getAllAlerts,
   getAlertById,
   analyzeFlightImpact,
+  checkRouteImpact: analyzeFlightImpact,
   generateAiEventSummary,
   getProviderStatus,
   OFFICIAL_BASELINE_ADVISORIES

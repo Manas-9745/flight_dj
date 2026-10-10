@@ -52,7 +52,7 @@ export default function GlobalMapPage() {
     fetchFlights()
     let timer = null
     if (autoRefresh) {
-      timer = setInterval(fetchFlights, 30000)
+      timer = setInterval(fetchFlights, 120000) // 120 seconds (2 minutes) minimum refresh
     }
     return () => {
       if (timer) clearInterval(timer)
@@ -83,7 +83,8 @@ export default function GlobalMapPage() {
 
     // Add markers for flights
     flights.forEach(f => {
-      if (!f.latitude || !f.longitude) return
+      if (typeof f.latitude !== 'number' || typeof f.longitude !== 'number' || isNaN(f.latitude) || isNaN(f.longitude)) return
+      if (f.latitude === 0 && f.longitude === 0) return
 
       const el = document.createElement('div')
       el.className = 'aircraft-icon-pin'

@@ -240,7 +240,7 @@ export default function FlightDetails({ token }) {
             <p className="text-xs text-[#52524E]">Current flight location and altitude.</p>
           </div>
 
-          <RadarMap position={position} flightNumber={fnUpper} />
+          <RadarMap position={position} flightNumber={fnUpper} origin={originCode} destination={destCode} />
 
           {/* Journey Timeline */}
           <div className="surface-card p-6 border border-[#E5E5E0] space-y-4 shadow-subtle">

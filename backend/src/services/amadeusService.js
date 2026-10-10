@@ -1,14 +1,24 @@
 const axios = require('axios');
 const alertsService = require('./alertsService');
 const { getAirportByIata } = require('./airportsData');
+const cacheService = require('./cacheService');
 
 class AmadeusService {
   constructor() {
+    this.duffelToken = process.env.DUFFEL_ACCESS_TOKEN;
     this.clientId = process.env.AMADEUS_CLIENT_ID;
     this.clientSecret = process.env.AMADEUS_CLIENT_SECRET;
     this.baseUrl = 'https://test.api.amadeus.com';
     this.accessToken = null;
     this.tokenExpiresAt = 0;
+  }
+
+  get isDuffelConfigured() {
+    return Boolean(
+      this.duffelToken &&
+      !this.duffelToken.includes('your-') &&
+      !this.duffelToken.includes('placeholder')
+    );
   }
 
   get isConfigured() {
@@ -47,7 +57,7 @@ class AmadeusService {
   }
 
   /**
-   * Search Flight Offers
+   * Search Flight Offers with 120-second server-side caching
    */
   async searchFlights({
     origin,
@@ -59,59 +69,219 @@ class AmadeusService {
     cabinClass = 'ECONOMY',
     currency = 'USD'
   }) {
-    let rawOffers = [];
-    let isLiveAmadeus = false;
+    const origUpper = (origin || 'BOM').toUpperCase().trim();
+    const destUpper = (destination || 'DEL').toUpperCase().trim();
+    const cacheKey = `flights:search:${origUpper}:${destUpper}:${date}:${returnDate || ''}:${adults}:${children}:${cabinClass}:${currency.toUpperCase()}`;
 
-    if (this.isConfigured) {
-      try {
-        const token = await this.getAccessToken();
-        const params = {
-          originLocationCode: origin.toUpperCase(),
-          destinationLocationCode: destination.toUpperCase(),
-          departureDate: date,
-          adults: parseInt(adults, 10) || 1,
-          max: 12,
-          currencyCode: currency.toUpperCase()
-        };
+    return cacheService.getOrFetch(cacheKey, async () => {
+      let rawOffers = [];
+      let providerSource = 'AeroMate Multi-GDS Verified Engine';
+      let isLive = false;
 
-        if (returnDate) {
-          params.returnDate = returnDate;
+      // 1. Try Duffel if configured
+      if (this.isDuffelConfigured) {
+        try {
+          const slices = [{
+            origin: origUpper,
+            destination: destUpper,
+            departure_date: date
+          }];
+          if (returnDate) {
+            slices.push({
+              origin: destUpper,
+              destination: origUpper,
+              departure_date: returnDate
+            });
+          }
+
+          const passengers = [];
+          const numAdults = Math.max(1, parseInt(adults, 10) || 1);
+          for (let i = 0; i < numAdults; i++) passengers.push({ type: 'adult' });
+          const numChildren = parseInt(children, 10) || 0;
+          for (let i = 0; i < numChildren; i++) passengers.push({ type: 'child' });
+
+          const cabin = cabinClass && cabinClass.toLowerCase() !== 'any' ? cabinClass.toLowerCase() : 'economy';
+
+          const duffelRes = await axios.post('https://api.duffel.com/air/offer_requests', {
+            data: {
+              slices,
+              passengers,
+              cabin_class: cabin
+            }
+          }, {
+            headers: {
+              'Authorization': `Bearer ${this.duffelToken}`,
+              'Duffel-Version': 'v2',
+              'Content-Type': 'application/json'
+            },
+            timeout: 10000
+          });
+
+          const duffelOffers = duffelRes.data?.data?.offers || [];
+          if (duffelOffers.length > 0) {
+            rawOffers = this.formatDuffelOffers(duffelOffers, currency);
+            providerSource = 'Duffel Live Flight Search API';
+            isLive = true;
+          }
+        } catch (duffelErr) {
+          console.warn('⚠️ [Duffel] Live API search failed, falling back:', duffelErr.response?.data?.errors || duffelErr.message);
         }
-
-        if (children && parseInt(children, 10) > 0) {
-          params.children = parseInt(children, 10);
-        }
-
-        if (cabinClass && cabinClass !== 'ANY') {
-          params.travelClass = cabinClass.toUpperCase();
-        }
-
-        const response = await axios.get(`${this.baseUrl}/v2/shopping/flight-offers`, {
-          headers: { Authorization: `Bearer ${token}` },
-          params,
-          timeout: 10000
-        });
-
-        rawOffers = this.formatOffers(response.data, currency);
-        isLiveAmadeus = true;
-      } catch (err) {
-        console.warn('⚠️ [Amadeus] Live API search failed, switching to realistic Multi-GDS engine:', err.response?.data || err.message);
-        rawOffers = this.getRealisticFlightOffers({ origin, destination, date, returnDate, adults, children, cabinClass, currency });
       }
-    } else {
-      rawOffers = this.getRealisticFlightOffers({ origin, destination, date, returnDate, adults, children, cabinClass, currency });
-    }
 
-    // Attach AI Recommendations & Aviation Risk Flags to all offers
-    const processedOffers = await this.enrichOffersWithAiAndRisks(rawOffers, origin, destination);
+      // 2. Try Amadeus if Duffel was not configured or returned no offers
+      if (rawOffers.length === 0 && this.isConfigured) {
+        try {
+          const token = await this.getAccessToken();
+          const params = {
+            originLocationCode: origUpper,
+            destinationLocationCode: destUpper,
+            departureDate: date,
+            adults: parseInt(adults, 10) || 1,
+            max: 12,
+            currencyCode: currency.toUpperCase()
+          };
+          if (returnDate) params.returnDate = returnDate;
+          if (children && parseInt(children, 10) > 0) params.children = parseInt(children, 10);
+          if (cabinClass && cabinClass !== 'ANY') params.travelClass = cabinClass.toUpperCase();
 
-    return {
-      source: isLiveAmadeus ? 'Amadeus GDS Live API' : 'AeroMate Multi-GDS Verified Engine',
-      isLiveProvider: isLiveAmadeus,
-      lastVerified: new Date().toISOString(),
-      currency: currency.toUpperCase(),
-      offers: processedOffers
-    };
+          const response = await axios.get(`${this.baseUrl}/v2/shopping/flight-offers`, {
+            headers: { Authorization: `Bearer ${token}` },
+            params,
+            timeout: 10000
+          });
+
+          rawOffers = this.formatOffers(response.data, currency);
+          providerSource = 'Amadeus GDS Live API';
+          isLive = true;
+        } catch (err) {
+          console.warn('⚠️ [Amadeus] Live API search failed, falling back:', err.response?.data || err.message);
+        }
+      }
+
+      // 3. Fallback to realistic Multi-GDS offers
+      if (rawOffers.length === 0) {
+        rawOffers = this.getRealisticFlightOffers({
+          origin: origUpper,
+          destination: destUpper,
+          date,
+          returnDate,
+          adults,
+          children,
+          cabinClass,
+          currency
+        });
+      }
+
+      // Attach AI Recommendations & Aviation Risk Flags to all offers
+      const processedOffers = await this.enrichOffersWithAiAndRisks(rawOffers, origUpper, destUpper);
+
+      return {
+        source: providerSource,
+        isLiveProvider: isLive,
+        lastVerified: new Date().toISOString(),
+        currency: currency.toUpperCase(),
+        offers: processedOffers
+      };
+    }, 120 * 1000);
+  }
+
+  /**
+   * Parse and format Duffel responses into AeroMate standardized schema
+   */
+  formatDuffelOffers(duffelOffers, requestedCurrency) {
+    if (!duffelOffers || !Array.isArray(duffelOffers)) return [];
+
+    return duffelOffers.slice(0, 15).map((offer, index) => {
+      const slice = offer.slices?.[0];
+      const returnSlice = offer.slices?.[1] || null;
+      const segments = (slice?.segments || []).map((seg, sIdx) => {
+        const depIata = seg.origin?.iata_code;
+        const arrIata = seg.destination?.iata_code;
+        return {
+          id: `seg-${index}-${sIdx}`,
+          airline: seg.marketing_carrier?.name || offer.owner?.name || 'Airlines',
+          airlineCode: seg.marketing_carrier?.iata_code || offer.owner?.iata_code || 'XX',
+          flightNumber: `${seg.marketing_carrier?.iata_code || ''}${seg.marketing_carrier_flight_number || ''}`,
+          aircraft: seg.aircraft?.name || 'Boeing 787-9',
+          origin: depIata,
+          originAirport: getAirportByIata(depIata),
+          destination: arrIata,
+          destinationAirport: getAirportByIata(arrIata),
+          departureTime: seg.departing_at,
+          departureTerminal: seg.origin_terminal || '1',
+          arrivalTime: seg.arriving_at,
+          arrivalTerminal: seg.destination_terminal || '2',
+          duration: seg.duration ? seg.duration.replace('PT', '').toLowerCase() : 'N/A'
+        };
+      });
+
+      const firstSeg = segments[0] || {};
+      const lastSeg = segments[segments.length - 1] || firstSeg;
+
+      // Calculate layovers
+      const layovers = [];
+      for (let i = 0; i < segments.length - 1; i++) {
+        const arrTime = new Date(segments[i].arrivalTime).getTime();
+        const nextDepTime = new Date(segments[i + 1].departureTime).getTime();
+        const diffMins = Math.max(0, Math.round((nextDepTime - arrTime) / (60 * 1000)));
+        const h = Math.floor(diffMins / 60);
+        const m = diffMins % 60;
+        layovers.push({
+          airport: segments[i].destination,
+          airportDetails: getAirportByIata(segments[i].destination),
+          durationMins: diffMins,
+          durationFormatted: `${h}h ${m}m`
+        });
+      }
+
+      const totalFare = parseFloat(offer.total_amount || 0);
+      const baseFare = parseFloat(offer.base_amount || (totalFare * 0.82).toFixed(2));
+      const taxesAndFees = parseFloat(offer.tax_amount || (totalFare - baseFare).toFixed(2));
+      const fareCurrency = offer.total_currency || requestedCurrency;
+
+      // Extract baggage allowances
+      const bagInfo = slice?.segments?.[0]?.passengers?.[0]?.baggages || [];
+      const checkedBag = bagInfo.find(b => b.type === 'checked');
+      const includedCheckedBags = checkedBag ? checkedBag.quantity : 1;
+
+      const durationMinutes = this.parseDurationToMinutes(slice?.duration);
+
+      return {
+        id: offer.id || `offer-${index + 1}`,
+        airline: firstSeg.airline || offer.owner?.name || 'Commercial Airline',
+        airlineCode: firstSeg.airlineCode || offer.owner?.iata_code || 'XX',
+        flightNumber: firstSeg.flightNumber || 'FL100',
+        origin: firstSeg.origin,
+        destination: lastSeg.destination,
+        departureTime: firstSeg.departureTime,
+        arrivalTime: lastSeg.arrivalTime,
+        duration: slice?.duration ? slice.duration.replace('PT', '').toLowerCase() : 'N/A',
+        durationMinutes,
+        stops: segments.length - 1,
+        segments,
+        layovers,
+        isRoundTrip: Boolean(returnSlice),
+        pricing: {
+          total: totalFare,
+          base: baseFare,
+          taxesAndFees: taxesAndFees,
+          currency: fareCurrency
+        },
+        baggage: {
+          cabinBag: '1 x 7kg Carry-on Included',
+          checkedBags: includedCheckedBags > 0 ? `${includedCheckedBags} x 23kg Checked Bag Included` : 'No Checked Bag Included',
+          includedCheckedCount: includedCheckedBags
+        },
+        conditions: {
+          refundable: Boolean(offer.conditions?.refund_before_departure?.allowed),
+          changeAllowed: Boolean(offer.conditions?.change_before_departure?.allowed !== false),
+          changeFee: offer.conditions?.change_before_departure?.penalty_amount ? `$${offer.conditions.change_before_departure.penalty_amount}` : 'Free Date Changes'
+        },
+        numberOfBookableSeats: 9,
+        bookingUrl: `https://www.google.com/travel/flights?q=flights+from+${firstSeg.origin}+to+${lastSeg.destination}`,
+        isSearchOffer: true
+      };
+    });
   }
 
   /**
@@ -556,6 +726,12 @@ class AmadeusService {
         isSearchOffer: true
       };
     });
+  }
+
+  async getFlightStatus(flightNumber) {
+    const aviationstackService = require('./aviationstackService');
+    const result = await aviationstackService.getFlightStatus(flightNumber);
+    return { data: result };
   }
 }
 
