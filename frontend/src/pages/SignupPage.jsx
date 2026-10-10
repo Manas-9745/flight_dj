@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plane, Mail, Lock, User, Loader2, AlertCircle } from 'lucide-react'
+import { Mail, Lock, User, Loader2, AlertCircle } from 'lucide-react'
 
 export default function SignupPage({ onSignup }) {
   const [form, setForm] = useState({ name: '', email: '', password: '' })
@@ -14,7 +14,7 @@ export default function SignupPage({ onSignup }) {
     if (form.password.length < 6) return setError('Password must be at least 6 characters.')
     setLoading(true)
     try {
-      await new Promise(r => setTimeout(r, 800))
+      await new Promise(r => setTimeout(r, 600))
       onSignup({ email: form.email, name: form.name })
       navigate('/')
     } catch {
@@ -25,56 +25,85 @@ export default function SignupPage({ onSignup }) {
   }
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4">
-      <div className="w-full max-w-md animate-slide-up">
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-sky-500/15 border border-sky-500/25 flex items-center justify-center mx-auto mb-4">
-            <Plane className="w-7 h-7 text-sky-400" />
-          </div>
-          <h1 className="text-3xl font-display font-bold text-white">Create your account</h1>
-          <p className="text-slate-400 mt-1">Start tracking your flights with AI guidance.</p>
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 pt-28">
+      <div className="w-full max-w-md animate-slide-up space-y-8">
+        <div className="text-center space-y-3">
+          <span className="font-display font-extrabold text-5xl text-aeromate-ink tracking-tight">
+            AeroMate®
+          </span>
+          <p className="text-sm font-medium text-aeromate-muted">
+            Create your account to start tracking flights.
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="card space-y-4">
+        <form onSubmit={handleSubmit} className="surface-card p-8 border border-aeromate-border shadow-card space-y-4">
           {error && (
-            <div className="flex items-center gap-2 text-red-400 bg-red-400/10 border border-red-400/20 rounded-xl px-4 py-3 text-sm">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" /> {error}
+            <div className="flex items-center gap-2 text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-4 py-3 text-xs font-semibold">
+              <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" /> {error}
             </div>
           )}
-          <div>
-            <label className="text-xs text-slate-400 mb-1.5 block font-medium">Full Name</label>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-aeromate-muted uppercase tracking-wider block">Full Name</label>
             <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <input id="signup-name" type="text" placeholder="Manas Parekar" value={form.name}
+              <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-aeromate-muted/60" />
+              <input
+                id="signup-name"
+                type="text"
+                placeholder="Alex Morgan"
+                value={form.name}
                 onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-                className="input-field pl-11" required />
+                className="input-field pl-10 text-sm font-semibold"
+                required
+              />
             </div>
           </div>
-          <div>
-            <label className="text-xs text-slate-400 mb-1.5 block font-medium">Email</label>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-aeromate-muted uppercase tracking-wider block">Email Address</label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <input id="signup-email" type="email" placeholder="you@example.com" value={form.email}
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-aeromate-muted/60" />
+              <input
+                id="signup-email"
+                type="email"
+                placeholder="you@example.com"
+                value={form.email}
                 onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
-                className="input-field pl-11" required />
+                className="input-field pl-10 text-sm font-semibold"
+                required
+              />
             </div>
           </div>
-          <div>
-            <label className="text-xs text-slate-400 mb-1.5 block font-medium">Password</label>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-aeromate-muted uppercase tracking-wider block">Password</label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <input id="signup-password" type="password" placeholder="Min. 6 characters" value={form.password}
+              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-aeromate-muted/60" />
+              <input
+                id="signup-password"
+                type="password"
+                placeholder="Min. 6 characters"
+                value={form.password}
                 onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-                className="input-field pl-11" required />
+                className="input-field pl-10 text-sm font-semibold"
+                required
+              />
             </div>
           </div>
-          <button id="signup-submit" type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2">
+
+          <button
+            id="signup-submit"
+            type="submit"
+            disabled={loading}
+            className="btn-primary w-full py-3 text-sm font-bold mt-2"
+          >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-            {loading ? 'Creating account...' : 'Create account'}
+            {loading ? 'Creating Account...' : 'Create Free Account'}
           </button>
-          <p className="text-center text-sm text-slate-400">
+
+          <p className="text-center text-xs font-medium text-aeromate-muted pt-2 border-t border-aeromate-border">
             Already have an account?{' '}
-            <Link to="/login" className="text-sky-400 hover:text-sky-300 font-medium">Sign in</Link>
+            <Link to="/login" className="text-aeromate-ink hover:underline font-bold">Sign in</Link>
           </p>
         </form>
       </div>

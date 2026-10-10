@@ -1,24 +1,39 @@
-import { CheckCircle2, Clock, AlertTriangle, XCircle, Info } from 'lucide-react'
+import { CheckCircle2, Clock, AlertTriangle, PlaneTakeoff } from 'lucide-react'
 
-const STATUS_CONFIG = {
-  scheduled: { label: 'Scheduled', color: 'text-sky-400 bg-sky-400/10 border-sky-400/20', Icon: Clock },
-  active:    { label: 'In Flight',  color: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20', Icon: CheckCircle2 },
-  delayed:   { label: 'Delayed',   color: 'text-amber-400 bg-amber-400/10 border-amber-400/20', Icon: AlertTriangle },
-  cancelled: { label: 'Cancelled', color: 'text-red-400 bg-red-400/10 border-red-400/20', Icon: XCircle },
-  landed:    { label: 'Landed',    color: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20', Icon: CheckCircle2 },
-}
+export default function StatusBadge({ status = 'scheduled', delayMinutes = 0 }) {
+  const normStatus = (status || 'scheduled').toLowerCase()
 
-export default function StatusBadge({ status = 'scheduled', delayMinutes }) {
-  const config = STATUS_CONFIG[status?.toLowerCase()] || STATUS_CONFIG.scheduled
-  const { label, color, Icon } = config
+  if (normStatus === 'cancelled') {
+    return (
+      <span className="status-badge bg-red-100 text-red-700 border border-red-200">
+        <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
+        <span>Cancelled</span>
+      </span>
+    )
+  }
+
+  if (normStatus === 'delayed' || delayMinutes > 0) {
+    return (
+      <span className="status-badge bg-amber-100 text-amber-800 border border-amber-200">
+        <Clock className="w-3.5 h-3.5 text-amber-600" />
+        <span>Delayed {delayMinutes > 0 ? `(${delayMinutes}m)` : ''}</span>
+      </span>
+    )
+  }
+
+  if (normStatus === 'in-flight' || normStatus === 'active') {
+    return (
+      <span className="status-badge bg-blue-100 text-aeromate-blue border border-blue-200">
+        <PlaneTakeoff className="w-3.5 h-3.5 text-aeromate-blue" />
+        <span>In Flight</span>
+      </span>
+    )
+  }
 
   return (
-    <span className={`status-badge border ${color}`}>
-      <Icon className="w-3 h-3" />
-      {label}
-      {status === 'delayed' && delayMinutes > 0 && (
-        <span className="ml-1 opacity-80">+{delayMinutes}m</span>
-      )}
+    <span className="status-badge bg-emerald-100 text-emerald-800 border border-emerald-200">
+      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+      <span>On Time</span>
     </span>
   )
 }

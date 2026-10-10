@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, Loader2, Globe, Plane, Zap } from 'lucide-react'
+import { Send, Bot, User, Loader2, Globe, Sparkles } from 'lucide-react'
 import { sendChatMessage } from '../services/api'
 
 const LANGUAGES = [
   { code: 'en', label: 'English' },
-  { code: 'hi', label: 'हिंदी' },
+  { code: 'hi', label: 'हिंदी (Hindi)' },
   { code: 'es', label: 'Español' },
   { code: 'fr', label: 'Français' },
   { code: 'de', label: 'Deutsch' },
@@ -14,15 +14,15 @@ const LANGUAGES = [
 const QUICK_PROMPTS = [
   'What are my rights if my flight is delayed?',
   'How do I get a refund for a cancelled flight?',
-  'Can I get lounge access during my delay?',
+  'Can I get meal vouchers or lounge access?',
   'What should I do about my connecting flight?',
 ]
 
-export default function ChatWidget({ flightContext }) {
+export default function ChatWidget({ flightContext, className = '' }) {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: `✈️ Hello! I'm **AeroMate**, your AI travel companion.\n\nI can help you understand flight updates, explain your passenger rights, and guide you through delays or cancellations.\n\nAsk me anything about your journey!`,
+      content: `✈️ Hello! I'm **AeroMate AI**, your dedicated travel concierge.\n\nI can help you understand real-time flight updates, calculate disruption compensation under DGCA / EU261 regulations, and guide your journey in multiple languages.\n\nHow can I help you today?`,
     }
   ])
   const [input, setInput] = useState('')
@@ -32,7 +32,7 @@ export default function ChatWidget({ flightContext }) {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, loading])
 
   const sendMessage = async (text) => {
     const userMessage = text || input.trim()
@@ -51,92 +51,119 @@ export default function ChatWidget({ flightContext }) {
         language,
         history,
       })
-      setMessages(prev => [...prev, { role: 'assistant', content: res.data?.reply || 'I couldn\'t process that. Please try again.' }])
-    } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Unable to reach the AI assistant right now. Please check your backend connection.' }])
+      const replyText = res.data?.reply || res.reply || 'I processed your request. How else can I assist?'
+      setMessages(prev => [...prev, { role: 'assistant', content: replyText }])
+    } catch (err) {
+      console.error('Chat error:', err)
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: '⚠️ I couldn\'t connect to the AI engine right now. Please verify backend service availability or try again.'
+      }])
     } finally {
       setLoading(false)
     }
   }
 
   const renderMessage = (content) => {
-    // Simple bold markdown support
-    return content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>')
+    return content
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-aeromate-text">$1</strong>')
+      .replace(/\n/g, '<br/>')
   }
 
   return (
-    <div className="card flex flex-col h-[600px] p-0 overflow-hidden">
+    <div className={`surface-card p-0 flex flex-col h-[580px] border border-slate-200 shadow-card overflow-hidden ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
+      <div className="flex items-center justify-between px-5 py-3.5 bg-slate-50 border-b border-slate-200">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-sky-500/15 border border-sky-500/25 flex items-center justify-center">
-            <Bot className="w-5 h-5 text-sky-400" />
+          <div className="w-10 h-10 rounded-xl bg-aeromate-paleBlue border border-aeromate-blue/20 flex items-center justify-center text-aeromate-blue shadow-sm">
+            <Bot className="w-5 h-5" />
           </div>
           <div>
-            <div className="font-display font-semibold text-white text-sm">AeroMate AI</div>
-            <div className="flex items-center gap-1.5 text-xs text-emerald-400">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Online
+            <div className="font-display font-bold text-aeromate-text text-sm flex items-center gap-2">
+              AeroMate AI Concierge
+              <span className="text-[10px] bg-blue-100 text-aeromate-blue font-bold px-2 py-0.5 rounded-full border border-blue-200">
+                Live Assistant
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Connected · Gemini 2.5 Engine
             </div>
           </div>
         </div>
+
         {/* Language selector */}
         <div className="flex items-center gap-2">
-          <Globe className="w-4 h-4 text-slate-500" />
+          <Globe className="w-4 h-4 text-slate-400" />
           <select
             value={language}
             onChange={e => setLanguage(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-sky-500/50"
+            className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-700 font-medium focus:outline-none focus:border-aeromate-blue shadow-sm"
           >
             {LANGUAGES.map(l => (
-              <option key={l.code} value={l.code} style={{ background: '#0c1425' }}>{l.label}</option>
+              <option key={l.code} value={l.code}>{l.label}</option>
             ))}
           </select>
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto chat-scroll px-5 py-4 space-y-4">
+      {/* Flight Context Chip if available */}
+      {flightContext && (
+        <div className="bg-amber-50/80 border-b border-amber-200 px-5 py-2 flex items-center justify-between text-xs text-amber-900 font-medium">
+          <span className="flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+            Context Active: <strong>{flightContext.flightNumber || 'AI645'}</strong> ({flightContext.origin || 'BOM'} → {flightContext.destination || 'DEL'})
+          </span>
+          <span className="text-[11px] text-amber-700 font-semibold bg-white/80 px-2 py-0.5 rounded border border-amber-300">
+            Tailored Q&A
+          </span>
+        </div>
+      )}
+
+      {/* Messages Feed */}
+      <div className="flex-1 overflow-y-auto chat-scroll px-5 py-4 space-y-4 bg-white">
         {messages.map((msg, i) => (
           <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''} animate-fade-in`}>
-            <div className={`w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold ${
+            <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold shadow-sm ${
               msg.role === 'assistant'
-                ? 'bg-sky-500/20 border border-sky-500/30 text-sky-400'
-                : 'bg-slate-700 border border-slate-600 text-slate-300'
+                ? 'bg-aeromate-paleBlue border border-blue-200 text-aeromate-blue'
+                : 'bg-aeromate-text text-white'
             }`}>
-              {msg.role === 'assistant' ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
+              {msg.role === 'assistant' ? <Bot className="w-4.5 h-4.5" /> : <User className="w-4.5 h-4.5" />}
             </div>
-            <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+
+            <div className={`max-w-[82%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
               msg.role === 'assistant'
-                ? 'bg-white/5 border border-white/8 text-slate-200'
-                : 'bg-sky-500/15 border border-sky-500/20 text-sky-100 rounded-tr-sm'
+                ? 'bg-slate-50 border border-slate-200 text-slate-800 shadow-sm'
+                : 'bg-aeromate-blue text-white font-medium shadow-md shadow-aeromate-blue/20 rounded-tr-sm'
             }`}
               dangerouslySetInnerHTML={{ __html: renderMessage(msg.content) }}
             />
           </div>
         ))}
+
         {loading && (
           <div className="flex gap-3 animate-fade-in">
-            <div className="w-7 h-7 rounded-full bg-sky-500/20 border border-sky-500/30 flex items-center justify-center">
-              <Bot className="w-4 h-4 text-sky-400" />
+            <div className="w-8 h-8 rounded-full bg-aeromate-paleBlue border border-blue-200 flex items-center justify-center text-aeromate-blue">
+              <Bot className="w-4.5 h-4.5" />
             </div>
-            <div className="bg-white/5 border border-white/8 rounded-2xl px-4 py-3 flex items-center gap-2">
-              <Loader2 className="w-4 h-4 text-sky-400 animate-spin" />
-              <span className="text-slate-400 text-sm">Thinking...</span>
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 flex items-center gap-2.5 text-aeromate-muted text-sm shadow-sm">
+              <Loader2 className="w-4 h-4 text-aeromate-blue animate-spin" />
+              <span>Analyzing passenger rights & regulations...</span>
             </div>
           </div>
         )}
         <div ref={bottomRef} />
       </div>
 
-      {/* Quick Prompts */}
-      {messages.length <= 1 && (
-        <div className="px-5 pb-3 flex flex-wrap gap-2">
+      {/* Suggested Prompt Chips */}
+      {messages.length <= 2 && (
+        <div className="px-5 py-2.5 bg-slate-50/50 border-t border-slate-100 flex flex-wrap gap-2">
           {QUICK_PROMPTS.map((p, i) => (
             <button
               key={i}
               onClick={() => sendMessage(p)}
-              className="text-xs text-sky-400 border border-sky-500/20 bg-sky-500/5 hover:bg-sky-500/15 rounded-full px-3 py-1.5 transition-all"
+              className="text-xs text-aeromate-blue border border-blue-200 bg-aeromate-paleBlue/60 hover:bg-blue-100 rounded-full px-3 py-1 font-medium transition-all"
             >
               {p}
             </button>
@@ -144,21 +171,21 @@ export default function ChatWidget({ flightContext }) {
         </div>
       )}
 
-      {/* Input */}
-      <div className="px-5 py-4 border-t border-white/8 flex gap-3">
+      {/* Input Bar */}
+      <div className="p-4 bg-slate-50 border-t border-slate-200 flex gap-3">
         <input
           type="text"
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-          placeholder="Ask about your flight, rights, or next steps..."
-          className="input-field flex-1 text-sm py-2.5"
+          placeholder="Ask about refunds, delay rules, lounge access, or baggage..."
+          className="input-field flex-1 text-sm py-2.5 bg-white border-slate-200"
           disabled={loading}
         />
         <button
           onClick={() => sendMessage()}
           disabled={loading || !input.trim()}
-          className="btn-primary px-4 py-2.5 flex items-center gap-2"
+          className="btn-primary px-4 py-2.5 flex items-center justify-center"
         >
           <Send className="w-4 h-4" />
         </button>
@@ -166,3 +193,4 @@ export default function ChatWidget({ flightContext }) {
     </div>
   )
 }
+

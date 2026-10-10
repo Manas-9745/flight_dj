@@ -1,104 +1,120 @@
 import { useState } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Plane, Search, Map, MessageSquare, Bookmark, LogIn, Menu, X, LogOut, User } from 'lucide-react'
-
-const navLinks = [
-  { to: '/', label: 'Dashboard', icon: Plane },
-  { to: '/search', label: 'Search', icon: Search },
-  { to: '/assistant', label: 'AI Assistant', icon: MessageSquare },
-  { to: '/trips', label: 'My Trips', icon: Bookmark },
-]
+import { Link, useLocation } from 'react-router-dom'
+import { Menu, X } from 'lucide-react'
 
 export default function Navbar({ user, onLogout }) {
-  const [open, setOpen] = useState(false)
   const location = useLocation()
-  const navigate = useNavigate()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  const isActive = (path) =>
-    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path)
+  const navLinks = [
+    { name: 'Solutions', path: '/search' },
+    { name: 'AI Assistant', path: '/assistant' },
+    { name: 'Disruptions', path: '/disruption' },
+    { name: 'My Trips', path: '/trips' },
+  ]
+
+  const isActive = (path) => location.pathname === path
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg bg-sky-500/20 border border-sky-500/30 flex items-center justify-center group-hover:bg-sky-500/30 transition-all">
-              <Plane className="w-4 h-4 text-sky-400" />
-            </div>
-            <span className="font-display font-bold text-white text-lg tracking-tight">Aero<span className="text-sky-400">Mate</span></span>
+    <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-500">
+      <div className="max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12">
+        <div className="flex items-center justify-between h-20">
+
+          {/* Brand — Bold Wordmark like Hyer */}
+          <Link to="/" className="flex items-center gap-1 group">
+            <span className="font-display font-extrabold text-3xl sm:text-4xl text-aeromate-ink tracking-tight leading-none">
+              AeroMate
+            </span>
+            <span className="text-aeromate-ink font-display text-lg align-super leading-none -ml-0.5 mt-0.5">®</span>
           </Link>
 
-          {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map(({ to, label, icon: Icon }) => (
+          {/* Desktop Nav — Clean, Minimal */}
+          <nav className="hidden md:flex items-center gap-8">
+            {navLinks.map((link) => (
               <Link
-                key={to}
-                to={to}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  isActive(to)
-                    ? 'bg-sky-500/15 text-sky-400 border border-sky-500/20'
-                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                key={link.path}
+                to={link.path}
+                className={`text-sm font-medium transition-all duration-300 ${
+                  isActive(link.path)
+                    ? 'text-aeromate-ink font-semibold'
+                    : 'text-aeromate-muted hover:text-aeromate-ink'
                 }`}
               >
-                <Icon className="w-4 h-4" />
-                {label}
+                {link.name}
               </Link>
             ))}
-          </div>
+          </nav>
 
-          {/* Auth Actions */}
-          <div className="hidden md:flex items-center gap-2">
+          {/* Right Side — Hamburger Circle */}
+          <div className="flex items-center gap-4">
             {user ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-slate-400 flex items-center gap-1.5">
-                  <User className="w-4 h-4" /> {user.email || 'Demo User'}
-                </span>
-                <button onClick={onLogout} className="btn-ghost text-sm flex items-center gap-1.5">
-                  <LogOut className="w-4 h-4" /> Logout
+              <div className="hidden md:flex items-center gap-3">
+                <span className="text-xs font-medium text-aeromate-muted">{user.email || 'Passenger'}</span>
+                <button
+                  onClick={onLogout}
+                  className="text-xs font-semibold text-aeromate-muted hover:text-aeromate-ink transition-colors"
+                >
+                  Logout
                 </button>
               </div>
             ) : (
-              <>
-                <Link to="/login" className="btn-ghost text-sm">Log in</Link>
-                <Link to="/signup" className="btn-primary text-sm">Sign up</Link>
-              </>
+              <Link
+                to="/login"
+                className="hidden md:inline-flex text-sm font-medium text-aeromate-muted hover:text-aeromate-ink transition-colors"
+              >
+                Sign in
+              </Link>
             )}
-          </div>
 
-          {/* Mobile toggle */}
-          <button
-            className="md:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/8 transition-all"
-            onClick={() => setOpen(!open)}
-          >
-            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="w-11 h-11 rounded-full bg-aeromate-ink text-white flex items-center justify-center hover:bg-black transition-all duration-300 hover:scale-105"
+              aria-label="Toggle Menu"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Mobile drawer */}
-      {open && (
-        <div className="md:hidden glass border-t border-white/8 px-4 py-4 space-y-1 animate-fade-in">
-          {navLinks.map(({ to, label, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                isActive(to)
-                  ? 'bg-sky-500/15 text-sky-400'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Icon className="w-4 h-4" /> {label}
-            </Link>
-          ))}
-          <div className="pt-2 border-t border-white/8 flex gap-2">
-            <Link to="/login" onClick={() => setOpen(false)} className="flex-1 btn-ghost text-sm text-center">Log in</Link>
-            <Link to="/signup" onClick={() => setOpen(false)} className="flex-1 btn-primary text-sm text-center">Sign up</Link>
+      {/* Full-Screen Menu Overlay */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 top-20 bg-white z-40 animate-fade-in">
+          <div className="max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12 pt-12">
+            <nav className="space-y-2">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`block text-4xl sm:text-5xl font-display font-bold py-3 transition-all duration-300 ${
+                    isActive(link.path) ? 'text-aeromate-ink' : 'text-aeromate-muted hover:text-aeromate-ink'
+                  }`}
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="mt-16 pt-8 border-t border-aeromate-border flex flex-wrap gap-4">
+              {user ? (
+                <button onClick={() => { onLogout(); setMobileMenuOpen(false) }} className="btn-primary">
+                  Logout
+                </button>
+              ) : (
+                <>
+                  <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="btn-primary">
+                    Sign in
+                  </Link>
+                  <Link to="/signup" onClick={() => setMobileMenuOpen(false)} className="btn-secondary">
+                    Create account
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
-    </nav>
+    </header>
   )
 }
