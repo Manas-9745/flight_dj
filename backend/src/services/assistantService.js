@@ -1,4 +1,12 @@
+const path = require('path');
 const OpenAI = require('openai');
+
+let kaustubhService = null;
+try {
+  kaustubhService = require(path.join(__dirname, '../../../ai-assistant/assistantService.js'));
+} catch (e) {
+  // If not found in sibling dir, use internal logic
+}
 
 class AssistantService {
   constructor() {
@@ -13,6 +21,28 @@ class AssistantService {
   async generateTravelGuidance({ message, flightContext, language = 'en', history = [] }) {
     if (!message) {
       throw new Error('User message is required.');
+    }
+
+    // Prioritize Kaustubh's dedicated AI assistant engine (Person 3)
+    if (kaustubhService && typeof kaustubhService.processAssistantChat === 'function') {
+      try {
+        const result = await kaustubhService.processAssistantChat({
+          message,
+          flightContext,
+          language,
+          history
+        });
+        return {
+          reply: result.reply,
+          language: language || 'en',
+          modelUsed: result.model || 'gpt-4o-mini',
+          mode: result.mode,
+          flightContextApplied: result.flightContextApplied,
+          isAiGenerated: result.mode === 'live_openai'
+        };
+      } catch (err) {
+        console.warn(`⚠️ [Assistant] Kaustubh AI engine threw error (${err.message}), falling back to internal engine.`);
+      }
     }
 
     if (this.isConfigured) {
