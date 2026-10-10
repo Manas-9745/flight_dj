@@ -130,12 +130,12 @@ export default function AirportAutocomplete({
 
   return (
     <div className="relative w-full" ref={wrapperRef}>
-      <div className="flex items-center justify-between mb-1.5">
-        <label htmlFor={id} className="text-xs font-semibold text-[#52524E] uppercase tracking-wider block">
+      <div className="flex items-center justify-between mb-2">
+        <label htmlFor={id} className="block text-[13px] font-medium text-[#383835] leading-none">
           {label}
         </label>
         {currentSelectedAirport && (
-          <span className="text-[11px] font-medium text-[#246BFD] truncate max-w-[180px]">
+          <span className="text-xs font-medium text-[#246BFD] truncate max-w-[180px] leading-none">
             {currentSelectedAirport.city}
           </span>
         )}
@@ -159,7 +159,7 @@ export default function AirportAutocomplete({
           }}
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
-          className="w-full bg-[#FAFAF7] border border-[#E5E5E0] hover:border-[#1A1A1A]/40 focus:border-[#1A1A1A] focus:bg-white rounded-xl pl-10 pr-9 py-2.5 font-mono font-bold text-sm text-[#0D0D0D] tracking-wider outline-none transition-all"
+          className="w-full h-12 bg-[#FAFAF7] border border-[#E5E5E0] hover:border-[#1A1A1A]/40 focus:border-[#1A1A1A] focus:bg-white rounded-xl pl-10 pr-9 font-mono font-bold text-sm text-[#0D0D0D] tracking-wider outline-none transition-all"
           maxLength={25}
           required={required}
           autoComplete="off"
