@@ -1,11 +1,16 @@
 -- ==============================================================================
--- AeroMate (PS-01) — Supabase Seed Dummy Data Script
+-- AeroMate (PS-01) — Robust Fail-Safe Supabase Seed Script
 -- Target Account: d2025.manas.parekar@ves.ac.in
--- Instructions: Run this script in the Supabase SQL Editor to populate dummy data.
+-- Instructions: Run this script in the Supabase SQL Editor.
 -- ==============================================================================
 
--- 1. Ensure Schema Tables Exist
-CREATE TABLE IF NOT EXISTS public.profiles (
+-- 1. DROP EXISTING CONFLICTING TABLES IF ANY (Ensures clean schema initialization)
+DROP TABLE IF EXISTS public.chat_history CASCADE;
+DROP TABLE IF EXISTS public.saved_trips CASCADE;
+DROP TABLE IF EXISTS public.profiles CASCADE;
+
+-- 2. CREATE PROFILES TABLE WITH UNIQUE EMAIL CONSTRAINT
+CREATE TABLE public.profiles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email TEXT UNIQUE NOT NULL,
     full_name TEXT,
@@ -14,7 +19,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS public.saved_trips (
+-- 3. CREATE SAVED TRIPS TABLE
+CREATE TABLE public.saved_trips (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID,
     flight_number VARCHAR(16) NOT NULL,
@@ -27,7 +33,8 @@ CREATE TABLE IF NOT EXISTS public.saved_trips (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS public.chat_history (
+-- 4. CREATE CHAT HISTORY TABLE
+CREATE TABLE public.chat_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID,
     flight_number VARCHAR(16),
@@ -37,19 +44,18 @@ CREATE TABLE IF NOT EXISTS public.chat_history (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Disable strict RLS temporarily for seeding or insert open policies
+-- Disable Row Level Security during initial data load
 ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.saved_trips DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.chat_history DISABLE ROW LEVEL SECURITY;
 
--- 2. SEED PROFILES
+-- 5. INSERT SEED PROFILES
 INSERT INTO public.profiles (id, email, full_name, preferred_language)
 VALUES 
     ('a0000000-0000-0000-0000-000000000001', 'd2025.manas.parekar@ves.ac.in', 'Manas Parekar', 'en'),
-    ('a0000000-0000-0000-0000-000000000002', 'passenger@aeromate.io', 'Alex Mercer', 'en')
-ON CONFLICT (email) DO UPDATE SET full_name = EXCLUDED.full_name;
+    ('a0000000-0000-0000-0000-000000000002', 'passenger@aeromate.io', 'Alex Mercer', 'en');
 
--- 3. SEED SAVED TRIPS
+-- 6. INSERT SEED SAVED TRIPS
 INSERT INTO public.saved_trips (id, user_id, flight_number, airline, origin, destination, travel_date, status, metadata)
 VALUES
     (
@@ -95,10 +101,9 @@ VALUES
         '2026-10-25',
         'scheduled',
         '{"terminal": "2", "gate": "C12", "seat": "4B"}'::jsonb
-    )
-ON CONFLICT (id) DO NOTHING;
+    );
 
--- 4. SEED CHAT HISTORY LOGS
+-- 7. INSERT SEED CHAT HISTORY LOGS
 INSERT INTO public.chat_history (id, user_id, flight_number, role, content)
 VALUES
     (
@@ -114,5 +119,20 @@ VALUES
         'BA142',
         'assistant',
         'Under EU261/UK261 regulations for flight BA142 from LHR to JFK: You are entitled to £520 / €600 compensation per passenger for delays exceeding 3 hours. Additionally, British Airways must provide meal vouchers, drinks, and access to communications at Terminal 5.'
-    )
-ON CONFLICT (id) DO NOTHING;
+    );
+
+-- 8. RE-ENABLE ROW LEVEL SECURITY WITH OPEN ACCESS POLICIES
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.saved_trips ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.chat_history ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public select on profiles" ON public.profiles FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on profiles" ON public.profiles FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update on profiles" ON public.profiles FOR UPDATE USING (true);
+
+CREATE POLICY "Allow public select on saved_trips" ON public.saved_trips FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on saved_trips" ON public.saved_trips FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public delete on saved_trips" ON public.saved_trips FOR DELETE USING (true);
+
+CREATE POLICY "Allow public select on chat_history" ON public.chat_history FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on chat_history" ON public.chat_history FOR INSERT WITH CHECK (true);
