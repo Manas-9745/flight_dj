@@ -8,7 +8,12 @@ import axios from 'axios'
 const getBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL
   if (envUrl && typeof envUrl === 'string' && envUrl.trim()) {
-    const clean = envUrl.trim().replace(/\/$/, '')
+    let clean = envUrl.trim().replace(/\/$/, '')
+    // If client is loading from a mobile phone (LAN IP), auto-map localhost to host IP so phone doesn't fail
+    if (typeof window !== 'undefined' && window.location?.hostname &&
+        window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      clean = clean.replace('localhost', window.location.hostname).replace('127.0.0.1', window.location.hostname)
+    }
     return clean.endsWith('/api') ? clean : `${clean}/api`
   }
   return '/api'
