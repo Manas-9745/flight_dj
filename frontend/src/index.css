@@ -65,12 +65,24 @@
   }
 }
 
-/* Mapbox Overrides */
-.mapboxgl-canvas { border-radius: 1rem; }
-.mapboxgl-ctrl-logo { display: none !important; }
-.mapboxgl-ctrl-attrib { display: none !important; }
+/* Leaflet Radar Overrides */
+.leaflet-container {
+  background: #020617 !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+}
+.leaflet-div-icon,
+.fr24-plane-marker,
+.fr24-leaflet-plane {
+  background: transparent !important;
+  border: none !important;
+}
+.leaflet-popup-content-wrapper {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 8px !important;
+}
+.leaflet-popup-tip {
+  background: #0F172A !important;
+}
 
-/* Chat Scrollbar */
-.chat-scroll { overflow-y: auto; scroll-behavior: smooth; }
-.chat-scroll::-webkit-scrollbar { width: 5px; }
-.chat-scroll::-webkit-scrollbar-thumb { background: #CACAC5; border-radius: 100px; }

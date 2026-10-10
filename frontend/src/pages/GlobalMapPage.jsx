@@ -53,7 +53,7 @@ export default function GlobalMapPage() {
   const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedFlight, setSelectedFlight] = useState(null)
-  const [activeTheme, setActiveTheme] = useState('satellite') // default to rich satellite terrain
+  const [activeTheme, setActiveTheme] = useState('dark') // default to Flightradar24 Dark Radar
   const [showDrawer, setShowDrawer] = useState(false)
   const [lastRefreshed, setLastRefreshed] = useState(null)
   const [isLiveFeed, setIsLiveFeed] = useState(true)
@@ -82,36 +82,39 @@ export default function GlobalMapPage() {
     return () => clearInterval(timer)
   }, [])
 
-  // Initialize Leaflet Map safely (handles React 18 Strict Mode and hot reloads)
+  // Initialize Leaflet Map safely (handles React 18 Strict Mode and resizing)
   useEffect(() => {
     if (!mapContainerRef.current) return
 
-    // Clean up any stale Leaflet instance or ID on this DOM node
+    // If map already initialized, trigger size invalidation
     if (mapRef.current) {
-      try {
-        mapRef.current.remove()
-      } catch (e) {}
-      mapRef.current = null
+      setTimeout(() => {
+        try { mapRef.current?.invalidateSize() } catch (e) {}
+      }, 100)
+      return
     }
+
+    // Clean up any stale Leaflet instance or ID on this DOM node
     if (mapContainerRef.current._leaflet_id) {
       delete mapContainerRef.current._leaflet_id
     }
 
     try {
-      // Center over Indian subcontinent & Arabian Sea (like Flightradar24 view)
+      // Center over Indian subcontinent & Arabian Sea (Flightradar24 view)
       const map = L.map(mapContainerRef.current, {
         center: [20.5937, 78.9629],
         zoom: 5,
         zoomControl: false,
         minZoom: 2,
-        maxZoom: 18
+        maxZoom: 18,
+        preferCanvas: true
       })
 
       // Custom zoom control in bottom right
       L.control.zoom({ position: 'bottom-right' }).addTo(map)
 
       // Add initial tile layer
-      const provider = TILE_PROVIDERS[activeTheme] || TILE_PROVIDERS.satellite
+      const provider = TILE_PROVIDERS[activeTheme] || TILE_PROVIDERS.dark
       const tileLayer = L.tileLayer(provider.url, provider.options).addTo(map)
       tileLayerRef.current = tileLayer
 
@@ -120,29 +123,37 @@ export default function GlobalMapPage() {
       markersLayerRef.current = markersLayer
 
       mapRef.current = map
+
+      // Multi-stage size invalidation to guarantee proper tile sizing
+      const t1 = setTimeout(() => { try { map.invalidateSize() } catch (e) {} }, 80)
+      const t2 = setTimeout(() => { try { map.invalidateSize() } catch (e) {} }, 300)
+      const t3 = setTimeout(() => { try { map.invalidateSize() } catch (e) {} }, 800)
+
+      const handleResize = () => {
+        try { map.invalidateSize() } catch (e) {}
+      }
+      window.addEventListener('resize', handleResize)
+
+      return () => {
+        clearTimeout(t1)
+        clearTimeout(t2)
+        clearTimeout(t3)
+        window.removeEventListener('resize', handleResize)
+      }
     } catch (err) {
       console.warn('Leaflet map initialization:', err.message)
-    }
-
-    return () => {
-      if (mapRef.current) {
-        try {
-          mapRef.current.remove()
-        } catch (e) {}
-        mapRef.current = null
-        tileLayerRef.current = null
-        markersLayerRef.current = null
-      }
     }
   }, [])
 
   // Switch basemap tile layer dynamically
   useEffect(() => {
     if (!mapRef.current) return
-    const provider = TILE_PROVIDERS[activeTheme] || TILE_PROVIDERS.satellite
+    const provider = TILE_PROVIDERS[activeTheme] || TILE_PROVIDERS.dark
 
     if (tileLayerRef.current) {
-      mapRef.current.removeLayer(tileLayerRef.current)
+      try {
+        mapRef.current.removeLayer(tileLayerRef.current)
+      } catch (e) {}
     }
 
     const newLayer = L.tileLayer(provider.url, provider.options).addTo(mapRef.current)
@@ -157,19 +168,22 @@ export default function GlobalMapPage() {
     markersLayerRef.current.clearLayers()
 
     flights.forEach(f => {
-      if (typeof f.latitude !== 'number' || typeof f.longitude !== 'number' || isNaN(f.latitude) || isNaN(f.longitude)) return
-      if (f.latitude === 0 && f.longitude === 0) return
+      const lat = Number(f.latitude)
+      const lon = Number(f.longitude)
+      if (isNaN(lat) || isNaN(lon)) return
+      if (lat === 0 && lon === 0) return
 
       const isSelected = selectedFlight?.callsign && selectedFlight.callsign === f.callsign
       const planeColor = isSelected ? '#38BDF8' : '#FFE600' // vibrant Flightradar24 yellow, cyan if selected
       const planeSize = isSelected ? 26 : 22
+      const heading = typeof f.heading === 'number' ? f.heading : 0
 
       // Custom HTML Marker using pure SVG silhouette with black border and drop shadow
       const icon = L.divIcon({
         className: 'fr24-leaflet-plane',
         html: `
-          <div style="transform: rotate(${f.heading || 0}deg); width: ${planeSize}px; height: ${planeSize}px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-            <svg width="${planeSize}" height="${planeSize}" viewBox="0 0 24 24" style="filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.9));">
+          <div style="transform: rotate(${heading}deg); width: ${planeSize}px; height: ${planeSize}px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.25s linear;">
+            <svg width="${planeSize}" height="${planeSize}" viewBox="0 0 24 24" style="filter: drop-shadow(0px 1px 3px rgba(0,0,0,0.9));">
               <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"
                     fill="${planeColor}"
                     stroke="#000000"
@@ -182,12 +196,12 @@ export default function GlobalMapPage() {
         iconAnchor: [planeSize / 2, planeSize / 2]
       })
 
-      const marker = L.marker([f.latitude, f.longitude], { icon })
+      const marker = L.marker([lat, lon], { icon })
         .addTo(markersLayerRef.current)
         .on('click', () => {
           setSelectedFlight(f)
           if (mapRef.current) {
-            mapRef.current.flyTo([f.latitude, f.longitude], Math.max(mapRef.current.getZoom(), 6), { duration: 0.8 })
+            mapRef.current.flyTo([lat, lon], Math.max(mapRef.current.getZoom(), 6), { duration: 0.8 })
           }
         })
 
@@ -196,7 +210,7 @@ export default function GlobalMapPage() {
           <div style="font-weight:800;color:#FFE600;font-size:12px;letter-spacing:0.5px;">${f.callsign || 'AIRCRAFT'}</div>
           <div style="font-size:10px;color:#94A3B8;margin-top:1px;">${f.airline || f.originCountry || 'Commercial'}</div>
           <div style="font-size:10px;color:#E2E8F0;margin-top:2px;font-family:monospace;">
-            ${f.altitude ? f.altitude.toLocaleString() + ' FT' : 'GND'} · ${f.velocityKts || 0} KTS
+            ${f.altitude ? Math.round(f.altitude).toLocaleString() + ' FT' : 'GND'} · ${f.velocityKts ? Math.round(f.velocityKts) + ' KTS' : '0 KTS'}
           </div>
         </div>
       `, { closeButton: false, offset: [0, -10] })
@@ -204,10 +218,11 @@ export default function GlobalMapPage() {
   }, [flights, selectedFlight])
 
   const filteredFlights = flights.filter(f => {
-    const q = searchTerm.toUpperCase()
+    const q = (searchTerm || '').trim().toUpperCase()
     const country = f.originCountry || f.origin_country || ''
     const airline = f.airline || ''
-    return !q || (f.callsign && f.callsign.includes(q)) || country.toUpperCase().includes(q) || airline.toUpperCase().includes(q)
+    const callsign = f.callsign || ''
+    return !q || callsign.toUpperCase().includes(q) || country.toUpperCase().includes(q) || airline.toUpperCase().includes(q)
   })
 
   // Quick region jumpers
@@ -217,9 +232,14 @@ export default function GlobalMapPage() {
   }
 
   return (
-    <div className="relative w-full h-[calc(100vh-80px)] min-h-[640px] bg-slate-950 overflow-hidden font-sans">
+    <div className="relative w-full h-[calc(100vh-80px)] mt-20 min-h-[600px] bg-[#020617] overflow-hidden font-sans">
       {/* ── 1. Full-screen Interactive Leaflet Map Canvas ── */}
-      <div ref={mapContainerRef} className="absolute inset-0 w-full h-full z-0" />
+      <div
+        ref={mapContainerRef}
+        id="leaflet-radar-map"
+        className="absolute inset-0 w-full h-full z-0"
+        style={{ width: '100%', height: '100%', minHeight: '600px', backgroundColor: '#020617' }}
+      />
 
       {/* ── 2. Flightradar24-Inspired Top Floating Search & Region Bar ── */}
       <div className="absolute top-4 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-3 pointer-events-none">
