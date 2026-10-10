@@ -39,7 +39,7 @@ router.get('/status', (req, res) => {
 router.post('/impact', async (req, res, next) => {
   try {
     const { flightNumber, origin, destination, connectingAirports, date } = req.body;
-    
+
     if (!origin && !destination && !flightNumber) {
       return res.status(400).json({
         success: false,
