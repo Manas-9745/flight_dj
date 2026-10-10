@@ -70,13 +70,17 @@ class StatsService {
   async _fetchLiveFlights(bbox = null) {
     try {
       let url = `${this.openSkyBaseUrl}/states/all`;
-      const params = {};
-      if (bbox) {
-        params.lamin = bbox.minLat;
-        params.lomin = bbox.minLon;
-        params.lamax = bbox.maxLat;
-        params.lomax = bbox.maxLon;
-      }
+      const params = bbox ? {
+        lamin: bbox.minLat,
+        lomin: bbox.minLon,
+        lamax: bbox.maxLat,
+        lomax: bbox.maxLon
+      } : {
+        lamin: 5.0,
+        lomin: 45.0,
+        lamax: 35.0,
+        lomax: 105.0
+      };
 
       const response = await axios.get(url, {
         params,

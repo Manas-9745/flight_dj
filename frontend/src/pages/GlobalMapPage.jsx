@@ -4,92 +4,39 @@ import {
   Search, RefreshCw, Layers, Compass, ArrowUpRight,
   Radio, X, ChevronRight, SlidersHorizontal, MapPin, Gauge
 } from 'lucide-react'
-import mapboxgl from 'mapbox-gl'
-import 'mapbox-gl/dist/mapbox-gl.css'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import { getLiveFlights } from '../services/api'
 
-// High-definition basemap tile configurations
-const MAP_THEMES = {
+// High-definition Leaflet basemap providers (100% free, no tokens required)
+const TILE_PROVIDERS = {
   satellite: {
     name: 'Satellite',
     icon: '🛰️',
-    style: {
-      version: 8,
-      sources: {
-        'esri-satellite': {
-          type: 'raster',
-          tiles: [
-            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-          ],
-          tileSize: 256,
-          attribution: '&copy; Esri, Maxar, Earthstar Geographics'
-        }
-      },
-      layers: [
-        {
-          id: 'esri-satellite-layer',
-          type: 'raster',
-          source: 'esri-satellite',
-          minzoom: 0,
-          maxzoom: 19
-        }
-      ]
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    options: {
+      maxZoom: 18,
+      attribution: '&copy; Esri World Imagery'
     }
   },
   dark: {
     name: 'Dark Radar',
     icon: '🌑',
-    style: {
-      version: 8,
-      sources: {
-        'carto-dark': {
-          type: 'raster',
-          tiles: [
-            'https://a.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}@2x.png',
-            'https://b.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}@2x.png',
-            'https://c.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}@2x.png'
-          ],
-          tileSize: 256,
-          attribution: '&copy; OpenStreetMap contributors, &copy; CARTO'
-        }
-      },
-      layers: [
-        {
-          id: 'carto-dark-layer',
-          type: 'raster',
-          source: 'carto-dark',
-          minzoom: 0,
-          maxzoom: 19
-        }
-      ]
+    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png',
+    options: {
+      subdomains: 'abcd',
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors, &copy; CARTO'
     }
   },
   light: {
     name: 'Daylight',
     icon: '🗺️',
-    style: {
-      version: 8,
-      sources: {
-        'carto-voyager': {
-          type: 'raster',
-          tiles: [
-            'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
-            'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
-            'https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png'
-          ],
-          tileSize: 256,
-          attribution: '&copy; OpenStreetMap contributors, &copy; CARTO'
-        }
-      },
-      layers: [
-        {
-          id: 'carto-voyager-layer',
-          type: 'raster',
-          source: 'carto-voyager',
-          minzoom: 0,
-          maxzoom: 19
-        }
-      ]
+    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    options: {
+      subdomains: 'abcd',
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors, &copy; CARTO'
     }
   }
 }
@@ -98,7 +45,8 @@ export default function GlobalMapPage() {
   const navigate = useNavigate()
   const mapContainerRef = useRef(null)
   const mapRef = useRef(null)
-  const markersRef = useRef([])
+  const tileLayerRef = useRef(null)
+  const markersLayerRef = useRef(null)
 
   const [flights, setFlights] = useState([])
   const [loading, setLoading] = useState(true)
@@ -108,8 +56,7 @@ export default function GlobalMapPage() {
   const [activeTheme, setActiveTheme] = useState('satellite') // default to rich satellite terrain
   const [showDrawer, setShowDrawer] = useState(false)
   const [lastRefreshed, setLastRefreshed] = useState(null)
-
-  const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
+  const [isLiveFeed, setIsLiveFeed] = useState(true)
 
   const fetchFlights = async () => {
     try {
@@ -117,11 +64,12 @@ export default function GlobalMapPage() {
       const res = await getLiveFlights()
       const list = res.flights || res.data || []
       setFlights(list)
+      setIsLiveFeed(!res.isMock)
       setLastRefreshed(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
       setError(null)
     } catch (err) {
       console.error('Failed to load live flights:', err)
-      setError('Live ADS-B feed connection busy. Displaying active aviation corridor snapshot.')
+      setError('Live ADS-B feed connection busy. Displaying regional radar snapshot.')
     } finally {
       setLoading(false)
     }
@@ -134,41 +82,59 @@ export default function GlobalMapPage() {
     return () => clearInterval(timer)
   }, [])
 
-  // Initialize or re-theme map
+  // Initialize Leaflet Map (guaranteed 100% visible, never a black screen)
   useEffect(() => {
     if (!mapContainerRef.current) return
+    if (mapRef.current) return // Already initialized
 
-    if (MAPBOX_TOKEN) {
-      mapboxgl.accessToken = MAPBOX_TOKEN
+    // Center over Indian subcontinent & Arabian Sea (like Flightradar24 view)
+    const map = L.map(mapContainerRef.current, {
+      center: [20.5937, 78.9629],
+      zoom: 5,
+      zoomControl: false,
+      minZoom: 2,
+      maxZoom: 18
+    })
+
+    // Custom zoom control in bottom right
+    L.control.zoom({ position: 'bottom-right' }).addTo(map)
+
+    // Add initial tile layer
+    const provider = TILE_PROVIDERS[activeTheme] || TILE_PROVIDERS.satellite
+    const tileLayer = L.tileLayer(provider.url, provider.options).addTo(map)
+    tileLayerRef.current = tileLayer
+
+    // Markers layer group
+    const markersLayer = L.layerGroup().addTo(map)
+    markersLayerRef.current = markersLayer
+
+    mapRef.current = map
+
+    return () => {
+      map.remove()
+      mapRef.current = null
+    }
+  }, [])
+
+  // Switch basemap tile layer dynamically
+  useEffect(() => {
+    if (!mapRef.current) return
+    const provider = TILE_PROVIDERS[activeTheme] || TILE_PROVIDERS.satellite
+
+    if (tileLayerRef.current) {
+      mapRef.current.removeLayer(tileLayerRef.current)
     }
 
-    const themeConfig = MAP_THEMES[activeTheme] || MAP_THEMES.satellite
-    const initialStyle = MAPBOX_TOKEN && activeTheme === 'satellite'
-      ? 'mapbox://styles/mapbox/satellite-streets-v12'
-      : themeConfig.style
-
-    if (!mapRef.current) {
-      // Center directly on Indian subcontinent & Middle East corridor (like Flightradar24 view)
-      const map = new mapboxgl.Map({
-        container: mapContainerRef.current,
-        style: initialStyle,
-        center: [75.5, 21.0],
-        zoom: 4.3,
-      })
-      mapRef.current = map
-      map.addControl(new mapboxgl.NavigationControl({ showCompass: true }), 'bottom-right')
-    } else {
-      mapRef.current.setStyle(initialStyle)
-    }
-  }, [activeTheme, MAPBOX_TOKEN])
+    const newLayer = L.tileLayer(provider.url, provider.options).addTo(mapRef.current)
+    tileLayerRef.current = newLayer
+  }, [activeTheme])
 
   // Plot Flightradar24-style yellow airplane markers
   useEffect(() => {
-    if (!mapRef.current) return
+    if (!markersLayerRef.current || !mapRef.current) return
 
-    // Clear old markers
-    markersRef.current.forEach(m => m.remove())
-    markersRef.current = []
+    // Clear previous markers
+    markersLayerRef.current.clearLayers()
 
     flights.forEach(f => {
       if (typeof f.latitude !== 'number' || typeof f.longitude !== 'number' || isNaN(f.latitude) || isNaN(f.longitude)) return
@@ -178,55 +144,42 @@ export default function GlobalMapPage() {
       const planeColor = isSelected ? '#38BDF8' : '#FFE600' // vibrant Flightradar24 yellow, cyan if selected
       const planeSize = isSelected ? 26 : 22
 
-      const el = document.createElement('div')
-      el.className = 'fr24-aircraft-marker'
-      el.style.cssText = `
-        width: ${planeSize}px;
-        height: ${planeSize}px;
-        cursor: pointer;
-        transform: rotate(${f.heading || 0}deg);
-        transition: transform 0.3s ease, filter 0.2s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: ${isSelected ? 50 : 10};
-      `
-
-      // Pure Flightradar24 aircraft SVG silhouette with clean black outline and realistic drop shadow
-      el.innerHTML = `
-        <svg width="${planeSize}" height="${planeSize}" viewBox="0 0 24 24" style="filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.85));">
-          <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"
-                fill="${planeColor}"
-                stroke="#000000"
-                stroke-width="0.75"
-                stroke-linejoin="round" />
-        </svg>
-      `
-
-      el.addEventListener('click', (e) => {
-        e.stopPropagation()
-        setSelectedFlight(f)
-        if (mapRef.current) {
-          mapRef.current.flyTo({ center: [f.longitude, f.latitude], zoom: Math.max(mapRef.current.getZoom(), 6), speed: 1.2 })
-        }
+      // Custom HTML Marker using pure SVG silhouette with black border and drop shadow
+      const icon = L.divIcon({
+        className: 'fr24-leaflet-plane',
+        html: `
+          <div style="transform: rotate(${f.heading || 0}deg); width: ${planeSize}px; height: ${planeSize}px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+            <svg width="${planeSize}" height="${planeSize}" viewBox="0 0 24 24" style="filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.9));">
+              <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"
+                    fill="${planeColor}"
+                    stroke="#000000"
+                    stroke-width="0.75"
+                    stroke-linejoin="round" />
+            </svg>
+          </div>
+        `,
+        iconSize: [planeSize, planeSize],
+        iconAnchor: [planeSize / 2, planeSize / 2]
       })
 
-      const marker = new mapboxgl.Marker({ element: el })
-        .setLngLat([f.longitude, f.latitude])
-        .setPopup(
-          new mapboxgl.Popup({ offset: 14, closeButton: false }).setHTML(`
-            <div style="font-family:Inter,sans-serif;padding:3px 5px;background:#0F172A;color:#FFFFFF;border-radius:6px;border:1px solid rgba(255,255,255,0.15);box-shadow:0 4px 12px rgba(0,0,0,0.4);">
-              <div style="font-weight:800;color:#FFE600;font-size:12px;letter-spacing:0.5px;">${f.callsign || 'AIRCRAFT'}</div>
-              <div style="font-size:10px;color:#94A3B8;margin-top:1px;">${f.airline || f.originCountry || 'Commercial'}</div>
-              <div style="font-size:10px;color:#E2E8F0;margin-top:2px;font-family:monospace;">
-                ${f.altitude ? f.altitude.toLocaleString() + ' FT' : 'GND'} · ${f.velocityKts || 0} KTS
-              </div>
-            </div>
-          `)
-        )
-        .addTo(mapRef.current)
+      const marker = L.marker([f.latitude, f.longitude], { icon })
+        .addTo(markersLayerRef.current)
+        .on('click', () => {
+          setSelectedFlight(f)
+          if (mapRef.current) {
+            mapRef.current.flyTo([f.latitude, f.longitude], Math.max(mapRef.current.getZoom(), 6), { duration: 0.8 })
+          }
+        })
 
-      markersRef.current.push(marker)
+      marker.bindPopup(`
+        <div style="font-family:Inter,sans-serif;padding:3px 5px;background:#0F172A;color:#FFFFFF;border-radius:6px;border:1px solid rgba(255,255,255,0.15);box-shadow:0 4px 12px rgba(0,0,0,0.4);">
+          <div style="font-weight:800;color:#FFE600;font-size:12px;letter-spacing:0.5px;">${f.callsign || 'AIRCRAFT'}</div>
+          <div style="font-size:10px;color:#94A3B8;margin-top:1px;">${f.airline || f.originCountry || 'Commercial'}</div>
+          <div style="font-size:10px;color:#E2E8F0;margin-top:2px;font-family:monospace;">
+            ${f.altitude ? f.altitude.toLocaleString() + ' FT' : 'GND'} · ${f.velocityKts || 0} KTS
+          </div>
+        </div>
+      `, { closeButton: false, offset: [0, -10] })
     })
   }, [flights, selectedFlight])
 
@@ -240,20 +193,20 @@ export default function GlobalMapPage() {
   // Quick region jumpers
   const focusRegion = (coords, zoom) => {
     if (!mapRef.current) return
-    mapRef.current.flyTo({ center: coords, zoom, speed: 1.4 })
+    mapRef.current.flyTo(coords, zoom, { duration: 1.2 })
   }
 
   return (
     <div className="relative w-full h-[calc(100vh-80px)] min-h-[640px] bg-slate-950 overflow-hidden font-sans">
-      {/* ── 1. Full-screen Interactive Map Canvas ── */}
-      <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
+      {/* ── 1. Full-screen Interactive Leaflet Map Canvas ── */}
+      <div ref={mapContainerRef} className="absolute inset-0 w-full h-full z-0" />
 
       {/* ── 2. Flightradar24-Inspired Top Floating Search & Region Bar ── */}
       <div className="absolute top-4 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-3 pointer-events-none">
         {/* Left: Quick Region Buttons */}
         <div className="flex items-center gap-1.5 bg-slate-900/90 backdrop-blur-md p-1.5 rounded-full border border-white/15 shadow-xl pointer-events-auto">
           <button
-            onClick={() => focusRegion([76.5, 21.0], 4.5)}
+            onClick={() => focusRegion([20.5937, 78.9629], 5)}
             className="px-3 py-1.5 rounded-full text-xs font-semibold text-white bg-slate-800 hover:bg-slate-700 transition flex items-center gap-1.5"
             title="Focus Indian Subcontinent & Arabian Sea"
           >
@@ -261,7 +214,7 @@ export default function GlobalMapPage() {
             <span className="hidden sm:inline">India & Gulf</span>
           </button>
           <button
-            onClick={() => focusRegion([54.0, 24.5], 5.0)}
+            onClick={() => focusRegion([24.5, 54.0], 6)}
             className="px-3 py-1.5 rounded-full text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition flex items-center gap-1.5"
             title="Focus Middle East Hubs"
           >
@@ -269,7 +222,7 @@ export default function GlobalMapPage() {
             <span className="hidden sm:inline">Middle East</span>
           </button>
           <button
-            onClick={() => focusRegion([15.0, 48.0], 4.2)}
+            onClick={() => focusRegion([48.0, 15.0], 5)}
             className="px-3 py-1.5 rounded-full text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition flex items-center gap-1.5"
             title="Focus Europe Corridor"
           >
@@ -277,7 +230,7 @@ export default function GlobalMapPage() {
             <span className="hidden sm:inline">Europe</span>
           </button>
           <button
-            onClick={() => focusRegion([20.0, 30.0], 2.2)}
+            onClick={() => focusRegion([25.0, 30.0], 3)}
             className="px-3 py-1.5 rounded-full text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition flex items-center gap-1.5"
             title="Global World View"
           >
@@ -292,7 +245,7 @@ export default function GlobalMapPage() {
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search flight (e.g. AIC645, BA142, Emirates)..."
+              placeholder="Search flight (e.g. AIC2389, IGO53M, Air India)..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-8 py-2 bg-slate-900/90 backdrop-blur-md border border-white/20 rounded-full text-xs text-white placeholder-slate-400 shadow-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400"
@@ -312,7 +265,7 @@ export default function GlobalMapPage() {
         <div className="flex items-center gap-2 pointer-events-auto">
           {/* Basemap Toggle */}
           <div className="flex items-center bg-slate-900/90 backdrop-blur-md p-1 rounded-full border border-white/15 shadow-xl">
-            {Object.entries(MAP_THEMES).map(([key, t]) => (
+            {Object.entries(TILE_PROVIDERS).map(([key, t]) => (
               <button
                 key={key}
                 onClick={() => setActiveTheme(key)}
@@ -332,7 +285,7 @@ export default function GlobalMapPage() {
           <div className="bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/15 shadow-xl flex items-center gap-2 text-xs font-semibold text-white">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
             <span className="text-amber-400 font-mono font-bold">{filteredFlights.length}</span>
-            <span className="hidden sm:inline text-slate-300">Live ADS-B</span>
+            <span className="hidden sm:inline text-slate-300">{isLiveFeed ? 'Live OpenSky' : 'Radar Snapshot'}</span>
           </div>
 
           {/* Drawer Toggle */}
@@ -436,7 +389,7 @@ export default function GlobalMapPage() {
                 onClick={() => {
                   setSelectedFlight(f)
                   if (mapRef.current) {
-                    mapRef.current.flyTo({ center: [f.longitude, f.latitude], zoom: 6 })
+                    mapRef.current.flyTo([f.latitude, f.longitude], 6)
                   }
                 }}
                 className={`p-3 text-xs flex items-center justify-between cursor-pointer transition ${
@@ -467,7 +420,7 @@ export default function GlobalMapPage() {
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
         <span>AeroMate Global ADS-B Radar</span>
         <span className="text-slate-500">·</span>
-        <span className="text-slate-400">120s Telemetry Cache</span>
+        <span className="text-slate-400">120s Live Cache</span>
       </div>
     </div>
   )
