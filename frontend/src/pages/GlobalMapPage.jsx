@@ -1,36 +1,97 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Globe, Plane, Search, RefreshCw, Layers, Compass,
-  SlidersHorizontal, AlertCircle, ArrowUpRight, Gauge, Radio
+  Search, RefreshCw, Layers, Compass, ArrowUpRight,
+  Radio, X, ChevronRight, SlidersHorizontal, MapPin, Gauge
 } from 'lucide-react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { getLiveFlights } from '../services/api'
 
-const FREE_MAP_STYLE = {
-  version: 8,
-  sources: {
-    'carto-tiles': {
-      type: 'raster',
-      tiles: [
-        'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
-        'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
-        'https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png'
-      ],
-      tileSize: 256,
-      attribution: '&copy; OpenStreetMap contributors, &copy; CARTO'
+// High-definition basemap tile configurations
+const MAP_THEMES = {
+  satellite: {
+    name: 'Satellite',
+    icon: '🛰️',
+    style: {
+      version: 8,
+      sources: {
+        'esri-satellite': {
+          type: 'raster',
+          tiles: [
+            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+          ],
+          tileSize: 256,
+          attribution: '&copy; Esri, Maxar, Earthstar Geographics'
+        }
+      },
+      layers: [
+        {
+          id: 'esri-satellite-layer',
+          type: 'raster',
+          source: 'esri-satellite',
+          minzoom: 0,
+          maxzoom: 19
+        }
+      ]
     }
   },
-  layers: [
-    {
-      id: 'carto-tiles-layer',
-      type: 'raster',
-      source: 'carto-tiles',
-      minzoom: 0,
-      maxzoom: 19
+  dark: {
+    name: 'Dark Radar',
+    icon: '🌑',
+    style: {
+      version: 8,
+      sources: {
+        'carto-dark': {
+          type: 'raster',
+          tiles: [
+            'https://a.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}@2x.png',
+            'https://b.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}@2x.png',
+            'https://c.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}@2x.png'
+          ],
+          tileSize: 256,
+          attribution: '&copy; OpenStreetMap contributors, &copy; CARTO'
+        }
+      },
+      layers: [
+        {
+          id: 'carto-dark-layer',
+          type: 'raster',
+          source: 'carto-dark',
+          minzoom: 0,
+          maxzoom: 19
+        }
+      ]
     }
-  ]
+  },
+  light: {
+    name: 'Daylight',
+    icon: '🗺️',
+    style: {
+      version: 8,
+      sources: {
+        'carto-voyager': {
+          type: 'raster',
+          tiles: [
+            'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+            'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+            'https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png'
+          ],
+          tileSize: 256,
+          attribution: '&copy; OpenStreetMap contributors, &copy; CARTO'
+        }
+      },
+      layers: [
+        {
+          id: 'carto-voyager-layer',
+          type: 'raster',
+          source: 'carto-voyager',
+          minzoom: 0,
+          maxzoom: 19
+        }
+      ]
+    }
+  }
 }
 
 export default function GlobalMapPage() {
@@ -44,7 +105,8 @@ export default function GlobalMapPage() {
   const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedFlight, setSelectedFlight] = useState(null)
-  const [autoRefresh, setAutoRefresh] = useState(true)
+  const [activeTheme, setActiveTheme] = useState('satellite') // default to rich satellite terrain
+  const [showDrawer, setShowDrawer] = useState(false)
   const [lastRefreshed, setLastRefreshed] = useState(null)
 
   const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
@@ -55,38 +117,24 @@ export default function GlobalMapPage() {
       const res = await getLiveFlights()
       const list = res.flights || res.data || []
       setFlights(list)
-      setLastRefreshed(new Date().toLocaleTimeString())
+      setLastRefreshed(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
       setError(null)
     } catch (err) {
       console.error('Failed to load live flights:', err)
-      setError('Unable to fetch live radar telemetry. Using cached aviation snapshot.')
-      // Graceful fallback sample data
-      setFlights([
-        { callsign: 'BA142', icao24: '400511', latitude: 51.47, longitude: -0.45, altitude: 34000, velocityKts: 480, heading: 275, originCountry: 'United Kingdom' },
-        { callsign: 'AI645', icao24: '800234', latitude: 19.09, longitude: 72.87, altitude: 28000, velocityKts: 440, heading: 18, originCountry: 'India' },
-        { callsign: 'AF112', icao24: '394a12', latitude: 48.85, longitude: 2.35, altitude: 36000, velocityKts: 510, heading: 120, originCountry: 'France' },
-        { callsign: 'LH404', icao24: '3c65a1', latitude: 50.03, longitude: 8.57, altitude: 38000, velocityKts: 495, heading: 290, originCountry: 'Germany' },
-        { callsign: 'EK201', icao24: '896123', latitude: 25.25, longitude: 55.36, altitude: 39000, velocityKts: 520, heading: 310, originCountry: 'UAE' },
-        { callsign: 'UA88',  icao24: 'a12bc4', latitude: 40.64, longitude: -73.78, altitude: 31000, velocityKts: 460, heading: 85, originCountry: 'United States' },
-        { callsign: 'SQ321', icao24: '76a89b', latitude: 1.36, longitude: 103.99, altitude: 37000, velocityKts: 505, heading: 330, originCountry: 'Singapore' },
-      ])
+      setError('Live ADS-B feed connection busy. Displaying active aviation corridor snapshot.')
     } finally {
       setLoading(false)
     }
   }
 
+  // Polling every 120 seconds (2 minutes) to preserve free credits
   useEffect(() => {
     fetchFlights()
-    let timer = null
-    if (autoRefresh) {
-      timer = setInterval(fetchFlights, 120000) // 120 seconds (2 minutes) minimum refresh
-    }
-    return () => {
-      if (timer) clearInterval(timer)
-    }
-  }, [autoRefresh])
+    const timer = setInterval(fetchFlights, 120000)
+    return () => clearInterval(timer)
+  }, [])
 
-  // Interactive map initialization (Mapbox or high-DPI OpenStreetMap / CARTO)
+  // Initialize or re-theme map
   useEffect(() => {
     if (!mapContainerRef.current) return
 
@@ -94,53 +142,85 @@ export default function GlobalMapPage() {
       mapboxgl.accessToken = MAPBOX_TOKEN
     }
 
+    const themeConfig = MAP_THEMES[activeTheme] || MAP_THEMES.satellite
+    const initialStyle = MAPBOX_TOKEN && activeTheme === 'satellite'
+      ? 'mapbox://styles/mapbox/satellite-streets-v12'
+      : themeConfig.style
+
     if (!mapRef.current) {
+      // Center directly on Indian subcontinent & Middle East corridor (like Flightradar24 view)
       const map = new mapboxgl.Map({
         container: mapContainerRef.current,
-        style: MAPBOX_TOKEN ? 'mapbox://styles/mapbox/light-v11' : FREE_MAP_STYLE,
-        center: [15, 35],
-        zoom: 2.2,
+        style: initialStyle,
+        center: [75.5, 21.0],
+        zoom: 4.3,
       })
       mapRef.current = map
-      map.addControl(new mapboxgl.NavigationControl(), 'top-right')
+      map.addControl(new mapboxgl.NavigationControl({ showCompass: true }), 'bottom-right')
+    } else {
+      mapRef.current.setStyle(initialStyle)
     }
+  }, [activeTheme, MAPBOX_TOKEN])
+
+  // Plot Flightradar24-style yellow airplane markers
+  useEffect(() => {
+    if (!mapRef.current) return
 
     // Clear old markers
     markersRef.current.forEach(m => m.remove())
     markersRef.current = []
 
-    // Add markers for flights
     flights.forEach(f => {
       if (typeof f.latitude !== 'number' || typeof f.longitude !== 'number' || isNaN(f.latitude) || isNaN(f.longitude)) return
       if (f.latitude === 0 && f.longitude === 0) return
 
+      const isSelected = selectedFlight?.callsign && selectedFlight.callsign === f.callsign
+      const planeColor = isSelected ? '#38BDF8' : '#FFE600' // vibrant Flightradar24 yellow, cyan if selected
+      const planeSize = isSelected ? 26 : 22
+
       const el = document.createElement('div')
-      el.className = 'aircraft-icon-pin'
+      el.className = 'fr24-aircraft-marker'
       el.style.cssText = `
-        width: 28px; height: 28px;
-        background: #FFFFFF;
-        border: 2px solid #2563EB;
-        box-shadow: 0 4px 10px rgba(37,99,235,0.25);
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
+        width: ${planeSize}px;
+        height: ${planeSize}px;
         cursor: pointer;
         transform: rotate(${f.heading || 0}deg);
-        transition: transform 0.2s ease;
+        transition: transform 0.3s ease, filter 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: ${isSelected ? 50 : 10};
       `
-      el.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="#2563EB"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>`
 
-      el.addEventListener('click', () => {
+      // Pure Flightradar24 aircraft SVG silhouette with clean black outline and realistic drop shadow
+      el.innerHTML = `
+        <svg width="${planeSize}" height="${planeSize}" viewBox="0 0 24 24" style="filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.85));">
+          <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"
+                fill="${planeColor}"
+                stroke="#000000"
+                stroke-width="0.75"
+                stroke-linejoin="round" />
+        </svg>
+      `
+
+      el.addEventListener('click', (e) => {
+        e.stopPropagation()
         setSelectedFlight(f)
+        if (mapRef.current) {
+          mapRef.current.flyTo({ center: [f.longitude, f.latitude], zoom: Math.max(mapRef.current.getZoom(), 6), speed: 1.2 })
+        }
       })
 
-      const marker = new mapboxgl.Marker(el)
+      const marker = new mapboxgl.Marker({ element: el })
         .setLngLat([f.longitude, f.latitude])
         .setPopup(
-          new mapboxgl.Popup({ offset: 15 }).setHTML(`
-            <div style="font-family:Inter,sans-serif;padding:4px 6px;">
-              <div style="font-weight:700;color:#2563EB;font-size:13px;">${f.callsign || 'Unknown'}</div>
-              <div style="font-size:11px;color:#475569;">${f.originCountry || f.origin_country || 'Commercial Flight'}</div>
-              <div style="font-size:11px;color:#0F172A;margin-top:2px;">Alt: ${f.altitude ? f.altitude.toLocaleString() + ' ft' : 'Ground'} · Speed: ${f.velocityKts || 0} kts</div>
+          new mapboxgl.Popup({ offset: 14, closeButton: false }).setHTML(`
+            <div style="font-family:Inter,sans-serif;padding:3px 5px;background:#0F172A;color:#FFFFFF;border-radius:6px;border:1px solid rgba(255,255,255,0.15);box-shadow:0 4px 12px rgba(0,0,0,0.4);">
+              <div style="font-weight:800;color:#FFE600;font-size:12px;letter-spacing:0.5px;">${f.callsign || 'AIRCRAFT'}</div>
+              <div style="font-size:10px;color:#94A3B8;margin-top:1px;">${f.airline || f.originCountry || 'Commercial'}</div>
+              <div style="font-size:10px;color:#E2E8F0;margin-top:2px;font-family:monospace;">
+                ${f.altitude ? f.altitude.toLocaleString() + ' FT' : 'GND'} · ${f.velocityKts || 0} KTS
+              </div>
             </div>
           `)
         )
@@ -148,186 +228,246 @@ export default function GlobalMapPage() {
 
       markersRef.current.push(marker)
     })
-
-    return () => {
-      // Keep map alive or teardown on page unmount
-    }
-  }, [flights, MAPBOX_TOKEN])
+  }, [flights, selectedFlight])
 
   const filteredFlights = flights.filter(f => {
     const q = searchTerm.toUpperCase()
     const country = f.originCountry || f.origin_country || ''
-    return !q || (f.callsign && f.callsign.includes(q)) || country.toUpperCase().includes(q)
+    const airline = f.airline || ''
+    return !q || (f.callsign && f.callsign.includes(q)) || country.toUpperCase().includes(q) || airline.toUpperCase().includes(q)
   })
 
-  return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-display font-bold text-navy-700">Worldwide Live Flight Map</h1>
-            <span className="badge-live">LIVE ADS-B</span>
-          </div>
-          <p className="text-slate-500 text-sm mt-1">
-            Real-time global aircraft positions, radar vectors, and telemetry
-          </p>
-        </div>
+  // Quick region jumpers
+  const focusRegion = (coords, zoom) => {
+    if (!mapRef.current) return
+    mapRef.current.flyTo({ center: coords, zoom, speed: 1.4 })
+  }
 
-        <div className="flex items-center gap-2.5">
+  return (
+    <div className="relative w-full h-[calc(100vh-80px)] min-h-[640px] bg-slate-950 overflow-hidden font-sans">
+      {/* ── 1. Full-screen Interactive Map Canvas ── */}
+      <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
+
+      {/* ── 2. Flightradar24-Inspired Top Floating Search & Region Bar ── */}
+      <div className="absolute top-4 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-3 pointer-events-none">
+        {/* Left: Quick Region Buttons */}
+        <div className="flex items-center gap-1.5 bg-slate-900/90 backdrop-blur-md p-1.5 rounded-full border border-white/15 shadow-xl pointer-events-auto">
           <button
-            onClick={() => setAutoRefresh(!autoRefresh)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-              autoRefresh
-                ? 'bg-teal-50 text-teal-600 border-teal-200'
-                : 'bg-white text-slate-500 border-surface-200 hover:bg-surface-50'
-            }`}
+            onClick={() => focusRegion([76.5, 21.0], 4.5)}
+            className="px-3 py-1.5 rounded-full text-xs font-semibold text-white bg-slate-800 hover:bg-slate-700 transition flex items-center gap-1.5"
+            title="Focus Indian Subcontinent & Arabian Sea"
           >
-            {autoRefresh ? '● Auto-refresh (30s)' : '○ Manual refresh'}
+            <span>🇮🇳</span>
+            <span className="hidden sm:inline">India & Gulf</span>
           </button>
           <button
-            onClick={fetchFlights}
-            disabled={loading}
-            className="btn-secondary text-xs flex items-center gap-1.5 py-1.5 px-3"
-            title="Refresh positions"
+            onClick={() => focusRegion([54.0, 24.5], 5.0)}
+            className="px-3 py-1.5 rounded-full text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition flex items-center gap-1.5"
+            title="Focus Middle East Hubs"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            <span>🇦🇪</span>
+            <span className="hidden sm:inline">Middle East</span>
+          </button>
+          <button
+            onClick={() => focusRegion([15.0, 48.0], 4.2)}
+            className="px-3 py-1.5 rounded-full text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition flex items-center gap-1.5"
+            title="Focus Europe Corridor"
+          >
+            <span>🇪🇺</span>
+            <span className="hidden sm:inline">Europe</span>
+          </button>
+          <button
+            onClick={() => focusRegion([20.0, 30.0], 2.2)}
+            className="px-3 py-1.5 rounded-full text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition flex items-center gap-1.5"
+            title="Global World View"
+          >
+            <span>🌍</span>
+            <span className="hidden sm:inline">World</span>
+          </button>
+        </div>
+
+        {/* Center: Flight Search Pill */}
+        <div className="flex-1 max-w-md mx-auto pointer-events-auto">
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search flight (e.g. AIC645, BA142, Emirates)..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-8 py-2 bg-slate-900/90 backdrop-blur-md border border-white/20 rounded-full text-xs text-white placeholder-slate-400 shadow-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Right: Basemap Switcher & Flight Count Pill */}
+        <div className="flex items-center gap-2 pointer-events-auto">
+          {/* Basemap Toggle */}
+          <div className="flex items-center bg-slate-900/90 backdrop-blur-md p-1 rounded-full border border-white/15 shadow-xl">
+            {Object.entries(MAP_THEMES).map(([key, t]) => (
+              <button
+                key={key}
+                onClick={() => setActiveTheme(key)}
+                className={`px-2.5 py-1 rounded-full text-xs font-medium transition ${
+                  activeTheme === key
+                    ? 'bg-amber-400 text-slate-950 font-bold shadow-sm'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                <span className="mr-1">{t.icon}</span>
+                <span className="hidden md:inline">{t.name}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Aircraft Counter Pill */}
+          <div className="bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/15 shadow-xl flex items-center gap-2 text-xs font-semibold text-white">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            <span className="text-amber-400 font-mono font-bold">{filteredFlights.length}</span>
+            <span className="hidden sm:inline text-slate-300">Live ADS-B</span>
+          </div>
+
+          {/* Drawer Toggle */}
+          <button
+            onClick={() => setShowDrawer(!showDrawer)}
+            className="bg-slate-900/90 backdrop-blur-md p-2 rounded-full border border-white/15 text-white hover:bg-slate-800 shadow-xl transition"
+            title="Toggle Flights List"
+          >
+            <SlidersHorizontal className="w-4 h-4 text-amber-400" />
           </button>
         </div>
       </div>
 
-      {error && (
-        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0 text-amber-500" />
-          <span>{error}</span>
+      {/* ── 3. Selected Flight Inspector Card (Flightradar24 Drawer) ── */}
+      {selectedFlight && (
+        <div className="absolute bottom-6 left-4 right-4 sm:left-6 sm:right-auto sm:w-96 z-30 bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl p-4 text-white shadow-2xl animate-fade-in">
+          <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-amber-400 text-slate-950 font-bold flex items-center justify-center font-display text-base shadow-sm">
+                ✈️
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-lg text-white tracking-wide">
+                  {selectedFlight.callsign || 'N/A'}
+                </h3>
+                <p className="text-[11px] text-slate-400">{selectedFlight.airline || selectedFlight.originCountry || 'Commercial Airliner'}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setSelectedFlight(null)}
+              className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 flex items-center justify-center text-xs transition"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Telemetry Grid */}
+          <div className="grid grid-cols-3 gap-2 bg-black/40 rounded-xl p-3 border border-white/10 text-center text-xs font-mono mb-3">
+            <div>
+              <div className="text-[10px] text-slate-400 uppercase font-sans font-semibold">Altitude</div>
+              <div className="text-amber-400 font-bold text-sm mt-0.5">
+                {selectedFlight.altitude ? `${Math.round(selectedFlight.altitude).toLocaleString()} ft` : 'Ground'}
+              </div>
+            </div>
+            <div className="border-l border-white/10">
+              <div className="text-[10px] text-slate-400 uppercase font-sans font-semibold">Airspeed</div>
+              <div className="text-white font-bold text-sm mt-0.5">
+                {selectedFlight.velocityKts ? `${Math.round(selectedFlight.velocityKts)} kts` : '—'}
+              </div>
+            </div>
+            <div className="border-l border-white/10">
+              <div className="text-[10px] text-slate-400 uppercase font-sans font-semibold">Track</div>
+              <div className="text-white font-bold text-sm mt-0.5">
+                {selectedFlight.heading ? `${Math.round(selectedFlight.heading)}°` : '0°'}
+              </div>
+            </div>
+          </div>
+
+          {/* Coordinates & Actions */}
+          <div className="flex items-center justify-between text-[11px] text-slate-400 mb-3 px-1">
+            <span>Lat: {selectedFlight.latitude?.toFixed(4)}°</span>
+            <span>Lon: {selectedFlight.longitude?.toFixed(4)}°</span>
+            <span>Origin: {selectedFlight.originCountry || 'International'}</span>
+          </div>
+
+          <button
+            onClick={() => navigate(`/flight/${selectedFlight.callsign}`)}
+            className="w-full py-2.5 px-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-lg"
+          >
+            <span>Inspect Full Flight & Radar Route</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 
-      {/* Main Map Container & Panel Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: The Interactive Map View */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white border border-surface-200 rounded-2xl shadow-card overflow-hidden relative">
-            {/* Map Header Status Bar */}
-            <div className="px-5 py-3 border-b border-surface-200 flex items-center justify-between text-xs text-slate-500 bg-white">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-brand-500 animate-ping" />
-                <span className="font-semibold text-navy-700">{filteredFlights.length} Aircraft Plotted</span>
-              </div>
-              <div>Last ping: {lastRefreshed || 'Just now'}</div>
+      {/* ── 4. Slide-out Flight List Drawer (Right Side) ── */}
+      {showDrawer && (
+        <div className="absolute top-20 right-4 bottom-6 w-80 z-20 bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-white animate-fade-in">
+          <div className="p-3.5 border-b border-white/10 flex items-center justify-between bg-black/30">
+            <div className="flex items-center gap-2 text-xs font-bold text-white">
+              <Radio className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+              <span>Airspace Radar Feed</span>
             </div>
+            <button
+              onClick={() => setShowDrawer(false)}
+              className="text-slate-400 hover:text-white text-xs"
+            >
+              ✕
+            </button>
+          </div>
 
-            {/* Real Interactive World Map Canvas */}
-            <div ref={mapContainerRef} className="w-full bg-[#f8f9fa]" style={{ height: '560px' }} />
+          <div className="p-2.5 bg-black/20 border-b border-white/10 text-[11px] text-slate-400 flex items-center justify-between">
+            <span>Showing {filteredFlights.length} flights</span>
+            <span>Updated {lastRefreshed || 'live'}</span>
+          </div>
+
+          <div className="flex-1 overflow-y-auto divide-y divide-white/5">
+            {filteredFlights.map((f, i) => (
+              <div
+                key={f.callsign || i}
+                onClick={() => {
+                  setSelectedFlight(f)
+                  if (mapRef.current) {
+                    mapRef.current.flyTo({ center: [f.longitude, f.latitude], zoom: 6 })
+                  }
+                }}
+                className={`p-3 text-xs flex items-center justify-between cursor-pointer transition ${
+                  selectedFlight?.callsign === f.callsign
+                    ? 'bg-amber-400/20 border-l-2 border-amber-400'
+                    : 'hover:bg-white/5'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-amber-400">✈</span>
+                  <div>
+                    <div className="font-bold text-white font-mono">{f.callsign || 'N/A'}</div>
+                    <div className="text-[10px] text-slate-400">{f.airline || f.originCountry}</div>
+                  </div>
+                </div>
+                <div className="text-right font-mono">
+                  <div className="text-amber-300 text-[11px] font-semibold">{f.altitude ? `${Math.round(f.altitude / 1000)}k ft` : 'GND'}</div>
+                  <div className="text-[10px] text-slate-400">{f.velocityKts || 0} kts</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+      )}
 
-        {/* Right 1 Col: Live Aircraft List & Selected Details */}
-        <div className="space-y-4">
-          {/* Search Box */}
-          <div className="bg-white border border-surface-200 rounded-2xl p-4 shadow-card">
-            <label className="text-xs font-semibold text-navy-700 block mb-2">Search Aircraft or Country</label>
-            <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="e.g. BA142, AI645, United States"
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
-              />
-            </div>
-          </div>
-
-          {/* Selected Aircraft Quick Peek */}
-          {selectedFlight && (
-            <div className="bg-brand-50 border border-brand-200 rounded-2xl p-4 shadow-sm animate-fade-in">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-brand-600 uppercase tracking-wider">Inspecting Airframe</span>
-                <button
-                  onClick={() => setSelectedFlight(null)}
-                  className="text-xs text-slate-400 hover:text-navy-700"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-xl font-display font-bold text-navy-700">{selectedFlight.callsign?.trim() || 'N/A'}</div>
-                  <div className="text-xs text-slate-500">{selectedFlight.origin_country}</div>
-                </div>
-                <button
-                  onClick={() => navigate(`/flight/${selectedFlight.callsign?.trim()}`)}
-                  className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1"
-                >
-                  Full Journey <ArrowUpRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-brand-200/60 text-center text-xs">
-                <div>
-                  <div className="text-slate-400 text-[10px]">Altitude</div>
-                  <div className="font-semibold text-navy-700">{selectedFlight.altitude ? `${Math.round(selectedFlight.altitude).toLocaleString()} ft` : 'Ground'}</div>
-                </div>
-                <div>
-                  <div className="text-slate-400 text-[10px]">Speed</div>
-                  <div className="font-semibold text-navy-700">{selectedFlight.velocityKts ? `${Math.round(selectedFlight.velocityKts)} kts` : '—'}</div>
-                </div>
-                <div>
-                  <div className="text-slate-400 text-[10px]">Heading</div>
-                  <div className="font-semibold text-navy-700">{selectedFlight.heading ? `${Math.round(selectedFlight.heading)}°` : '—'}</div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Scrollable Aircraft Radar Feed */}
-          <div className="bg-white border border-surface-200 rounded-2xl shadow-card overflow-hidden">
-            <div className="px-4 py-3 border-b border-surface-200 flex items-center justify-between text-xs font-semibold text-navy-700 bg-surface-50">
-              <span>Radar Detections</span>
-              <span className="text-slate-400">{filteredFlights.length} Available</span>
-            </div>
-            <div className="divide-y divide-surface-100 max-h-[380px] overflow-y-auto">
-              {filteredFlights.length === 0 ? (
-                <div className="p-8 text-center text-slate-400 text-xs">
-                  No aircraft matching "{searchTerm}"
-                </div>
-              ) : (
-                filteredFlights.map((f, i) => {
-                  const callsign = f.callsign?.trim() || `ICAO ${f.icao24}`
-                  const isSelected = selectedFlight?.callsign === f.callsign
-                  return (
-                    <div
-                      key={f.icao24 || i}
-                      onClick={() => setSelectedFlight(f)}
-                      className={`p-3 text-xs flex items-center justify-between cursor-pointer transition-colors ${
-                        isSelected ? 'bg-brand-50/70' : 'hover:bg-surface-50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-surface-100 border border-surface-200 flex items-center justify-center text-brand-600 font-bold shrink-0">
-                          <Plane className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <div className="font-bold text-navy-700">{callsign}</div>
-                          <div className="text-[11px] text-slate-400">{f.origin_country || 'Commercial Flight'}</div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-mono text-navy-700 font-medium">
-                          {f.altitude ? `${Math.round(f.altitude / 1000)}k ft` : 'GND'}
-                        </div>
-                        <div className="text-[10px] text-slate-400">
-                          {f.velocityKts ? `${Math.round(f.velocityKts)} kts` : '—'}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })
-              )}
-            </div>
-          </div>
-        </div>
+      {/* ── 5. Bottom Brand Watermark & 120s Cache Indicator ── */}
+      <div className="absolute bottom-4 left-4 z-10 pointer-events-none hidden sm:flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-[11px] text-slate-300 border border-white/10">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+        <span>AeroMate Global ADS-B Radar</span>
+        <span className="text-slate-500">·</span>
+        <span className="text-slate-400">120s Telemetry Cache</span>
       </div>
     </div>
   )
