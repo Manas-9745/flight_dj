@@ -48,10 +48,11 @@ router.post('/resolve', apiLimiter, async (req, res, next) => {
     });
 
     if (!resolution.valid) {
-      return res.status(404).json({
+      return res.status(200).json({
         success: false,
         code,
         message: resolution.message || 'Code not recognized. Please try a listed Quick Help code.',
+        data: resolution,
         availableCodes: resolution.availableCodes
       });
     }
@@ -65,4 +66,43 @@ router.post('/resolve', apiLimiter, async (req, res, next) => {
   }
 });
 
+/**
+ * GET /api/quick-help/logs
+ * Returns live recorded Quick Help submissions
+ */
+router.get('/logs', (req, res) => {
+  try {
+    const logs = quickHelpService.getExecutionLogs();
+    res.status(200).json({
+      success: true,
+      data: logs
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve quick dial activity logs'
+    });
+  }
+});
+
+/**
+ * POST /api/quick-help/log
+ * Explicitly logs any dial attempt into the database/activity log
+ */
+router.post('/log', (req, res) => {
+  try {
+    const entry = quickHelpService.logExecution(req.body);
+    res.status(200).json({
+      success: true,
+      data: entry
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to log command execution'
+    });
+  }
+});
+
 module.exports = router;
+

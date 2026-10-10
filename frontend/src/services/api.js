@@ -120,6 +120,12 @@ export const getQuickHelpCommands = () =>
 export const resolveQuickHelpCommand = (params) =>
   api.post('/quick-help/resolve', params).then(r => r.data)
 
+export const getQuickHelpLogs = () =>
+  api.get('/quick-help/logs').then(r => r.data)
+
+export const logQuickHelpExecution = (params) =>
+  api.post('/quick-help/log', params).then(r => r.data)
+
 // ── Health ────────────────────────────────────────────────────────────────────
 
 export const getHealth = () =>

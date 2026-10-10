@@ -83,8 +83,8 @@ export default function FlightDetails({ token }) {
   if (loading) return (
     <div className="flex items-center justify-center min-h-[65vh]">
       <div className="flex flex-col items-center gap-3">
-        <Loader2 className="w-10 h-10 text-aeromate-blue animate-spin" />
-        <span className="text-aeromate-muted text-sm font-semibold">Connecting to live radar & telemetry...</span>
+        <Loader2 className="w-8 h-8 text-[#246BFD] animate-spin" />
+        <span className="text-[#6B6B6B] text-sm font-medium">Loading flight details…</span>
       </div>
     </div>
   )
@@ -235,9 +235,9 @@ export default function FlightDetails({ token }) {
           <div className="space-y-1">
             <h2 className="font-display font-semibold text-lg text-[#0D0D0D] flex items-center gap-2">
               <Navigation className="w-4 h-4 text-[#246BFD]" />
-              Live Aircraft Position & Telemetry
+              Aircraft Position
             </h2>
-            <p className="text-xs text-[#52524E]">Real-time ADS-B altitude, speed, and heading coordinates.</p>
+            <p className="text-xs text-[#52524E]">Current flight location and altitude.</p>
           </div>
 
           <RadarMap position={position} flightNumber={fnUpper} />
@@ -311,9 +311,9 @@ export default function FlightDetails({ token }) {
         {showChat && (
           <div className="lg:col-span-5 space-y-3 sticky top-20">
             <div className="flex items-center justify-between">
-              <h2 className="font-display font-bold text-xl text-aeromate-text flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-aeromate-blue" />
-                Tailored AI Flight Assistant
+              <h2 className="font-display font-semibold text-lg text-[#0D0D0D] flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#246BFD]" />
+                AI Assistant
               </h2>
             </div>
             <ChatWidget flightContext={status} className="h-[540px]" />

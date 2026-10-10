@@ -57,7 +57,7 @@ export default function ChatWidget({ flightContext, className = '' }) {
       console.error('Chat error:', err)
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: 'I could not connect to the AI engine right now. Please verify backend service availability or try again.'
+        content: 'Unable to reach the assistant right now. Please try again in a moment.'
       }])
     } finally {
       setLoading(false)
@@ -87,7 +87,7 @@ export default function ChatWidget({ flightContext, className = '' }) {
             </div>
             <div className="flex items-center gap-1.5 text-xs text-[#52524E] font-medium">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              Connected · Gemini 2.5
+              Online · Ready to help
             </div>
           </div>
         </div>

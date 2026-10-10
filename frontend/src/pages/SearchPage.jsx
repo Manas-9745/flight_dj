@@ -112,7 +112,7 @@ export default function SearchPage({ token }) {
       }
     } catch (err) {
       console.error('Search error:', err)
-      setError(err.response?.data?.message || 'Failed to fetch flight offers. Please adjust criteria and retry.')
+      setError('Unable to find flights for this route and date. Please try another search.')
     } finally {
       setLoading(false)
     }
@@ -138,13 +138,13 @@ export default function SearchPage({ token }) {
       }, token)
 
       setSavedOfferIds(prev => [...prev, offer.id])
-      setSaveSuccessMsg(`Flight ${offer.flightNumber} saved to My Journeys!`)
-      setTimeout(() => setSaveSuccessMsg(null), 3500)
+      setSaveSuccessMsg('Trip saved.')
+      setTimeout(() => setSaveSuccessMsg(null), 3000)
     } catch {
       // Graceful local saved state
       setSavedOfferIds(prev => [...prev, offer.id])
-      setSaveSuccessMsg(`Flight ${offer.flightNumber} saved to offline trips!`)
-      setTimeout(() => setSaveSuccessMsg(null), 3500)
+      setSaveSuccessMsg('Trip saved.')
+      setTimeout(() => setSaveSuccessMsg(null), 3000)
     }
   }
 

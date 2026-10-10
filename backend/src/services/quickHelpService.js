@@ -148,10 +148,21 @@ class QuickHelpService {
     const command = COMMAND_CODES[cleanCode];
 
     if (!command) {
+      const logEntry = this.logExecution({
+        code: cleanCode,
+        status: 'UNRECOGNIZED_CODE',
+        commandTitle: 'Unrecognized Code',
+        flightNumber: context.flightNumber || 'AI161',
+        origin: context.origin || 'LHR',
+        destination: context.destination || 'JFK',
+        message: `Attempted code (${cleanCode}) not recognized in directory.`
+      });
+
       return {
         valid: false,
         code: cleanCode,
         message: 'Code not recognized. Please try a listed Quick Help code.',
+        logEntry,
         availableCodes: Object.keys(COMMAND_CODES)
       };
     }
@@ -281,8 +292,78 @@ class QuickHelpService {
       result.redirectUrl = `/flight/${flightNum || 'AI645'}`;
     }
 
+    // Record submission into execution logs
+    this.logExecution({
+      code: cleanCode,
+      status: 'EXECUTED',
+      commandTitle: command.title,
+      flightNumber: flightNum || 'AI161',
+      origin: context.origin || 'LHR',
+      destination: context.destination || 'JFK',
+      message: `Action executed: ${command.actionText}`
+    });
+
     return result;
   }
+
+  /**
+   * Log command submission/execution attempt
+   */
+  logExecution({ code, status = 'SUBMITTED', commandTitle, flightNumber, origin, destination, message }) {
+    const cleanCode = String(code || '').trim();
+    const cmd = COMMAND_CODES[cleanCode];
+
+    const entry = {
+      id: `qhl_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      code: cleanCode,
+      timestamp: new Date().toISOString(),
+      status: status || (cmd ? 'EXECUTED' : 'UNRECOGNIZED_CODE'),
+      commandTitle: commandTitle || (cmd ? cmd.title : 'Unrecognized Code'),
+      category: cmd ? cmd.category : 'General Inquiry',
+      flightNumber: flightNumber || 'AI161',
+      origin: origin || 'LHR',
+      destination: destination || 'JFK',
+      message: message || (cmd ? cmd.description : 'Code was submitted but does not match any registered Quick Help action.')
+    };
+
+    executionLogs.unshift(entry);
+    if (executionLogs.length > 50) executionLogs.pop();
+    return entry;
+  }
+
+  /**
+   * Get all recorded command submissions
+   */
+  getExecutionLogs() {
+    return executionLogs;
+  }
 }
+
+const executionLogs = [
+  {
+    id: 'qhl_init_1',
+    code: '101',
+    timestamp: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+    status: 'EXECUTED',
+    commandTitle: 'Flight Delayed',
+    category: 'Flight Operations',
+    flightNumber: 'AI645',
+    origin: 'BOM',
+    destination: 'DEL',
+    message: 'Delay telemetery checked (210m delay).'
+  },
+  {
+    id: 'qhl_init_2',
+    code: '104',
+    timestamp: new Date(Date.now() - 1000 * 60 * 35).toISOString(),
+    status: 'EXECUTED',
+    commandTitle: 'Overnight Accommodation',
+    category: 'Accommodation',
+    flightNumber: 'BA142',
+    origin: 'DEL',
+    destination: 'LHR',
+    message: 'Nearby Aerocity hotels matched for cancellation.'
+  }
+];
 
 module.exports = new QuickHelpService();
