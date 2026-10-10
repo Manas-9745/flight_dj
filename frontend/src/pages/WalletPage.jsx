@@ -272,24 +272,13 @@ export default function WalletPage({ token }) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 space-y-6 animate-fade-in font-sans">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 space-y-6 animate-fade-in font-sans">
       {/* Top Header & Security Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-display font-bold text-navy-800">
-              Secure Travel Wallet
-            </h1>
-            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-              online ? 'bg-teal-50 text-teal-700 border border-teal-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
-            }`}>
-              {online ? <Wifi className="w-3.5 h-3.5 text-teal-600" /> : <WifiOff className="w-3.5 h-3.5 text-amber-600" />}
-              {online ? 'Cloud Synchronized' : 'Offline Mode (Local Storage)'}
-            </span>
-          </div>
-          <p className="text-slate-500 text-xs sm:text-sm mt-1">
-            Store passports, flight tickets, and travel IDs with AES-GCM-256 device encryption for 35,000-ft offline access.
-          </p>
+          <h1 className="text-2xl sm:text-3xl font-display font-bold text-[#0D0D0D]">
+            Secure Travel Wallet
+          </h1>
         </div>
 
         {/* Action Buttons: Add Document & PIN Lock */}
