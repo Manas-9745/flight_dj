@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "node tests/test_api.js"
+    "test": "node tests/test_api.js",
+    "verify": "node tests/verify_keys.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.8",
