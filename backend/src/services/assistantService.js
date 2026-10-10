@@ -7,7 +7,7 @@ class AssistantService {
   }
 
   get isConfigured() {
-    return !!this.client;
+    return !!this.apiKey && !this.apiKey.includes('your-') && !this.apiKey.includes('placeholder');
   }
 
   async generateTravelGuidance({ message, flightContext, language = 'en', history = [] }) {
@@ -16,7 +16,12 @@ class AssistantService {
     }
 
     if (this.isConfigured) {
-      return this.callOpenAI({ message, flightContext, language, history });
+      try {
+        return await this.callOpenAI({ message, flightContext, language, history });
+      } catch (err) {
+        console.warn(`⚠️ [Assistant] OpenAI request failed (${err.message}). Falling back to rule engine.`);
+        return this.generateOfflineFallback({ message, flightContext, language });
+      }
     }
 
     // Deterministic resilient fallback if OPENAI_API_KEY is not configured
