@@ -416,10 +416,16 @@ export default function DisruptionCenter({ token }) {
     }
   }
 
-  // Initial load
+  // Initial load & Quick-Dial routing support
   useEffect(() => {
     fetchMonitoring()
-  }, [])
+    if (location.state?.tab) {
+      setActiveTab(location.state.tab)
+      if (location.state.tab === 'hotels') {
+        handleLoadCancelledFlightDemo(location.state.demoAirport || 'DEL')
+      }
+    }
+  }, [location.state])
 
   return (
     <div className="min-h-screen bg-[#F5F5F0] pt-24 pb-20 font-sans text-[#0D0D0D]">

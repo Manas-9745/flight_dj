@@ -40,12 +40,18 @@ export default function Dashboard() {
             Real-time radar tracking, AI disruption guidance, and passenger rights protection across global airlines.
           </p>
 
-          <div className="flex items-center gap-3 mt-8">
+          <div className="flex flex-wrap items-center gap-3 mt-8">
             <button
               onClick={() => navigate('/search')}
               className="btn-primary text-sm px-6 py-3"
             >
               Search Flights <ArrowRight className="w-4 h-4 ml-1" />
+            </button>
+            <button
+              onClick={() => navigate('/quick-help')}
+              className="btn-secondary text-sm px-6 py-3"
+            >
+              Quick Help (Dial Pad)
             </button>
             <button
               onClick={() => navigate('/assistant')}

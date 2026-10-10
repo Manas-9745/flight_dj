@@ -20,6 +20,7 @@ import LoginPage      from './pages/LoginPage'
 import SignupPage     from './pages/SignupPage'
 import LiveAlertsPage from './pages/LiveAlertsPage'
 import AirportNavigationPage from './pages/AirportNavigationPage'
+import QuickHelpPage from './pages/QuickHelpPage'
 
 import { createClient } from '@supabase/supabase-js'
 
@@ -81,6 +82,8 @@ export default function App() {
         <main className="flex-1">
           <Routes>
             <Route path="/"          element={<Dashboard token={token} />} />
+            <Route path="/quick-help" element={<QuickHelpPage token={token} />} />
+            <Route path="/quick-dial" element={<QuickHelpPage token={token} />} />
             <Route path="/map"       element={<GlobalMapPage />} />
             <Route path="/search"    element={<SearchPage />} />
             <Route path="/flight/:flightNumber" element={<FlightDetails token={token} />} />

@@ -16,6 +16,7 @@ export default function Navbar({ user, onLogout }) {
   }, [])
 
   const navLinks = [
+    { name: 'Quick Help', path: '/quick-help' },
     { name: 'Live Alerts', path: '/alerts' },
     { name: 'Disruptions', path: '/disruption' },
     { name: 'Airport Guide', path: '/navigation' },
@@ -23,7 +24,6 @@ export default function Navbar({ user, onLogout }) {
     { name: 'AI Assistant', path: '/assistant' },
     { name: 'Global Map', path: '/map' },
     { name: 'My Journeys', path: '/trips' },
-    { name: 'Baggage', path: '/baggage' },
   ]
 
   const isActive = (path) => location.pathname === path

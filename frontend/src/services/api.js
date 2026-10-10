@@ -112,8 +112,17 @@ export const dismissDisruptionAlert = (alertId, token) =>
 export const getDisruptionHotelRecommendations = (params, token) =>
   api.post('/disruptions/hotels', params, authHeader(token)).then(r => r.data)
 
+// ── Quick-Dial Assistance Pad (Quick Help) ───────────────────────────────────
+
+export const getQuickHelpCommands = () =>
+  api.get('/quick-help/commands').then(r => r.data)
+
+export const resolveQuickHelpCommand = (params) =>
+  api.post('/quick-help/resolve', params).then(r => r.data)
+
 // ── Health ────────────────────────────────────────────────────────────────────
 
 export const getHealth = () =>
   api.get('/health').then(r => r.data)
+
 
