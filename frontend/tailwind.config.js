@@ -19,6 +19,9 @@ export default {
           950: '#060d1a',
         }
       },
+      opacity: {
+        8: '0.08',
+      },
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'fade-in': 'fadeIn 0.4s ease-out',
