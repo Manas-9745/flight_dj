@@ -152,10 +152,10 @@ export default function DocumentViewerModal({
                         setZoomLevel(1)
                         setRotation(0)
                       }}
-                      className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
+                      className={`px-3 py-1.5 rounded-xl font-semibold transition-all border ${
                         activePageIndex === idx
-                          ? 'bg-navy-800 text-white shadow-sm'
-                          : 'bg-surface-100 text-slate-600 hover:bg-surface-200'
+                          ? 'bg-[#1A1A1A] text-white border-[#1A1A1A] shadow-xs'
+                          : 'bg-[#FAFAF7] text-[#52524E] border-[#E5E5E0] hover:bg-[#EAEAE5] hover:text-[#0D0D0D]'
                       }`}
                     >
                       {f.pageType ? f.pageType.toUpperCase() : `Page ${idx + 1}`}

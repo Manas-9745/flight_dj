@@ -681,10 +681,10 @@ export default function AddDocumentModal({ isOpen, onClose, onSave, isOffline = 
                     setCategory(cat.id)
                     setDocType(DOC_TYPES[cat.id][0].id)
                   }}
-                  className={`py-2 px-3 rounded-xl font-bold text-center border transition-all ${
+                  className={`py-2 px-3 rounded-xl font-semibold text-center border transition-all ${
                     category === cat.id
-                      ? 'bg-navy-800 text-white border-navy-800 shadow-sm'
-                      : 'bg-surface-50 text-slate-600 border-surface-200 hover:bg-surface-100'
+                      ? 'bg-[#1A1A1A] text-white border-[#1A1A1A] shadow-xs'
+                      : 'bg-[#FAFAF7] text-[#52524E] border-[#E5E5E0] hover:bg-[#EAEAE5] hover:text-[#0D0D0D]'
                   }`}
                 >
                   {cat.label}

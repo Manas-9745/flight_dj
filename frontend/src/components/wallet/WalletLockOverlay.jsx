@@ -101,13 +101,13 @@ export default function WalletLockOverlay({ isOpen, onClose, onUnlocked, isSetti
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/80 backdrop-blur-md animate-fade-in font-sans">
-      <div className="bg-white rounded-3xl max-w-sm w-full p-6 sm:p-8 shadow-2xl border border-surface-200 text-center relative overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in font-sans">
+      <div className="bg-white rounded-3xl max-w-sm w-full p-6 sm:p-8 shadow-2xl border border-[#E5E5E0] text-center relative overflow-hidden">
         {/* Close / Bypass button if user wants to close lock dialog */}
         {onClose && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-slate-400 hover:text-navy-800 rounded-full hover:bg-surface-100 transition-colors"
+            className="absolute top-4 right-4 p-2 text-slate-400 hover:text-[#0D0D0D] rounded-full hover:bg-[#FAFAF7] transition-colors"
             title="Cancel"
             aria-label="Cancel"
           >
@@ -116,11 +116,11 @@ export default function WalletLockOverlay({ isOpen, onClose, onUnlocked, isSetti
         )}
 
         {/* Shield Icon */}
-        <div className="w-16 h-16 rounded-2xl bg-brand-50 border border-brand-200 text-brand-600 flex items-center justify-center mx-auto mb-4 shadow-sm">
+        <div className="w-16 h-16 rounded-2xl bg-[#FAFAF7] border border-[#E5E5E0] text-[#1A1A1A] flex items-center justify-center mx-auto mb-4 shadow-sm">
           {step === 'unlock' ? <Lock className="w-8 h-8" /> : <KeyRound className="w-8 h-8" />}
         </div>
 
-        <h2 className="text-xl font-display font-bold text-navy-800 mb-1">
+        <h2 className="text-xl font-display font-bold text-[#0D0D0D] mb-1">
           {step === 'unlock' && 'Wallet Security Lock'}
           {step === 'set' && 'Set Wallet Security PIN'}
           {step === 'confirm' && 'Confirm Security PIN'}
@@ -139,13 +139,13 @@ export default function WalletLockOverlay({ isOpen, onClose, onUnlocked, isSetti
               key={idx}
               className={`w-4 h-4 rounded-full border-2 transition-all duration-200 ${
                 pin.length > idx
-                  ? 'bg-brand-600 border-brand-600 scale-110 shadow-sm'
-                  : 'bg-surface-100 border-surface-300'
+                  ? 'bg-[#1A1A1A] border-[#1A1A1A] scale-110 shadow-sm'
+                  : 'bg-[#FAFAF7] border-[#E5E5E0]'
               }`}
             />
           ))}
           {pin.length > 4 && (
-            <div className="w-4 h-4 rounded-full bg-brand-600 border-2 border-brand-600 scale-110 shadow-sm" />
+            <div className="w-4 h-4 rounded-full bg-[#1A1A1A] border-2 border-[#1A1A1A] scale-110 shadow-sm" />
           )}
         </div>
 
@@ -163,7 +163,7 @@ export default function WalletLockOverlay({ isOpen, onClose, onUnlocked, isSetti
               key={num}
               type="button"
               onClick={() => handleKeyPress(num.toString())}
-              className="h-13 rounded-2xl bg-surface-50 hover:bg-brand-50 active:bg-brand-100 border border-surface-200 text-lg font-bold text-navy-800 transition-all flex items-center justify-center select-none shadow-sm touch-manipulation active:scale-95"
+              className="h-13 rounded-2xl bg-[#FAFAF7] hover:bg-[#EAEAE5] active:bg-[#DFDFD9] border border-[#E5E5E0] text-lg font-bold text-[#0D0D0D] transition-all flex items-center justify-center select-none shadow-xs touch-manipulation active:scale-95"
             >
               {num}
             </button>
@@ -171,21 +171,21 @@ export default function WalletLockOverlay({ isOpen, onClose, onUnlocked, isSetti
           <button
             type="button"
             onClick={handleClear}
-            className="h-13 rounded-2xl bg-surface-50 hover:bg-surface-100 active:bg-surface-200 text-xs font-semibold text-slate-500 transition-all flex items-center justify-center select-none touch-manipulation active:scale-95"
+            className="h-13 rounded-2xl bg-[#FAFAF7] hover:bg-[#EAEAE5] active:bg-[#DFDFD9] text-xs font-semibold text-slate-500 transition-all flex items-center justify-center select-none touch-manipulation active:scale-95"
           >
             Clear
           </button>
           <button
             type="button"
             onClick={() => handleKeyPress('0')}
-            className="h-13 rounded-2xl bg-surface-50 hover:bg-brand-50 active:bg-brand-100 border border-surface-200 text-lg font-bold text-navy-800 transition-all flex items-center justify-center select-none shadow-sm touch-manipulation active:scale-95"
+            className="h-13 rounded-2xl bg-[#FAFAF7] hover:bg-[#EAEAE5] active:bg-[#DFDFD9] border border-[#E5E5E0] text-lg font-bold text-[#0D0D0D] transition-all flex items-center justify-center select-none shadow-xs touch-manipulation active:scale-95"
           >
             0
           </button>
           <button
             type="button"
             onClick={handleDelete}
-            className="h-13 rounded-2xl bg-surface-50 hover:bg-surface-100 active:bg-surface-200 text-xs font-semibold text-slate-500 transition-all flex items-center justify-center select-none touch-manipulation active:scale-95"
+            className="h-13 rounded-2xl bg-[#FAFAF7] hover:bg-[#EAEAE5] active:bg-[#DFDFD9] text-xs font-semibold text-slate-500 transition-all flex items-center justify-center select-none touch-manipulation active:scale-95"
           >
             ⌫
           </button>

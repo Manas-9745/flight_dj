@@ -440,10 +440,10 @@ export default function WalletPage({ token }) {
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all border ${
                 selectedCategory === cat.id
-                  ? 'bg-navy-800 text-white shadow-sm'
-                  : 'bg-surface-50 text-slate-600 hover:bg-surface-100 border border-surface-200'
+                  ? 'bg-[#1A1A1A] text-white border-[#1A1A1A] shadow-xs'
+                  : 'bg-[#FAFAF7] text-[#52524E] hover:text-[#0D0D0D] hover:bg-[#EAEAE5] border-[#E5E5E0]'
               }`}
             >
               {cat.label}
