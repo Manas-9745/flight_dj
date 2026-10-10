@@ -199,38 +199,82 @@ export default function AddDocumentModal({ isOpen, onClose, onSave, isOffline = 
     stopCamera()
   }
 
-  // Handle uploaded files (Photos or PDFs)
-  const handleFileInputChange = (e, pageType = activePageType) => {
-    const selectedFiles = Array.from(e.target.files || [])
-    if (!selectedFiles.length) return
-
-    selectedFiles.forEach(file => {
-      // Validate file size (10MB limit)
-      if (file.size > 10 * 1024 * 1024) {
-        setError(`File ${file.name} exceeds the 10MB limit.`)
-        return
-      }
-
-      // Validate file types
-      const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'application/pdf']
-      if (!validTypes.includes(file.type) && !file.name.endsWith('.pdf')) {
-        setError('Unsupported format. Please upload PDF, PNG, JPG, or WEBP.')
+  // Client-side image optimization to compress high-res mobile photos
+  const optimizeImageFile = (file) => {
+    return new Promise((resolve) => {
+      if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+        const reader = new FileReader()
+        reader.onload = (e) => resolve({ dataUrl: e.target.result, size: file.size, type: 'application/pdf' })
+        reader.readAsDataURL(file)
         return
       }
 
       const reader = new FileReader()
-      reader.onload = (event) => {
-        addFileItem({
-          name: file.name,
-          type: file.type || 'application/pdf',
-          pageType: pageType,
-          dataUrl: event.target.result,
-          size: file.size,
-          rotation: 0
-        })
+      reader.onload = (e) => {
+        const img = new window.Image()
+        img.onload = () => {
+          const maxDim = 1600
+          let { width, height } = img
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width)
+              width = maxDim
+            } else {
+              width = Math.round((width * maxDim) / height)
+              height = maxDim
+            }
+          }
+          const canvas = document.createElement('canvas')
+          canvas.width = width
+          canvas.height = height
+          const ctx = canvas.getContext('2d')
+          ctx.drawImage(img, 0, 0, width, height)
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85)
+          const approxSize = Math.round(compressedDataUrl.length * 0.75)
+          resolve({ dataUrl: compressedDataUrl, size: approxSize, type: 'image/jpeg' })
+        }
+        img.onerror = () => {
+          resolve({ dataUrl: e.target.result, size: file.size, type: file.type || 'image/jpeg' })
+        }
+        img.src = e.target.result
       }
       reader.readAsDataURL(file)
     })
+  }
+
+  // Handle uploaded files (Photos or PDFs)
+  const handleFileInputChange = async (e, pageType = activePageType) => {
+    const selectedFiles = Array.from(e.target.files || [])
+    if (!selectedFiles.length) return
+
+    for (const file of selectedFiles) {
+      // Validate file size (25MB limit)
+      if (file.size > 25 * 1024 * 1024) {
+        setError(`File ${file.name} exceeds the 25MB limit.`)
+        continue
+      }
+
+      // Validate file types
+      const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/jpg', 'application/pdf']
+      if (!validTypes.includes(file.type) && !file.name.toLowerCase().endsWith('.pdf')) {
+        setError('Unsupported format. Please upload PDF, PNG, JPG, or WEBP.')
+        continue
+      }
+
+      try {
+        const { dataUrl, size, type } = await optimizeImageFile(file)
+        addFileItem({
+          name: file.name,
+          type: type || 'image/jpeg',
+          pageType: pageType,
+          dataUrl,
+          size,
+          rotation: 0
+        })
+      } catch (err) {
+        console.warn('Error optimizing document image:', err)
+      }
+    }
 
     // Reset input
     e.target.value = ''
@@ -346,7 +390,11 @@ export default function AddDocumentModal({ isOpen, onClose, onSave, isOffline = 
       await onSave(docData)
       onClose()
     } catch (err) {
-      setError(err.message || 'Failed to save document.')
+      if (err.response?.status === 413) {
+        setError('Document payload is too large. Please upload an image or PDF under 25MB.')
+      } else {
+        setError(err.response?.data?.message || err.message || 'Failed to save document.')
+      }
     } finally {
       setSubmitting(false)
     }
