@@ -1,7 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
   PhoneCall,
+  Phone,
+  PhoneOff,
+  Volume2,
+  VolumeX,
+  Mic,
+  MicOff,
   Delete,
   ArrowRight,
   Plane,
@@ -22,6 +28,7 @@ import {
   logQuickHelpExecution,
   getTrips
 } from '../services/api'
+import { speakText, stopSpeaking, isSpeechSynthesisSupported } from '../services/voiceService'
 
 // Pre-defined commands
 const DEFAULT_COMMANDS = [
@@ -127,6 +134,12 @@ export default function QuickHelpPage({ token }) {
   const [executing, setExecuting] = useState(false)
   const [unrecognizedSubmitted, setUnrecognizedSubmitted] = useState(null)
 
+  // Call Simulation & IVR Voice Mode State
+  const [isCallActive, setIsCallActive] = useState(false)
+  const [callDuration, setCallDuration] = useState(0)
+  const [ivrPrompt, setIvrPrompt] = useState('')
+  const timerRef = useRef(null)
+
   // Context Dialog Modal State (for flight number required)
   const [showContextModal, setShowContextModal] = useState(false)
   const [pendingCommand, setPendingCommand] = useState(null)
@@ -193,11 +206,83 @@ export default function QuickHelpPage({ token }) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [code, activeCommand])
 
+  // Voice IVR Speech Prompts
+  const IVR_MENU_SPEECH =
+    'Welcome to AeroMate Customer Service. ' +
+    'Please enter your three-digit assistance code on the dial pad. ' +
+    'Dial 101 for Flight Delay status. ' +
+    'Dial 102 for Cancelled Flights and Rebooking. ' +
+    'Dial 103 for Missed Connections. ' +
+    'Dial 104 for Nearby Hotels. ' +
+    'Dial 105 for Airport Navigation. ' +
+    'Dial 106 for Airspace Travel Alerts. ' +
+    'Dial 107 to Speak with AI Concierge. ' +
+    'Or Dial 108 for Live Flight Radar Telemetry.'
+
+  const handleStartCall = () => {
+    setIsCallActive(true)
+    setCallDuration(0)
+    setCode('')
+    setUnrecognizedSubmitted(null)
+    setIvrPrompt('Customer service line connected. Speaking automated menu options…')
+
+    // Start timer
+    if (timerRef.current) clearInterval(timerRef.current)
+    timerRef.current = setInterval(() => {
+      setCallDuration((prev) => prev + 1)
+    }, 1000)
+
+    // Speak menu options
+    speakText(IVR_MENU_SPEECH, 'en', () => {
+      setIvrPrompt('Enter a 3-digit code on the dial pad to execute…')
+    })
+  }
+
+  const handleEndCall = () => {
+    setIsCallActive(false)
+    setCallDuration(0)
+    setIvrPrompt('')
+    stopSpeaking()
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      stopSpeaking()
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [])
+
   // Keypad Handlers
   const handleKeyPress = (digit) => {
     setUnrecognizedSubmitted(null)
     if (code.length < 3) {
-      setCode(prev => prev + digit)
+      const nextCode = code + digit
+      setCode(nextCode)
+
+      // Audio feedback for dialed number
+      if (isCallActive) {
+        speakText(digit, 'en')
+      }
+
+      // If completes 3 digits
+      if (nextCode.length === 3) {
+        const found = commands.find(c => c.code === nextCode)
+        if (found) {
+          if (isCallActive) {
+            speakText(`You selected ${found.title}. Connecting you now.`, 'en', () => {
+              handleRun(nextCode)
+            })
+          }
+        } else {
+          if (isCallActive) {
+            speakText(`Code ${nextCode} is not recognized. Please try again.`, 'en')
+          }
+        }
+      }
     }
   }
 
@@ -322,7 +407,67 @@ export default function QuickHelpPage({ token }) {
         </div>
 
         {/* Central Dial Pad */}
-        <div className="max-w-md mx-auto surface-card p-6 sm:p-8 border border-[#E5E5E0] shadow-subtle space-y-6">
+        <div className="max-w-md mx-auto surface-card p-6 sm:p-8 border border-[#E5E5E0] shadow-subtle space-y-5">
+
+          {/* Interactive Customer Support Call Mode Banner */}
+          <div className={`p-4 rounded-2xl border transition-all duration-300 flex items-center justify-between gap-3 ${
+            isCallActive
+              ? 'bg-emerald-50 border-emerald-300 text-emerald-950 shadow-sm'
+              : 'bg-[#FAFAF7] border-[#E5E5E0] text-[#0D0D0D]'
+          }`}>
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                isCallActive ? 'bg-emerald-600 text-white animate-pulse' : 'bg-[#1A1A1A] text-white'
+              }`}>
+                <Phone className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-xs sm:text-sm">
+                    {isCallActive ? 'Support Call Active' : 'Automated Phone Agent'}
+                  </h3>
+                  {isCallActive && (
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-800 text-[10px] font-mono font-bold animate-pulse">
+                      {Math.floor(callDuration / 60)}:{String(callDuration % 60).padStart(2, '0')}
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-[#6B6B6B] mt-0.5">
+                  {isCallActive
+                    ? 'Interactive voice prompts speaking options...'
+                    : 'Dial 101, 102, 103... with voice narration'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={isCallActive ? handleEndCall : handleStartCall}
+              className={`px-3.5 py-2 rounded-full font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs ${
+                isCallActive
+                  ? 'bg-rose-600 hover:bg-rose-700 text-white'
+                  : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+              }`}
+            >
+              {isCallActive ? (
+                <>
+                  <PhoneOff className="w-3.5 h-3.5" /> End Call
+                </>
+              ) : (
+                <>
+                  <Phone className="w-3.5 h-3.5" /> Start Call
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Active Call Voice Transcription / IVR Prompt Screen */}
+          {isCallActive && ivrPrompt && (
+            <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl text-xs text-emerald-900 flex items-start gap-2 animate-fade-in">
+              <Volume2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5 animate-pulse" />
+              <p className="font-medium leading-relaxed">{ivrPrompt}</p>
+            </div>
+          )}
 
           {/* Numeric Readout Screen */}
           <div className="bg-[#FAFAF7] border border-[#E5E5E0] rounded-2xl p-5 text-center space-y-2 relative">
