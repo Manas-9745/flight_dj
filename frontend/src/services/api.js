@@ -220,4 +220,31 @@ export const updateWalletDocument = (id, docData, token) =>
 export const deleteWalletDocument = (id, token) =>
   api.delete(`/wallet/documents/${id}`, authHeader(token)).then(r => r.data)
 
+// ── Baggage Tracking & Recovery Service ───────────────────────────────────────
+
+export const getBaggageRecords = (token) =>
+  api.get('/baggage', authHeader(token)).then(r => r.data)
+
+export const getBaggageRecord = (id, token) =>
+  api.get(`/baggage/${id}`, authHeader(token)).then(r => r.data)
+
+export const registerBaggage = (baggageData, token) =>
+  api.post('/baggage', baggageData, authHeader(token)).then(r => r.data)
+
+export const updateBaggageStatus = (id, statusData, token) =>
+  api.post(`/baggage/${id}/status`, statusData, authHeader(token)).then(r => r.data)
+
+export const simulateBaggageStep = (id, token) =>
+  api.post(`/baggage/${id}/simulate`, {}, authHeader(token)).then(r => r.data)
+
+export const submitBaggageRecoveryReport = (id, reportData, token) =>
+  api.post(`/baggage/${id}/recovery-report`, reportData, authHeader(token)).then(r => r.data)
+
+export const updateBaggageRecoveryStatus = (id, recoveryData, token) =>
+  api.put(`/baggage/${id}/recovery-status`, recoveryData, authHeader(token)).then(r => r.data)
+
+export const deleteBaggageRecord = (id, token) =>
+  api.delete(`/baggage/${id}`, authHeader(token)).then(r => r.data)
+
+
 

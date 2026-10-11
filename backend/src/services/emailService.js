@@ -78,6 +78,56 @@ class EmailService {
       html
     });
   }
+
+  async sendBaggageAlert(toEmail, baggageAlert) {
+    const {
+      tag_number,
+      passenger_name,
+      flight_number,
+      status,
+      previous_status,
+      location,
+      details,
+      is_simulated
+    } = baggageAlert;
+
+    const statusBadgeColor = (status === 'Delayed' || status === 'Misrouted' || status === 'Reported Missing')
+      ? '#dc2626'
+      : (status === 'Ready for Collection' || status === 'Delivered to Passenger' || status === 'Located')
+      ? '#059669'
+      : '#2563eb';
+
+    const modeNotice = is_simulated
+      ? '<p style="font-size: 11px; color: #6b7280; font-style: italic; margin-top: 4px;">[Notice: This status update was simulated in AeroMate Demo Mode]</p>'
+      : '';
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px;">
+        <h2 style="color: ${statusBadgeColor}; margin-top: 0;">🧳 Baggage Status Update</h2>
+        <p>Dear ${passenger_name || 'Passenger'},</p>
+        <p>There is a meaningful update regarding your checked baggage for flight <strong>${flight_number || 'your flight'}</strong>.</p>
+        
+        <div style="background-color: #f9fafb; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${statusBadgeColor};">
+          <p style="margin: 4px 0;"><strong>Baggage Tag:</strong> <code style="background: #e5e7eb; padding: 2px 6px; border-radius: 4px;">${tag_number}</code></p>
+          <p style="margin: 4px 0;"><strong>Current Status:</strong> <span style="font-weight: bold; color: ${statusBadgeColor};">${status}</span></p>
+          ${previous_status ? `<p style="margin: 4px 0;"><strong>Previous Status:</strong> ${previous_status}</p>` : ''}
+          ${location ? `<p style="margin: 4px 0;"><strong>Location:</strong> ${location}</p>` : ''}
+          ${details ? `<p style="margin: 4px 0;"><strong>Details:</strong> ${details}</p>` : ''}
+          ${modeNotice}
+        </div>
+
+        <p>You can track the complete journey timeline or file a Property Irregularity Report (PIR) directly in your AeroMate dashboard.</p>
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
+        <p style="font-size: 12px; color: #6b7280;">AeroMate Automated Flight & Baggage Assistance System</p>
+      </div>
+    `;
+
+    return this.sendEmail({
+      to: toEmail,
+      subject: `AeroMate Baggage Alert: Tag ${tag_number} is now ${status}`,
+      html
+    });
+  }
 }
 
 module.exports = new EmailService();

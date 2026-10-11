@@ -22,6 +22,7 @@ const passengerRoutes = require('./routes/passengerRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const walletRoutes = require('./routes/walletRoutes');
+const baggageRoutes = require('./routes/baggageRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -82,6 +83,7 @@ app.use('/api/passengers', passengerRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/wallet', walletRoutes);          // Secure Travel Wallet & Documents
+app.use('/api/baggage', baggageRoutes);        // Baggage Tracking & Recovery Service
 app.use('/api/quick-help', quickHelpRoutes);
 
 // 404 & Global Error Handling

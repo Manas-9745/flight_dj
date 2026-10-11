@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, Plane, Bookmark, Shield, Settings, LogOut, ChevronDown, Mic } from 'lucide-react'
+import { Menu, X, Plane, Bookmark, Shield, Settings, LogOut, ChevronDown, Mic, Luggage } from 'lucide-react'
 import NotificationCenter from './NotificationCenter'
 import { getAlerts } from '../services/api'
 
@@ -37,6 +37,7 @@ export default function Navbar({ user, onLogout, onOpenVoice }) {
   // Main desktop navigation links (Wallet & Journeys moved under Profile Icon)
   const navLinks = [
     { name: 'Search Flights', path: '/search' },
+    { name: 'Baggage Tracking', path: '/baggage' },
     { name: 'Quick Help', path: '/quick-help' },
     { name: 'Live Alerts', path: '/alerts' },
     { name: 'Disruptions', path: '/disruption' },
@@ -178,6 +179,20 @@ export default function Navbar({ user, onLogout, onOpenVoice }) {
                       </Link>
 
                       <Link
+                        to="/baggage"
+                        onClick={() => setProfileMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-[#0D0D0D] hover:bg-[#F5F5F0] transition-colors"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+                          <Luggage className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-[#0D0D0D]">Tracked Baggage</p>
+                          <p className="text-[10px] text-[#6B6B6B]">Tags, status & recovery</p>
+                        </div>
+                      </Link>
+
+                      <Link
                         to="/settings"
                         onClick={() => setProfileMenuOpen(false)}
                         className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-[#0D0D0D] hover:bg-[#F5F5F0] transition-colors"
@@ -299,6 +314,15 @@ export default function Navbar({ user, onLogout, onOpenVoice }) {
                     }`}
                   >
                     <Shield className="w-4 h-4 text-emerald-600" /> Travel Wallet
+                  </Link>
+                  <Link
+                    to="/baggage"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-2.5 min-h-[46px] text-base font-semibold px-3 py-2 rounded-xl transition-all duration-150 active:bg-black/5 ${
+                      isActive('/baggage') ? 'text-[#0D0D0D] bg-black/5 font-bold' : 'text-[#6B6B6B] hover:text-[#0D0D0D]'
+                    }`}
+                  >
+                    <Luggage className="w-4 h-4 text-amber-600" /> Baggage Tracking
                   </Link>
                   <div className="my-2 border-b border-[#E5E5E0]" />
                 </>

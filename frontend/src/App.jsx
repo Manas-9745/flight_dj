@@ -165,7 +165,7 @@ export default function App() {
             <Route path="/trips"     element={<TripsPage user={user} token={token} />} />
             <Route path="/impact"    element={<JourneyImpact />} />
             <Route path="/transfer"  element={<TransferGuide />} />
-            <Route path="/baggage"   element={<BaggagePage />} />
+            <Route path="/baggage"   element={<BaggagePage user={user} token={token} />} />
             <Route path="/hold"      element={<HoldCheckPage />} />
             <Route path="/wallet"    element={<WalletPage user={user} token={token} />} />
             <Route path="/settings"  element={<SettingsPage user={user} token={token} />} />
