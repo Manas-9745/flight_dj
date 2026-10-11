@@ -150,8 +150,8 @@ export default function App() {
             <Route path="/quick-help" element={<QuickHelpPage token={token} />} />
             <Route path="/quick-dial" element={<QuickHelpPage token={token} />} />
             <Route path="/map"       element={<GlobalMapPage />} />
-            <Route path="/search"    element={<SearchPage />} />
-            <Route path="/flight/:flightNumber" element={<FlightDetails token={token} />} />
+            <Route path="/search"    element={<SearchPage user={user} token={token} />} />
+            <Route path="/flight/:flightNumber" element={<FlightDetails user={user} token={token} />} />
             <Route path="/assistant" element={<AssistantPage />} />
             <Route path="/disruption" element={<DisruptionCenter token={token} />} />
             <Route path="/alerts"    element={<LiveAlertsPage token={token} />} />

@@ -7,6 +7,7 @@ import {
   ExternalLink, ShieldAlert, Check, X
 } from 'lucide-react'
 import { searchFlights, saveTrip } from '../services/api'
+import { saveLocalTrip } from '../services/tripsStorage'
 import AirportAutocomplete from '../components/AirportAutocomplete'
 import FlightComparisonTable from '../components/FlightComparisonTable'
 
@@ -20,7 +21,7 @@ function nextWeekISO() {
   return d.toISOString().split('T')[0]
 }
 
-export default function SearchPage({ token }) {
+export default function SearchPage({ user, token }) {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
 
@@ -127,20 +128,25 @@ export default function SearchPage({ token }) {
 
   // Save Trip to My Journey
   const handleSaveOffer = async (offer) => {
-    try {
-      await saveTrip({
-        flightNumber: offer.flightNumber,
-        airline: offer.airline,
-        origin: offer.origin,
-        destination: offer.destination,
-        travelDate: departureDate,
-        status: 'scheduled'
-      }, token)
+    const tripData = {
+      flightNumber: offer.flightNumber,
+      airline: offer.airline,
+      origin: offer.origin,
+      destination: offer.destination,
+      travelDate: departureDate,
+      status: 'scheduled'
+    }
 
+    try {
+      if (token) {
+        await saveTrip(tripData, token)
+      }
+      saveLocalTrip(tripData, user?.id || 'guest')
       setSavedOfferIds(prev => [...prev, offer.id])
       setSaveSuccessMsg('Trip saved to My Journeys.')
       setTimeout(() => setSaveSuccessMsg(null), 3000)
     } catch {
+      saveLocalTrip(tripData, user?.id || 'guest')
       setSavedOfferIds(prev => [...prev, offer.id])
       setSaveSuccessMsg('Trip saved to My Journeys.')
       setTimeout(() => setSaveSuccessMsg(null), 3000)

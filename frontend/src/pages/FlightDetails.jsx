@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Loader2, AlertCircle, ArrowLeft, Bot, Bookmark, CheckCircle2, Plane, Navigation, Sparkles, Flame, ShieldAlert, Compass } from 'lucide-react'
 import { getFlightStatus, getFlightPosition, saveTrip, checkRouteImpact } from '../services/api'
+import { saveLocalTrip } from '../services/tripsStorage'
 import StatusBadge from '../components/StatusBadge'
 import RadarMap from '../components/RadarMap'
 import ChatWidget from '../components/ChatWidget'
 
-export default function FlightDetails({ token }) {
+export default function FlightDetails({ user, token }) {
   const { flightNumber } = useParams()
   const navigate = useNavigate()
 
@@ -63,18 +64,26 @@ export default function FlightDetails({ token }) {
 
   const handleSave = async () => {
     if (!status) return
+    const orig = typeof status.origin === 'string' ? status.origin : status.departure?.iata || 'BOM'
+    const dest = typeof status.destination === 'string' ? status.destination : status.arrival?.iata || 'DEL'
+    const tripData = {
+      flightNumber: status.flightNumber || flightNumber,
+      airline: status.airline || 'AeroMate Carrier',
+      origin: orig,
+      destination: dest,
+      travelDate: new Date().toISOString().split('T')[0],
+      status: status.status || 'scheduled',
+    }
+
     try {
-      await saveTrip({
-        flightNumber: status.flightNumber || flightNumber,
-        airline: status.airline || 'AeroMate Carrier',
-        origin: typeof status.origin === 'string' ? status.origin : status.departure?.iata || 'BOM',
-        destination: typeof status.destination === 'string' ? status.destination : status.arrival?.iata || 'DEL',
-        travelDate: new Date().toISOString().split('T')[0],
-        status: status.status || 'scheduled',
-      }, token)
+      if (token) {
+        await saveTrip(tripData, token)
+      }
+      saveLocalTrip(tripData, user?.id || 'guest')
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     } catch {
+      saveLocalTrip(tripData, user?.id || 'guest')
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     }

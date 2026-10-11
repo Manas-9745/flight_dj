@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bookmark, Trash2, Plane, Loader2, ArrowRight, Sparkles, ShieldAlert, Compass } from 'lucide-react'
 import { getTrips, deleteTrip } from '../services/api'
+import { getLocalTrips, deleteLocalTrip } from '../services/tripsStorage'
 import StatusBadge from '../components/StatusBadge'
 
 export default function TripsPage({ user, token }) {
@@ -11,28 +12,40 @@ export default function TripsPage({ user, token }) {
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (!user || !token) {
-      setTrips([])
-      setLoading(false)
-      return
-    }
     setLoading(true)
-    getTrips(token)
-      .then(res => {
-        setTrips(res.data || [])
-      })
-      .catch(() => {
-        setTrips([])
-      })
-      .finally(() => setLoading(false))
+    const local = getLocalTrips(user?.id || 'guest')
+
+    if (token) {
+      getTrips(token)
+        .then(res => {
+          const apiTrips = res.data || []
+          const apiKeys = new Set(apiTrips.map(t => `${(t.flight_number || t.flightNumber || '').toUpperCase()}_${t.travel_date || t.travelDate}`))
+          const combined = [
+            ...apiTrips,
+            ...local.filter(l => !apiKeys.has(`${(l.flight_number || l.flightNumber || '').toUpperCase()}_${l.travel_date || l.travelDate}`))
+          ]
+          setTrips(combined)
+        })
+        .catch(() => {
+          setTrips(local)
+        })
+        .finally(() => setLoading(false))
+    } else {
+      setTrips(local)
+      setLoading(false)
+    }
   }, [user?.id, token])
 
   const handleDelete = async (id) => {
     setDeletingId(id)
     try {
-      await deleteTrip(id, token)
+      if (token) {
+        await deleteTrip(id, token).catch(() => null)
+      }
+      deleteLocalTrip(id, user?.id || 'guest')
       setTrips(prev => prev.filter(t => t.id !== id))
     } catch {
+      deleteLocalTrip(id, user?.id || 'guest')
       setTrips(prev => prev.filter(t => t.id !== id))
     }
     setDeletingId(null)
@@ -44,7 +57,7 @@ export default function TripsPage({ user, token }) {
     </div>
   )
 
-  if (!user || !token) {
+  if (!user && trips.length === 0) {
     return (
       <div className="max-w-md mx-auto px-4 sm:px-6 pt-28 pb-16 font-sans">
         <div className="bg-white border border-[#E5E5E0] rounded-3xl p-8 shadow-sm text-center space-y-5 animate-slide-up">
@@ -97,6 +110,18 @@ export default function TripsPage({ user, token }) {
         </button>
       </div>
 
+      {!user && (
+        <div className="p-3 bg-white border border-[#E5E5E0] rounded-2xl flex items-center justify-between text-xs text-[#52524E]">
+          <span>Saved on this device. Sign in to sync across devices.</span>
+          <button
+            onClick={() => navigate('/login?redirect=/trips')}
+            className="font-semibold text-[#1A1A1A] underline"
+          >
+            Sign in
+          </button>
+        </div>
+      )}
+
       {trips.length === 0 ? (
         <div className="surface-card text-center py-16 space-y-4 border border-[#E5E5E0] shadow-subtle">
           <Plane className="w-12 h-12 text-[#A8A8A3] mx-auto" />
@@ -139,7 +164,12 @@ export default function TripsPage({ user, token }) {
 
                   {trip.metadata?.gate && (
                     <div className="text-[11px] text-[#6B6B6B]">
-                      Terminal {trip.metadata.terminal} · Gate {trip.metadata.gate}
+                      Terminal {trip.metadata.terminal || 'T1'} · Gate {trip.metadata.gate}
+                    </div>
+                  )}
+                  {trip.metadata?.seat && (
+                    <div className="text-[11px] text-[#6B6B6B]">
+                      Seat: {trip.metadata.seat} {trip.metadata.pnr ? `· PNR: ${trip.metadata.pnr}` : ''}
                     </div>
                   )}
                 </div>
@@ -195,4 +225,3 @@ export default function TripsPage({ user, token }) {
     </div>
   )
 }
-

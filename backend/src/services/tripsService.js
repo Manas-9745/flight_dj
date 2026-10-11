@@ -1,44 +1,47 @@
-const { supabase, isConfigured } = require('../config/supabase');
+const crypto = require('crypto');
+const { supabase, supabaseAdmin, isConfigured } = require('../config/supabase');
 
-// In-memory store for local testing if Supabase is offline
+// Deterministic UUID mapper for non-UUID user IDs (e.g., usr_... or local IDs)
+function toValidUuid(id) {
+  if (!id) return '00000000-0000-4000-a000-000000000001';
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(id)) return id;
+  const h = crypto.createHash('md5').update(String(id).toLowerCase().trim()).digest('hex');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-a${h.slice(17, 20)}-${h.slice(20, 32)}`;
+}
+
+// In-memory store for local fallback
 const inMemoryTrips = new Map();
 
 class TripsService {
   async getUserTrips(userId) {
-    if (isConfigured) {
-      const { data, error } = await supabase
-        .from('saved_trips')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+    const dbUserId = toValidUuid(userId);
+    const client = supabaseAdmin || supabase;
 
-      if (error) {
-        console.error('❌ Supabase error fetching trips:', error.message);
-        throw new Error(error.message);
-      }
-      return data || [];
-    }
+    if (isConfigured && client) {
+      try {
+        const { data, error } = await client
+          .from('saved_trips')
+          .select('*')
+          .eq('user_id', dbUserId)
+          .order('created_at', { ascending: false });
 
-    // Mock fallback
-    let userList = inMemoryTrips.get(userId);
-    if (!userList || userList.length === 0) {
-      userList = [
-        {
-          id: 'mock-trip-1',
-          user_id: userId,
-          flight_number: 'BA142',
-          airline: 'British Airways',
-          origin: 'LHR',
-          destination: 'JFK',
-          travel_date: '2026-10-15',
-          status: 'delayed',
-          metadata: { terminal: '5', gate: 'B36' },
-          created_at: new Date().toISOString()
+        if (!error && Array.isArray(data)) {
+          // Merge with any session memory items
+          const mem = inMemoryTrips.get(userId) || [];
+          const existingIds = new Set(data.map(d => d.id));
+          return [...data, ...mem.filter(m => !existingIds.has(m.id))];
         }
-      ];
-      inMemoryTrips.set(userId, userList);
+        if (error) {
+          console.warn('Supabase fetch trips notice:', error.message);
+        }
+      } catch (err) {
+        console.warn('Supabase fetch trips exception, falling back:', err.message);
+      }
     }
-    return userList;
+
+    // In-memory fallback
+    return inMemoryTrips.get(userId) || [];
   }
 
   async saveTrip(userId, tripData) {
@@ -48,42 +51,43 @@ class TripsService {
       throw new Error('Flight number, origin, and destination are required.');
     }
 
-    if (isConfigured) {
-      const { data, error } = await supabase
-        .from('saved_trips')
-        .insert([
-          {
-            user_id: userId,
-            flight_number: flightNumber.toUpperCase(),
-            airline: airline || 'Airlines',
-            origin: origin.toUpperCase(),
-            destination: destination.toUpperCase(),
-            travel_date: travelDate || new Date().toISOString().split('T')[0],
-            status: status || 'scheduled',
-            metadata: metadata || {}
-          }
-        ])
-        .select()
-        .single();
+    const dbUserId = toValidUuid(userId);
+    const client = supabaseAdmin || supabase;
 
-      if (error) {
-        console.error('❌ Supabase error saving trip:', error.message);
-        throw new Error(error.message);
-      }
-      return data;
-    }
-
-    // Fallback store
-    const newTrip = {
-      id: `trip-${Date.now()}`,
-      user_id: userId,
+    const payload = {
       flight_number: flightNumber.toUpperCase(),
       airline: airline || 'Airlines',
       origin: origin.toUpperCase(),
       destination: destination.toUpperCase(),
       travel_date: travelDate || new Date().toISOString().split('T')[0],
       status: status || 'scheduled',
-      metadata: metadata || {},
+      metadata: metadata || {}
+    };
+
+    if (isConfigured && client) {
+      try {
+        const { data, error } = await client
+          .from('saved_trips')
+          .insert([{ ...payload, user_id: dbUserId }])
+          .select()
+          .single();
+
+        if (!error && data) {
+          return data;
+        }
+        if (error) {
+          console.warn('Supabase saveTrip notice, saving to memory fallback:', error.message);
+        }
+      } catch (err) {
+        console.warn('Supabase saveTrip exception, saving to memory fallback:', err.message);
+      }
+    }
+
+    // Fallback in-memory
+    const newTrip = {
+      id: `trip-${Date.now()}`,
+      user_id: userId,
+      ...payload,
       created_at: new Date().toISOString()
     };
 
@@ -94,74 +98,64 @@ class TripsService {
   }
 
   async deleteTrip(userId, tripId) {
-    if (isConfigured) {
-      const { error } = await supabase
-        .from('saved_trips')
-        .delete()
-        .eq('id', tripId)
-        .eq('user_id', userId);
+    const dbUserId = toValidUuid(userId);
+    const client = supabaseAdmin || supabase;
 
-      if (error) {
-        console.error('❌ Supabase error deleting trip:', error.message);
-        throw new Error(error.message);
+    if (isConfigured && client) {
+      try {
+        await client
+          .from('saved_trips')
+          .delete()
+          .eq('id', tripId)
+          .eq('user_id', dbUserId);
+      } catch (err) {
+        console.warn('Supabase deleteTrip notice:', err.message);
       }
-      return { success: true, id: tripId };
     }
 
     const userList = inMemoryTrips.get(userId) || [];
-    const filtered = userList.filter(t => t.id !== tripId);
-    inMemoryTrips.set(userId, filtered);
+    inMemoryTrips.set(userId, userList.filter(t => t.id !== tripId));
     return { success: true, id: tripId };
   }
 
   async updateTrip(userId, tripId, updateData) {
-    if (isConfigured) {
-      const { data, error } = await supabase
-        .from('saved_trips')
-        .update({
-          ...updateData,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', tripId)
-        .eq('user_id', userId)
-        .select()
-        .single();
+    const dbUserId = toValidUuid(userId);
+    const client = supabaseAdmin || supabase;
 
-      if (error) {
-        console.error('❌ Supabase error updating trip:', error.message);
-        throw new Error(error.message);
+    if (isConfigured && client) {
+      try {
+        const { data, error } = await client
+          .from('saved_trips')
+          .update({
+            ...updateData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', tripId)
+          .eq('user_id', dbUserId)
+          .select()
+          .single();
+
+        if (!error && data) {
+          return data;
+        }
+      } catch (err) {
+        console.warn('Supabase updateTrip notice:', err.message);
       }
-      return data;
     }
 
-    let userList = inMemoryTrips.get(userId);
-    if (!userList || userList.length === 0) {
-      userList = await this.getUserTrips(userId);
-    }
+    let userList = inMemoryTrips.get(userId) || [];
     const tripIndex = userList.findIndex(t => t.id === tripId);
-    if (tripIndex === -1) {
-      const newMock = {
-        id: tripId,
-        user_id: userId,
-        flight_number: updateData.flight_number || 'AI161',
-        airline: updateData.airline || 'Air India',
-        status: updateData.status || 'rebooked',
+    if (tripIndex >= 0) {
+      const updated = {
+        ...userList[tripIndex],
         ...updateData,
         updated_at: new Date().toISOString()
       };
-      userList.unshift(newMock);
+      userList[tripIndex] = updated;
       inMemoryTrips.set(userId, userList);
-      return newMock;
+      return updated;
     }
-
-    const updated = {
-      ...userList[tripIndex],
-      ...updateData,
-      updated_at: new Date().toISOString()
-    };
-    userList[tripIndex] = updated;
-    inMemoryTrips.set(userId, userList);
-    return updated;
+    return { id: tripId, user_id: userId, ...updateData };
   }
 }
 

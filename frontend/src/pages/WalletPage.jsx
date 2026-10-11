@@ -9,8 +9,10 @@ import {
 import {
   getWalletDocuments,
   saveWalletDocument,
-  deleteWalletDocument
+  deleteWalletDocument,
+  saveTrip
 } from '../services/api'
+import { saveLocalTrip } from '../services/tripsStorage'
 import {
   saveDocumentOffline,
   getOfflineDocumentsList,
@@ -217,6 +219,32 @@ export default function WalletPage({ user, token }) {
       if (docData.is_offline_available && savedDoc) {
         await saveDocumentOffline(savedDoc, activePin || '1234', user.id)
         setOfflineDocIds(prev => new Set([...prev, savedDoc.id]))
+      }
+
+      // If document contains flight details, automatically sync it to Saved Journeys
+      if (docData.flight_details && docData.flight_details.flightNumber) {
+        try {
+          const tripData = {
+            flightNumber: docData.flight_details.flightNumber,
+            airline: docData.flight_details.airline || 'Airlines',
+            origin: docData.flight_details.origin || 'BOM',
+            destination: docData.flight_details.destination || 'DEL',
+            travelDate: docData.flight_details.departureDate || new Date().toISOString().split('T')[0],
+            status: 'scheduled',
+            metadata: {
+              seat: docData.flight_details.seat,
+              pnr: docData.flight_details.pnr,
+              boardingGroup: docData.flight_details.boardingGroup,
+              walletDocId: savedDoc?.id
+            }
+          }
+          if (token) {
+            await saveTrip(tripData, token).catch(() => null)
+          }
+          saveLocalTrip(tripData, user.id)
+        } catch (e) {
+          console.warn('Auto-save trip from wallet notice:', e)
+        }
       }
 
       setDocuments(prev => [savedDoc, ...prev])
