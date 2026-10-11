@@ -1,6 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, Loader2, Globe, Sparkles } from 'lucide-react'
+import { Send, Bot, User, Loader2, Globe, Sparkles, Mic, MicOff, Volume2, VolumeX } from 'lucide-react'
 import { sendChatMessage } from '../services/api'
+import {
+  startListening,
+  speakText,
+  stopSpeaking,
+  isSpeechRecognitionSupported
+} from '../services/voiceService'
 
 const LANGUAGES = [
   { code: 'en', label: 'English' },
@@ -28,6 +34,9 @@ export default function ChatWidget({ flightContext, className = '', externalProm
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [language, setLanguage] = useState('en')
+  const [isListening, setIsListening] = useState(false)
+  const [speakingIndex, setSpeakingIndex] = useState(null)
+  const recognitionRef = useRef(null)
   const bottomRef = useRef(null)
 
   useEffect(() => {
@@ -77,6 +86,51 @@ export default function ChatWidget({ flightContext, className = '', externalProm
       .replace(/\n/g, '<br/>')
   }
 
+  const handleToggleMic = () => {
+    if (isListening) {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop() } catch (e) {}
+      }
+      setIsListening(false)
+      return
+    }
+
+    setIsListening(true)
+    const rec = startListening({
+      langCode: language,
+      onResult: ({ final, interim }) => {
+        if (final) {
+          setInput(final)
+          setIsListening(false)
+          sendMessage(final)
+        } else if (interim) {
+          setInput(interim)
+        }
+      },
+      onError: () => {
+        setIsListening(false)
+      },
+      onEnd: () => {
+        setIsListening(false)
+      }
+    })
+    recognitionRef.current = rec
+  }
+
+  const handleSpeakMessage = (index, content) => {
+    if (speakingIndex === index) {
+      stopSpeaking()
+      setSpeakingIndex(null)
+      return
+    }
+
+    stopSpeaking()
+    setSpeakingIndex(index)
+    speakText(content, language, () => {
+      setSpeakingIndex(null)
+    })
+  }
+
   return (
     <div className={`surface-card p-0 flex flex-col h-[580px] border border-slate-200 shadow-card overflow-hidden ${className}`}>
       {/* Header */}
@@ -104,7 +158,11 @@ export default function ChatWidget({ flightContext, className = '', externalProm
           <Globe className="w-4 h-4 text-slate-400" />
           <select
             value={language}
-            onChange={e => setLanguage(e.target.value)}
+            onChange={e => {
+              setLanguage(e.target.value)
+              stopSpeaking()
+              setSpeakingIndex(null)
+            }}
             className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-700 font-medium focus:outline-none focus:border-aeromate-blue shadow-sm"
           >
             {LANGUAGES.map(l => (
@@ -130,7 +188,7 @@ export default function ChatWidget({ flightContext, className = '', externalProm
       {/* Messages Feed */}
       <div className="flex-1 overflow-y-auto chat-scroll px-5 py-4 space-y-4 bg-white">
         {messages.map((msg, i) => (
-          <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''} animate-fade-in`}>
+          <div key={i} className={`flex gap-2.5 sm:gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''} animate-fade-in`}>
             <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold shadow-sm ${msg.role === 'assistant'
                 ? 'bg-aeromate-paleBlue border border-blue-200 text-aeromate-blue'
                 : 'bg-aeromate-text text-white'
@@ -138,12 +196,30 @@ export default function ChatWidget({ flightContext, className = '', externalProm
               {msg.role === 'assistant' ? <Bot className="w-4.5 h-4.5" /> : <User className="w-4.5 h-4.5" />}
             </div>
 
-            <div className={`max-w-[82%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'assistant'
-                ? 'bg-slate-50 border border-slate-200 text-slate-800 shadow-sm'
-                : 'bg-aeromate-blue text-white font-medium shadow-md shadow-aeromate-blue/20 rounded-tr-sm'
-              }`}
-              dangerouslySetInnerHTML={{ __html: renderMessage(msg.content) }}
-            />
+            <div className="max-w-[82%] flex items-start gap-1.5">
+              <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed flex-1 ${msg.role === 'assistant'
+                  ? 'bg-slate-50 border border-slate-200 text-slate-800 shadow-sm'
+                  : 'bg-aeromate-blue text-white font-medium shadow-md shadow-aeromate-blue/20 rounded-tr-sm'
+                }`}
+                dangerouslySetInnerHTML={{ __html: renderMessage(msg.content) }}
+              />
+
+              {msg.role === 'assistant' && (
+                <button
+                  type="button"
+                  onClick={() => handleSpeakMessage(i, msg.content)}
+                  className="p-1.5 rounded-full text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors self-start mt-1 flex-shrink-0"
+                  title={speakingIndex === i ? "Stop audio" : "Listen out loud"}
+                  aria-label="Read out loud"
+                >
+                  {speakingIndex === i ? (
+                    <VolumeX className="w-4 h-4 text-rose-500 animate-pulse" />
+                  ) : (
+                    <Volume2 className="w-4 h-4" />
+                  )}
+                </button>
+              )}
+            </div>
           </div>
         ))}
 
@@ -178,17 +254,37 @@ export default function ChatWidget({ flightContext, className = '', externalProm
       )}
 
       {/* Input Bar */}
-      <div className="p-3 sm:p-4 bg-slate-50 border-t border-slate-200 flex gap-2.5 sm:gap-3 items-center">
+      <div className="p-3 sm:p-4 bg-slate-50 border-t border-slate-200 flex gap-2 sm:gap-2.5 items-center">
         <input
           type="text"
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-          placeholder="Ask about refunds, delay rules, lounge access, or baggage..."
-          className="input-field flex-1 text-base sm:text-sm py-2.5 px-3.5 bg-white border-slate-200 min-h-[44px]"
+          placeholder={isListening ? "Listening... speak now" : "Ask about refunds, delay rules, lounge access, or baggage..."}
+          className={`input-field flex-1 text-base sm:text-sm py-2.5 px-3.5 bg-white border-slate-200 min-h-[44px] transition-all ${
+            isListening ? 'ring-2 ring-blue-500 border-blue-500' : ''
+          }`}
           disabled={loading}
           autoComplete="off"
         />
+
+        {/* Voice Input Mic Button */}
+        {isSpeechRecognitionSupported() && (
+          <button
+            type="button"
+            onClick={handleToggleMic}
+            className={`min-w-[44px] min-h-[44px] w-11 h-11 px-0 py-0 flex items-center justify-center shrink-0 rounded-xl transition-all active:scale-95 ${
+              isListening
+                ? 'bg-blue-600 text-white animate-pulse shadow-md shadow-blue-500/30'
+                : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200'
+            }`}
+            title={isListening ? "Listening... tap to stop" : "Speak your question"}
+            aria-label="Voice input"
+          >
+            {isListening ? <MicOff className="w-4.5 h-4.5" /> : <Mic className="w-4.5 h-4.5" />}
+          </button>
+        )}
+
         <button
           type="button"
           onClick={() => sendMessage()}

@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import OfflineBanner from './components/OfflineBanner'
 import InstallPrompt from './components/InstallPrompt'
+import VoiceAssistantModal from './components/VoiceAssistantModal'
+import { Mic } from 'lucide-react'
 
 // Pages
 import Dashboard      from './pages/Dashboard'
@@ -36,6 +38,7 @@ const supabase = (url && key && !url.includes('your-') && !url.includes('undefin
 export { supabase }
 
 export default function App() {
+  const [voiceAssistantOpen, setVoiceAssistantOpen] = useState(false)
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem('aeromate_auth_user')
@@ -142,7 +145,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-[#F5F5F0] text-[#0D0D0D] flex flex-col font-sans">
-        <Navbar user={user} onLogout={handleLogout} />
+        <Navbar user={user} onLogout={handleLogout} onOpenVoice={() => setVoiceAssistantOpen(true)} />
         <OfflineBanner />
         <main className="flex-1">
           <Routes>
@@ -169,6 +172,23 @@ export default function App() {
             <Route path="*"          element={<Navigate to="/" replace />} />
           </Routes>
         </main>
+        
+        {/* Floating Voice Assistant Trigger */}
+        <button
+          type="button"
+          onClick={() => setVoiceAssistantOpen(true)}
+          className="fixed bottom-6 right-6 z-40 bg-[#1A1A1A] hover:bg-black text-white p-3.5 sm:px-4 sm:py-3 rounded-full shadow-2xl flex items-center gap-2 border border-white/10 group transition-all duration-200 active:scale-95 touch-manipulation"
+          title="AeroMate Voice Assistant"
+          aria-label="Open Voice Assistant"
+        >
+          <Mic className="w-5 h-5 text-[#246BFD] group-hover:scale-110 transition-transform" />
+          <span className="text-xs font-semibold pr-1 hidden sm:inline">Voice Assistant</span>
+        </button>
+
+        <VoiceAssistantModal
+          isOpen={voiceAssistantOpen}
+          onClose={() => setVoiceAssistantOpen(false)}
+        />
         <InstallPrompt />
       </div>
     </BrowserRouter>

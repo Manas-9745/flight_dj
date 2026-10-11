@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, Plane, Bookmark, Shield, Settings, LogOut, ChevronDown } from 'lucide-react'
+import { Menu, X, Plane, Bookmark, Shield, Settings, LogOut, ChevronDown, Mic } from 'lucide-react'
 import NotificationCenter from './NotificationCenter'
 import { getAlerts } from '../services/api'
 
-export default function Navbar({ user, onLogout }) {
+export default function Navbar({ user, onLogout, onOpenVoice }) {
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
@@ -93,8 +93,19 @@ export default function Navbar({ user, onLogout }) {
             })}
           </nav>
 
-          {/* Right Side — Notifications, Profile Icon & Mobile Menu Button */}
-          <div className="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
+          {/* Right Side — Notifications, Voice Assistant, Profile Icon & Mobile Menu Button */}
+          <div className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
+            {onOpenVoice && (
+              <button
+                type="button"
+                onClick={onOpenVoice}
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#FAFAF7] hover:bg-[#EAEAE5] text-[#0D0D0D] flex items-center justify-center border border-[#E5E5E0] transition-colors"
+                title="AeroMate Voice Assistant"
+                aria-label="AeroMate Voice Assistant"
+              >
+                <Mic className="w-4 h-4 text-[#246BFD]" />
+              </button>
+            )}
             <NotificationCenter alerts={alerts} />
 
             {/* User Profile Avatar with Dropdown */}
