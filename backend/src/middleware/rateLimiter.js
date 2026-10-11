@@ -1,24 +1,28 @@
 const rateLimit = require('express-rate-limit');
 
-// General API rate limiter (100 requests per 15 minutes)
+// General API rate limiter
+const isDev = process.env.NODE_ENV === 'development';
+
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: isDev ? 10000 : 2000,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => isDev,
   message: {
     success: false,
     error: 'Too Many Requests',
-    message: 'Rate limit exceeded. Please try again after 15 minutes.'
+    message: 'Rate limit exceeded. Please try again after a few moments.'
   }
 });
 
-// Stricter rate limiter for AI Assistant calls (20 requests per 5 minutes)
+// AI Assistant calls rate limiter
 const aiAssistantLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
-  max: 25,
+  max: isDev ? 5000 : 200,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => isDev,
   message: {
     success: false,
     error: 'AI Rate Limit Exceeded',

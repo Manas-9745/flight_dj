@@ -257,9 +257,9 @@ export default function LiveAlertsPage({ token }) {
           </div>
           <div>
             <div className="text-xs font-semibold text-[#0D0D0D] truncate">
-              {lastUpdated ? new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Live'}
+              {lastUpdated ? new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Real-time'}
             </div>
-            <div className="text-xs text-[#6B6B6B]">Cache Active</div>
+            <div className="text-xs text-[#6B6B6B]">Updated Live</div>
           </div>
         </div>
       </div>

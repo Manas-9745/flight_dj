@@ -107,7 +107,7 @@ const airportNavigationService = require('../services/airportNavigationService')
  * POST /api/assistant/navigation/guide
  * Airport wayfinding and step-by-step passenger navigation guide
  */
-router.post('/navigation/guide', aiAssistantLimiter, async (req, res, next) => {
+router.post('/navigation/guide', async (req, res, next) => {
   try {
     const {
       flightNumber,

@@ -5,6 +5,13 @@ import {
   ExternalLink, Bookmark, CheckCircle2, Flame, Info, Clock, Luggage
 } from 'lucide-react'
 
+const CURRENCY_SYMBOLS = {
+  USD: '$',
+  EUR: '€',
+  GBP: '£',
+  INR: '₹'
+}
+
 export default function FlightComparisonTable({
   offers = [],
   currency = 'USD',
@@ -108,10 +115,10 @@ export default function FlightComparisonTable({
                   {/* Price */}
                   <td className="p-3.5 whitespace-nowrap">
                     <div className={`font-extrabold font-display text-base ${isBestPrice ? 'text-emerald-700' : 'text-slate-900'}`}>
-                      {offer.pricing?.currency === 'INR' ? '₹' : '$'}{offer.pricing?.total?.toLocaleString()}
+                      {CURRENCY_SYMBOLS[(offer.pricing?.currency || currency)?.toUpperCase()] || '$'}{offer.pricing?.total?.toLocaleString()}
                     </div>
                     <div className="text-[10px] text-slate-400">
-                      Base: {offer.pricing?.currency === 'INR' ? '₹' : '$'}{offer.pricing?.base} + Tax
+                      Base: {CURRENCY_SYMBOLS[(offer.pricing?.currency || currency)?.toUpperCase()] || '$'}{offer.pricing?.base?.toLocaleString()} + Tax
                     </div>
                   </td>
 

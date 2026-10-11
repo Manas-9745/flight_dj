@@ -234,10 +234,16 @@ class AmadeusService {
         });
       }
 
-      const totalFare = parseFloat(offer.total_amount || 0);
-      const baseFare = parseFloat(offer.base_amount || (totalFare * 0.82).toFixed(2));
-      const taxesAndFees = parseFloat(offer.tax_amount || (totalFare - baseFare).toFixed(2));
-      const fareCurrency = offer.total_currency || requestedCurrency;
+      const rawTotal = parseFloat(offer.total_amount || 0);
+      const rawBase = parseFloat(offer.base_amount || (rawTotal * 0.82).toFixed(2));
+      const rawTaxes = parseFloat(offer.tax_amount || (rawTotal - rawBase).toFixed(2));
+      const origCur = (offer.total_currency || 'USD').toUpperCase();
+      const targetCur = (requestedCurrency || 'USD').toUpperCase();
+
+      const totalFare = this.convertCurrency(rawTotal, origCur, targetCur);
+      const baseFare = this.convertCurrency(rawBase, origCur, targetCur);
+      const taxesAndFees = this.convertCurrency(rawTaxes, origCur, targetCur);
+      const fareCurrency = targetCur;
 
       // Extract baggage allowances
       const bagInfo = slice?.segments?.[0]?.passengers?.[0]?.baggages || [];
@@ -339,10 +345,16 @@ class AmadeusService {
         });
       }
 
-      const totalFare = parseFloat(offer.price?.total || 0);
-      const baseFare = parseFloat(offer.price?.base || (totalFare * 0.82).toFixed(2));
-      const taxesAndFees = parseFloat((totalFare - baseFare).toFixed(2));
-      const fareCurrency = offer.price?.currency || requestedCurrency;
+      const rawTotal = parseFloat(offer.price?.total || 0);
+      const rawBase = parseFloat(offer.price?.base || (rawTotal * 0.82).toFixed(2));
+      const rawTaxes = parseFloat((rawTotal - rawBase).toFixed(2));
+      const origCur = (offer.price?.currency || 'USD').toUpperCase();
+      const targetCur = (requestedCurrency || 'USD').toUpperCase();
+
+      const totalFare = this.convertCurrency(rawTotal, origCur, targetCur);
+      const baseFare = this.convertCurrency(rawBase, origCur, targetCur);
+      const taxesAndFees = this.convertCurrency(rawTaxes, origCur, targetCur);
+      const fareCurrency = targetCur;
 
       // Extract baggage allowances if provided
       const travelerPricing = offer.travelerPricings?.[0];
@@ -394,6 +406,31 @@ class AmadeusService {
         isSearchOffer: true
       };
     });
+  }
+
+  /**
+   * Universal currency converter (USD, EUR, GBP, INR)
+   */
+  convertCurrency(amount, fromCur = 'USD', toCur = 'USD') {
+    if (!amount || isNaN(amount)) return 0;
+    const from = (fromCur || 'USD').toUpperCase();
+    const to = (toCur || 'USD').toUpperCase();
+    if (from === to) return amount;
+
+    const rates = {
+      USD: 1.0,
+      EUR: 0.92,
+      GBP: 0.79,
+      INR: 83.5
+    };
+
+    const fromRate = rates[from] || 1.0;
+    const toRate = rates[to] || 1.0;
+
+    const inUsd = amount / fromRate;
+    const converted = inUsd * toRate;
+
+    return to === 'INR' ? Math.round(converted) : Math.round(converted * 100) / 100;
   }
 
   /**
@@ -454,26 +491,27 @@ class AmadeusService {
     });
 
     // 2. Aviation Risk & Airspace Assessment
-    // Query route impact for each flight offer
-    const enriched = await Promise.all(
-      offers.map(async (offer) => {
-        // Collect layover airports if any
-        const connecting = (offer.layovers || []).map(l => l.airport);
+    let defaultRisk = {
+      impactLevel: 'No Known Direct Impact',
+      evidence: 'Normal routing. No active airspace closures identified on this flight path.'
+    };
+    try {
+      defaultRisk = await alertsService.analyzeFlightImpact({
+        flightNumber: '',
+        origin,
+        destination,
+        connectingAirports: []
+      });
+    } catch {
+      // defaultRisk fallback
+    }
 
-        let riskAssessment = null;
-        try {
-          riskAssessment = await alertsService.analyzeFlightImpact({
-            flightNumber: offer.flightNumber,
-            origin: offer.origin || origin,
-            destination: offer.destination || destination,
-            connectingAirports: connecting
-          });
-        } catch {
-          riskAssessment = {
-            impactLevel: 'No Known Direct Impact',
-            evidence: 'Normal routing. No active airspace closures identified on this flight path.'
-          };
-        }
+    const enriched = offers.map((offer) => {
+      const connecting = (offer.layovers || []).map(l => l.airport);
+      const riskAssessment = connecting.length === 0 ? defaultRisk : {
+        ...defaultRisk,
+        connectingAirports: connecting
+      };
 
         // Determine AI Labels & Explanations
         const recommendations = [];
@@ -531,8 +569,7 @@ class AmadeusService {
             hasConfirmedImpact: riskAssessment?.impactLevel === 'Confirmed'
           }
         };
-      })
-    );
+      });
 
     return enriched;
   }

@@ -21,6 +21,34 @@ function nextWeekISO() {
   return d.toISOString().split('T')[0]
 }
 
+const CURRENCY_SYMBOLS = {
+  USD: '$',
+  EUR: '€',
+  GBP: '£',
+  INR: '₹'
+}
+
+const EXCHANGE_RATES = {
+  USD: 1.0,
+  EUR: 0.92,
+  GBP: 0.79,
+  INR: 83.5
+}
+
+function convertCurrency(amount, fromCur = 'USD', toCur = 'USD') {
+  if (!amount || isNaN(amount)) return 0
+  const from = (fromCur || 'USD').toUpperCase()
+  const to = (toCur || 'USD').toUpperCase()
+  if (from === to) return amount
+
+  const fromRate = EXCHANGE_RATES[from] || 1.0
+  const toRate = EXCHANGE_RATES[to] || 1.0
+
+  const inUsd = amount / fromRate
+  const converted = inUsd * toRate
+  return to === 'INR' ? Math.round(converted) : Math.round(converted * 100) / 100
+}
+
 export default function SearchPage({ user, token }) {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -70,8 +98,8 @@ export default function SearchPage({ user, token }) {
     }
   }, [])
 
-  const handleSearch = async (e) => {
-    if (e) e.preventDefault()
+  const handleSearch = async (e, currOverride = null) => {
+    if (e && e.preventDefault) e.preventDefault()
     if (!origin || !destination) {
       setError('Please select both Origin and Destination airports.')
       return
@@ -87,6 +115,8 @@ export default function SearchPage({ user, token }) {
       return
     }
 
+    const activeCurrency = currOverride || currency
+
     setError(null)
     setLoading(true)
     setResultsData(null)
@@ -101,7 +131,7 @@ export default function SearchPage({ user, token }) {
         adults: parseInt(adults, 10),
         children: parseInt(children, 10),
         cabinClass,
-        currency
+        currency: activeCurrency
       })
 
       setResultsData(res)
@@ -109,13 +139,51 @@ export default function SearchPage({ user, token }) {
       // Set max price slider dynamically
       if (res.data?.length > 0) {
         const highest = Math.max(...res.data.map(o => o.pricing?.total || 500))
-        setPriceMax(Math.ceil(highest * 1.1))
+        setPriceMax(Math.ceil(highest * 1.15))
       }
     } catch (err) {
       console.error('Search error:', err)
       setError('Unable to find flights for this route and date. Please try another search.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Handle Dynamic Currency Switching (Instant conversion for loaded offers)
+  const handleCurrencyChange = (newCurr) => {
+    if (newCurr === currency) return
+    const prevCurr = currency
+    setCurrency(newCurr)
+
+    if (resultsData?.data?.length > 0) {
+      const updatedOffers = resultsData.data.map((offer) => {
+        const offerCurr = offer.pricing?.currency || prevCurr
+        const newTotal = convertCurrency(offer.pricing?.total, offerCurr, newCurr)
+        const newBase = convertCurrency(offer.pricing?.base, offerCurr, newCurr)
+        const newTaxes = convertCurrency(offer.pricing?.taxesAndFees, offerCurr, newCurr)
+
+        return {
+          ...offer,
+          pricing: {
+            ...offer.pricing,
+            total: newTotal,
+            base: newBase,
+            taxesAndFees: newTaxes,
+            currency: newCurr
+          }
+        }
+      })
+
+      const highest = Math.max(...updatedOffers.map(o => o.pricing?.total || 500))
+      setPriceMax(Math.ceil(highest * 1.15))
+
+      setResultsData(prev => ({
+        ...prev,
+        currency: newCurr,
+        data: updatedOffers
+      }))
+    } else {
+      setPriceMax(newCurr === 'INR' ? 150000 : 3500)
     }
   }
 
@@ -235,13 +303,11 @@ export default function SearchPage({ user, token }) {
           {['USD', 'EUR', 'GBP', 'INR'].map((curr) => (
             <button
               key={curr}
-              onClick={() => {
-                setCurrency(curr)
-                if (resultsData) handleSearch()
-              }}
+              type="button"
+              onClick={() => handleCurrencyChange(curr)}
               className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
                 currency === curr
-                  ? 'bg-[#1A1A1A] text-white'
+                  ? 'bg-[#1A1A1A] text-white shadow-xs'
                   : 'text-[#6B6B6B] hover:text-[#0D0D0D] hover:bg-[#FAFAF7]'
               }`}
             >
@@ -623,13 +689,15 @@ export default function SearchPage({ user, token }) {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs font-medium text-[#6B6B6B]">
                   <span>Max Price</span>
-                  <span className="font-semibold text-[#0D0D0D]">{currency === 'INR' ? '₹' : '$'}{priceMax.toLocaleString()}</span>
+                  <span className="font-semibold text-[#0D0D0D]">
+                    {CURRENCY_SYMBOLS[currency] || '$'}{priceMax.toLocaleString()}
+                  </span>
                 </div>
                 <input
                   type="range"
-                  min="50"
-                  max="3500"
-                  step="25"
+                  min={currency === 'INR' ? 1000 : 50}
+                  max={currency === 'INR' ? 250000 : 5000}
+                  step={currency === 'INR' ? 500 : 25}
                   value={priceMax}
                   onChange={(e) => setPriceMax(parseInt(e.target.value, 10))}
                   className="w-full accent-[#1A1A1A] cursor-pointer"
@@ -821,7 +889,7 @@ export default function SearchPage({ user, token }) {
                               <div className="text-right">
                                 <div className="text-[10px] font-medium text-[#8C8C85] uppercase tracking-wider">Total Fare</div>
                                 <div className="font-display font-bold text-2xl text-[#0D0D0D] leading-none">
-                                  {offer.pricing?.currency === 'INR' ? '₹' : '$'}{offer.pricing?.total?.toLocaleString()}
+                                  {CURRENCY_SYMBOLS[offer.pricing?.currency || currency] || '$'}{Math.round(offer.pricing?.total || 0).toLocaleString()}
                                 </div>
                               </div>
 

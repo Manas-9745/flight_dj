@@ -22,14 +22,12 @@ import {
   FileText,
   Building2,
   WifiOff,
-  Sparkles,
-  Send,
   Info,
   Calendar,
   AlertTriangle,
   ArrowLeft
 } from 'lucide-react'
-import { getAirportNavigationGuide, sendChatMessage } from '../services/api'
+import { getAirportNavigationGuide } from '../services/api'
 import TerminalMapViewer from '../components/TerminalMapViewer'
 
 // Preset popular flights for instant testing & demonstration
@@ -99,35 +97,7 @@ export default function AirportNavigationPage({ token }) {
 
   // Checklist interactive state
   const [completedStepIds, setCompletedStepIds] = useState(new Set())
-  const [activeTab, setActiveTab] = useState('checklist') // 'checklist' | 'terminal' | 'copilot'
-
-  // AI Copilot State
-  const [copilotMessages, setCopilotMessages] = useState([
-    {
-      sender: 'ai',
-      text: 'Hello! I am your AeroMate Airport Copilot. Ask me anything about terminal navigation, DigiYatra, luggage security rules, or boarding procedures!'
-    }
-  ])
-  const [copilotInput, setCopilotInput] = useState('')
-  const [copilotLoading, setCopilotLoading] = useState(false)
-
-  // Quick suggestions for AI copilot
-  const quickQuestions = useMemo(() => {
-    if (language === 'hi') {
-      return [
-        'डिजीयात्रा (DigiYatra) का उपयोग कैसे करें?',
-        'क्या मैं चेक-इन बैग में पावर बैंक रख सकता हूँ?',
-        'अंतरराष्ट्रीय इमिग्रेशन के लिए कौन से दस्तावेज चाहिए?',
-        'अगर मेरा बोर्डिंग गेट अभी तक निर्धारित नहीं है तो क्या करूँ?'
-      ]
-    }
-    return [
-      'How do I use DigiYatra biometric gates?',
-      'Can I pack lithium power banks in checked baggage?',
-      'What documents are needed for departure immigration?',
-      'What should I do if my gate is unassigned?'
-    ]
-  }, [language])
+  const [activeTab, setActiveTab] = useState('checklist') // 'checklist' | 'terminal'
 
   // Fetch or Refresh Guide Data
   const fetchGuide = async (lang = language, overridePreset = null) => {
@@ -255,61 +225,14 @@ export default function AirportNavigationPage({ token }) {
     }
   }
 
-  // Send Copilot Message
-  const handleSendCopilot = async (overrideText = null) => {
-    const textToSend = overrideText || copilotInput
-    if (!textToSend || !textToSend.trim()) return
 
-    const userMsg = { sender: 'user', text: textToSend.trim() }
-    setCopilotMessages((prev) => [...prev, userMsg])
-    if (!overrideText) setCopilotInput('')
-    setCopilotLoading(true)
-
-    try {
-      const flightContext = {
-        flightNumber: guideData?.flight?.flightNumber || flightNumber,
-        airline: guideData?.flight?.airline || airline,
-        origin: guideData?.flight?.origin || origin,
-        destination: guideData?.flight?.destination || destination,
-        terminal: guideData?.flight?.terminal,
-        gate: guideData?.flight?.gate,
-        status: guideData?.flight?.status,
-        isDomestic: guideData?.flight?.isDomestic
-      }
-
-      const res = await sendChatMessage({
-        message: textToSend,
-        flightContext,
-        language,
-        history: copilotMessages.slice(-4).map((m) => ({
-          role: m.sender === 'user' ? 'user' : 'assistant',
-          content: m.text
-        }))
-      })
-
-      const reply = res?.data?.reply || res?.reply || (language === 'hi'
-        ? 'मैं आपके एयरपोर्ट सहायता अनुरोध को समझ गया। कृपया टर्मिनल डिस्प्ले बोर्ड (FIDS) पर भी ध्यान दें।'
-        : 'I have verified this procedure against airport operating rules. Let me know if you need any additional gate or baggage guidance.')
-
-      setCopilotMessages((prev) => [...prev, { sender: 'ai', text: reply }])
-    } catch (err) {
-      console.error(err)
-      setCopilotMessages((prev) => [
-        ...prev,
-        {
-          sender: 'ai',
-          text: language === 'hi'
-            ? 'क्षमा करें, इस समय संपर्क नहीं हो पाया। कृपया एयरपोर्ट हेल्पडेस्क या डिस्प्ले स्क्रीन से पुष्टि करें।'
-            : 'Sorry, could not process request right now. Please check official airport display screens (FIDS) or consult airline staff.'
-        }
-      ])
-    } finally {
-      setCopilotLoading(false)
-    }
-  }
 
   const isHi = language === 'hi'
-  const isDomestic = guideData?.flight?.isDomestic
+  const isDomestic = useMemo(() => {
+    if (guideData?.flight?.isDomestic !== undefined) return guideData.flight.isDomestic
+    const indianAirports = ['BOM', 'DEL', 'BLR', 'MAA', 'HYD', 'CCU', 'GOI', 'COK', 'AMD', 'PNQ', 'SXR']
+    return indianAirports.includes((origin || '').toUpperCase().trim()) && indianAirports.includes((destination || '').toUpperCase().trim())
+  }, [guideData, origin, destination])
 
   return (
     <div className="min-h-screen bg-[#F5F5F0] pb-24 pt-24 font-sans text-[#0D0D0D]">
@@ -586,6 +509,30 @@ export default function AirportNavigationPage({ token }) {
           </div>
         </div>
 
+        {/* Error Alert */}
+        {error && (
+          <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+              <span>{error}</span>
+            </div>
+            <button
+              onClick={() => fetchGuide(language)}
+              className="px-3 py-1 bg-white border border-red-200 rounded-lg text-xs font-semibold text-red-900 hover:bg-red-100 transition-all"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Loading Spinner */}
+        {loading && !guideData && (
+          <div className="p-12 text-center bg-white rounded-2xl border border-[#E5E5E0] space-y-3">
+            <RefreshCw className="w-7 h-7 animate-spin text-blue-600 mx-auto" />
+            <p className="text-xs sm:text-sm font-semibold text-[#0D0D0D]">Loading airport navigation guide...</p>
+          </div>
+        )}
+
         {/* Live Flight & Terminal Status Bar */}
         {guideData?.flight && (
           <div className="bg-[#1A1A1A] text-white rounded-2xl p-5 sm:p-6 shadow-md">
@@ -764,26 +711,24 @@ export default function AirportNavigationPage({ token }) {
           </div>
         )}
 
-        {/* Navigation Tabs: Checklist vs Interactive Map vs Copilot */}
-        <div className="flex items-center gap-2 border-b border-[#E5E5E0] pb-2">
-          <button
-            onClick={() => setActiveTab('checklist')}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
-              activeTab === 'checklist'
-                ? 'bg-[#1A1A1A] text-white shadow-xs'
-                : 'text-[#52524E] hover:text-[#0D0D0D] hover:bg-white'
-            }`}
-          >
-            <CheckCircle2 className="w-4 h-4" />
-            <span>
-              {isDomestic
-                ? (isHi ? '2. घरेलू एयरपोर्ट वॉकथ्रू चेकलिस्ट' : '2. Domestic Airport Checklist')
-                : (isHi ? '3. अंतरराष्ट्रीय एयरपोर्ट वॉकथ्रू चेकलिस्ट' : '3. International Airport Checklist')}
-            </span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-white/20 text-white">
-              {completedCount}/{totalSteps}
-            </span>
-          </button>
+        {/* Navigation Tabs: Checklist vs Interactive Map */}
+        {guideData && (
+          <>
+            <div className="flex items-center gap-2 border-b border-[#E5E5E0] pb-2">
+              <button
+                onClick={() => setActiveTab('checklist')}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
+                  activeTab === 'checklist'
+                    ? 'bg-[#1A1A1A] text-white shadow-xs'
+                    : 'text-[#52524E] hover:text-[#0D0D0D] hover:bg-white'
+                }`}
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{isHi ? 'एयरपोर्ट चेकलिस्ट' : 'Airport Checklist'}</span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-white/20 text-white">
+                  {completedCount}/{totalSteps}
+                </span>
+              </button>
 
           <button
             onClick={() => setActiveTab('terminal')}
@@ -794,19 +739,7 @@ export default function AirportNavigationPage({ token }) {
             }`}
           >
             <Compass className="w-4 h-4" />
-            <span>{isHi ? '4. टर्मिनल एवं इनडोर नक्शा' : '4. Terminal & Indoor Navigation'}</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('copilot')}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
-              activeTab === 'copilot'
-                ? 'bg-[#1A1A1A] text-white shadow-xs'
-                : 'text-[#52524E] hover:text-[#0D0D0D] hover:bg-white'
-            }`}
-          >
-            <Sparkles className="w-4 h-4 text-amber-500" />
-            <span>{isHi ? '6. AI एयरपोर्ट सहायक' : '6. AI Travel Copilot'}</span>
+            <span>{isHi ? 'टर्मिनल एवं इनडोर नक्शा' : 'Terminal & Indoor Navigation'}</span>
           </button>
         </div>
 
@@ -953,141 +886,10 @@ export default function AirportNavigationPage({ token }) {
             />
           </div>
         )}
-
-        {/* Tab 3: Context-Aware AI Airport Copilot */}
-        {activeTab === 'copilot' && (
-          <div className="bg-white rounded-2xl border border-[#E5E5E0] shadow-xs overflow-hidden flex flex-col h-[650px]">
-            {/* Copilot Header */}
-            <div className="p-4 sm:p-5 bg-[#FAFAF7] border-b border-[#E5E5E0] flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-[#1A1A1A] text-white flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-amber-400" />
-                </div>
-                <div>
-                  <h3 className="font-display font-bold text-base text-[#0D0D0D]">
-                    {isHi ? 'एयरोमेट AI एयरपोर्ट को-पायलट' : 'AeroMate AI Travel Copilot'}
-                  </h3>
-                  <p className="text-xs text-[#6B6B6B]">
-                    {isHi
-                      ? `${guideData?.flight?.flightNumber || 'उड़ान'} के लिए सक्रिय संदर्भयुक्त सहायता`
-                      : `Contextual assistance for flight ${guideData?.flight?.flightNumber || 'active flight'} at ${guideData?.flight?.origin || 'Airport'}`}
-                  </p>
-                </div>
-              </div>
-
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                Online
-              </span>
-            </div>
-
-            {/* Quick Suggestion Chips */}
-            <div className="px-4 py-2.5 bg-[#FAF9F5] border-b border-[#E5E5E0] flex items-center gap-2 overflow-x-auto scrollbar-none">
-              <span className="text-[11px] font-semibold text-[#8C8C85] uppercase tracking-wider shrink-0 mr-1">
-                {isHi ? 'त्वरित प्रश्न:' : 'Quick Questions:'}
-              </span>
-              {quickQuestions.map((q, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleSendCopilot(q)}
-                  disabled={copilotLoading}
-                  className="px-3 py-1 rounded-lg text-xs bg-white border border-[#D5D5D0] hover:border-[#1A1A1A] hover:bg-[#F5F5F0] text-[#1A1A1A] font-medium transition-all shrink-0"
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
-
-            {/* Message Thread */}
-            <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4">
-              {copilotMessages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[85%] sm:max-w-[75%] rounded-2xl p-4 text-xs sm:text-sm leading-relaxed ${
-                      msg.sender === 'user'
-                        ? 'bg-[#1A1A1A] text-white rounded-tr-none'
-                        : 'bg-[#FAF9F5] text-[#0D0D0D] border border-[#E5E5E0] rounded-tl-none'
-                    }`}
-                  >
-                    {msg.text}
-                  </div>
-                </div>
-              ))}
-
-              {copilotLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-[#FAF9F5] text-[#52524E] border border-[#E5E5E0] rounded-2xl rounded-tl-none p-3 text-xs flex items-center gap-2">
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-600" />
-                    <span>{isHi ? 'को-पायलट उत्तर तैयार कर रहा है...' : 'Copilot researching airport guidance...'}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Input Box */}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                handleSendCopilot()
-              }}
-              className="p-3 sm:p-4 bg-white border-t border-[#E5E5E0] flex items-center gap-2"
-            >
-              <input
-                type="text"
-                value={copilotInput}
-                onChange={(e) => setCopilotInput(e.target.value)}
-                placeholder={isHi ? 'गेट, लगेज नियम या एयरपोर्ट से जुड़ा कोई भी सवाल पूछें...' : 'Ask about security rules, gates, DigiYatra, luggage, or immigration...'}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-[#D5D5D0] text-xs sm:text-sm focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A]"
-              />
-              <button
-                type="submit"
-                disabled={copilotLoading || !copilotInput.trim()}
-                className="p-2.5 sm:px-5 sm:py-2.5 rounded-xl bg-[#1A1A1A] text-white text-xs sm:text-sm font-semibold hover:bg-black transition-all disabled:opacity-50 flex items-center gap-1.5"
-              >
-                <Send className="w-4 h-4" />
-                <span className="hidden sm:inline">{isHi ? 'पूछें' : 'Send'}</span>
-              </button>
-            </form>
-          </div>
+          </>
         )}
 
-        {/* Section 7: Airport Data Transparency & Regulatory Report Box */}
-        <div className="bg-white rounded-2xl border border-[#E5E5E0] p-5 sm:p-6 text-xs text-[#52524E] space-y-3">
-          <h4 className="font-display font-bold text-sm text-[#0D0D0D] flex items-center gap-2">
-            <Info className="w-4 h-4 text-blue-600" />
-            {isHi ? 'डेटा स्रोत एवं परिचालन पारदर्शिता रिपोर्ट' : 'Airport Operational Data Integrity & Connection Status'}
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
-            <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E5E5E0]">
-              <span className="font-bold text-[#0D0D0D] block mb-0.5">
-                {isHi ? 'कनेक्टेड डेटा स्रोत:' : 'Connected Data Feeds:'}
-              </span>
-              <span>
-                Verified IATA/ICAO Airport Registry, Amadeus Global Schedule Engine, and Architecture Blueprint registry for BOM, DEL, LHR, DXB, and JFK.
-              </span>
-            </div>
 
-            <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E5E5E0]">
-              <span className="font-bold text-[#0D0D0D] block mb-0.5">
-                {isHi ? 'लाइव बनाम जेनेरिक फ़ील्ड:' : 'Live vs Standard Guidance:'}
-              </span>
-              <span>
-                Terminal and flight statuses are verified from live feeds. Gate numbers and counter islands are dynamically confirmed. Unassigned gates explicitly instruct passengers to consult FIDS screens.
-              </span>
-            </div>
-
-            <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E5E5E0]">
-              <span className="font-bold text-[#0D0D0D] block mb-0.5">
-                {isHi ? 'इनडोर पोजिशनिंग सीमा:' : 'Indoor Positioning Reality:'}
-              </span>
-              <span>
-                True blue-dot indoor positioning requires physical BLE beacons/WiFi RTT. Turn-by-turn routes reflect verified zone architecture and official airport authority wayfinding blueprints.
-              </span>
-            </div>
-          </div>
-        </div>
 
       </div>
     </div>

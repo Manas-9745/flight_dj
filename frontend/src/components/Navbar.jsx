@@ -36,7 +36,7 @@ export default function Navbar({ user, onLogout, onOpenVoice }) {
 
   // Main desktop navigation links (Wallet & Journeys moved under Profile Icon)
   const navLinks = [
-    { name: 'Search & Flights', path: '/search' },
+    { name: 'Search Flights', path: '/search' },
     { name: 'Quick Help', path: '/quick-help' },
     { name: 'Live Alerts', path: '/alerts' },
     { name: 'Disruptions', path: '/disruption' },
@@ -214,7 +214,8 @@ export default function Navbar({ user, onLogout, onOpenVoice }) {
             ) : (
               <Link
                 to="/login"
-                className="hidden md:inline-flex items-center justify-center h-9 px-4 rounded-xl text-xs font-semibold bg-[#1A1A1A] hover:bg-black text-white transition-colors shadow-sm"
+                id="navbar-signin-button"
+                className="inline-flex items-center justify-center h-8 sm:h-9 px-3 sm:px-4 rounded-xl text-xs font-semibold bg-[#1A1A1A] hover:bg-black text-white transition-colors shadow-sm"
               >
                 Sign in
               </Link>
@@ -237,16 +238,42 @@ export default function Navbar({ user, onLogout, onOpenVoice }) {
       {mobileMenuOpen && (
         <div className="fixed inset-0 top-[calc(4.25rem+env(safe-area-inset-top,0px))] bg-[#F5F5F0] z-40 animate-fade-in overflow-y-auto pb-[env(safe-area-inset-bottom,16px)]">
           <div className="max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12 pt-6 pb-12">
-            {/* If user logged in, display mobile profile header */}
-            {user && (
-              <div className="mb-4 pb-4 border-b border-[#E5E5E0] flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#1A1A1A] text-white flex items-center justify-center font-bold text-base shadow-sm">
-                  {userInitial}
+            {/* Mobile Profile or Sign In Card at the top of mobile menu */}
+            {user ? (
+              <div className="mb-4 pb-4 border-b border-[#E5E5E0] flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#1A1A1A] text-white flex items-center justify-center font-bold text-base shadow-sm">
+                    {userInitial}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-[#0D0D0D]">Passenger Profile</p>
+                    <p className="text-xs text-emerald-600 font-medium">Account Active</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-bold text-[#0D0D0D]">Passenger Profile</p>
-                  <p className="text-xs text-emerald-600 font-medium">Account Active</p>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => { onLogout(); setMobileMenuOpen(false) }}
+                  className="text-xs font-semibold text-rose-600 hover:text-rose-700 px-3 py-1.5 rounded-lg hover:bg-rose-50 transition-colors"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <div className="mb-4 pb-4 border-b border-[#E5E5E0] flex items-center gap-2">
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="btn-primary min-h-[42px] flex-1 text-center justify-center text-xs font-semibold"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  to="/signup"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="btn-secondary min-h-[42px] flex-1 text-center justify-center text-xs font-semibold"
+                >
+                  Create account
+                </Link>
               </div>
             )}
 

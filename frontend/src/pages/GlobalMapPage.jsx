@@ -56,6 +56,7 @@ export default function GlobalMapPage() {
   const [showDrawer, setShowDrawer] = useState(false)
   const [lastRefreshed, setLastRefreshed] = useState(null)
   const [isLiveFeed, setIsLiveFeed] = useState(true)
+  const [mapReady, setMapReady] = useState(false)
 
   const fetchFlights = async () => {
     try {
@@ -85,12 +86,14 @@ export default function GlobalMapPage() {
   useEffect(() => {
     if (!mapContainerRef.current) return
 
-    // If map already initialized, trigger size invalidation
+    // Clean up any existing map instance before creating a new one
     if (mapRef.current) {
-      setTimeout(() => {
-        try { mapRef.current?.invalidateSize() } catch (e) {}
-      }, 100)
-      return
+      try {
+        mapRef.current.remove()
+      } catch (e) {}
+      mapRef.current = null
+      markersLayerRef.current = null
+      tileLayerRef.current = null
     }
 
     // Clean up any stale Leaflet instance or ID on this DOM node
@@ -109,7 +112,7 @@ export default function GlobalMapPage() {
         preferCanvas: true
       })
 
-      // Custom zoom control in bottom right (Leaflet position format is 'bottomright')
+      // Custom zoom control in bottom right
       L.control.zoom({ position: 'bottomright' }).addTo(map)
 
       // Add initial tile layer
@@ -122,22 +125,41 @@ export default function GlobalMapPage() {
       markersLayerRef.current = markersLayer
 
       mapRef.current = map
+      setMapReady(true)
 
       // Multi-stage size invalidation to guarantee proper tile sizing
-      const t1 = setTimeout(() => { try { map.invalidateSize() } catch (e) {} }, 80)
-      const t2 = setTimeout(() => { try { map.invalidateSize() } catch (e) {} }, 300)
-      const t3 = setTimeout(() => { try { map.invalidateSize() } catch (e) {} }, 800)
+      const t1 = setTimeout(() => { try { map.invalidateSize() } catch (e) {} }, 100)
+      const t2 = setTimeout(() => { try { map.invalidateSize() } catch (e) {} }, 400)
+      const t3 = setTimeout(() => { try { map.invalidateSize() } catch (e) {} }, 1000)
 
       const handleResize = () => {
         try { map.invalidateSize() } catch (e) {}
       }
       window.addEventListener('resize', handleResize)
 
+      let ro = null
+      if (typeof ResizeObserver !== 'undefined' && mapContainerRef.current) {
+        ro = new ResizeObserver(() => {
+          try { map.invalidateSize() } catch (e) {}
+        })
+        ro.observe(mapContainerRef.current)
+      }
+
       return () => {
         clearTimeout(t1)
         clearTimeout(t2)
         clearTimeout(t3)
         window.removeEventListener('resize', handleResize)
+        if (ro) ro.disconnect()
+        setMapReady(false)
+        if (mapRef.current) {
+          try {
+            mapRef.current.remove()
+          } catch (e) {}
+          mapRef.current = null
+          markersLayerRef.current = null
+          tileLayerRef.current = null
+        }
       }
     } catch (err) {
       console.warn('Leaflet map initialization:', err.message)
@@ -159,14 +181,22 @@ export default function GlobalMapPage() {
     tileLayerRef.current = newLayer
   }, [activeTheme])
 
+  const filteredFlights = flights.filter(f => {
+    const q = (searchTerm || '').trim().toUpperCase()
+    const country = f.originCountry || f.origin_country || ''
+    const airline = f.airline || ''
+    const callsign = f.callsign || ''
+    return !q || callsign.toUpperCase().includes(q) || country.toUpperCase().includes(q) || airline.toUpperCase().includes(q)
+  })
+
   // Plot Flightradar24-style yellow airplane markers
   useEffect(() => {
-    if (!markersLayerRef.current || !mapRef.current) return
+    if (!mapReady || !markersLayerRef.current || !mapRef.current) return
 
     // Clear previous markers
     markersLayerRef.current.clearLayers()
 
-    flights.forEach(f => {
+    filteredFlights.forEach(f => {
       const lat = Number(f.latitude)
       const lon = Number(f.longitude)
       if (isNaN(lat) || isNaN(lon)) return
@@ -175,7 +205,7 @@ export default function GlobalMapPage() {
       const isSelected = selectedFlight?.callsign && selectedFlight.callsign === f.callsign
       const planeColor = isSelected ? '#38BDF8' : '#FFE600' // vibrant Flightradar24 yellow, cyan if selected
       const planeSize = isSelected ? 26 : 22
-      const heading = typeof f.heading === 'number' ? f.heading : 0
+      const heading = typeof f.heading === 'number' && !isNaN(f.heading) ? f.heading : 0
 
       // Custom HTML Marker using pure SVG silhouette with black border and drop shadow
       const icon = L.divIcon({
@@ -195,7 +225,10 @@ export default function GlobalMapPage() {
         iconAnchor: [planeSize / 2, planeSize / 2]
       })
 
-      const marker = L.marker([lat, lon], { icon })
+      const marker = L.marker([lat, lon], {
+        icon,
+        zIndexOffset: isSelected ? 1000 : 50
+      })
         .addTo(markersLayerRef.current)
         .on('click', () => {
           setSelectedFlight(f)
@@ -214,15 +247,7 @@ export default function GlobalMapPage() {
         </div>
       `, { closeButton: false, offset: [0, -10] })
     })
-  }, [flights, selectedFlight])
-
-  const filteredFlights = flights.filter(f => {
-    const q = (searchTerm || '').trim().toUpperCase()
-    const country = f.originCountry || f.origin_country || ''
-    const airline = f.airline || ''
-    const callsign = f.callsign || ''
-    return !q || callsign.toUpperCase().includes(q) || country.toUpperCase().includes(q) || airline.toUpperCase().includes(q)
-  })
+  }, [mapReady, flights, searchTerm, selectedFlight])
 
   // Quick region jumpers
   const focusRegion = (coords, zoom) => {
@@ -320,12 +345,18 @@ export default function GlobalMapPage() {
             ))}
           </div>
 
-          {/* Aircraft Counter Pill */}
-          <div className="bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/15 shadow-xl flex items-center gap-2 text-xs font-semibold text-white">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span className="text-amber-400 font-mono font-bold">{filteredFlights.length}</span>
-            <span className="hidden sm:inline text-slate-300">{isLiveFeed ? 'Live OpenSky' : 'Radar Snapshot'}</span>
-          </div>
+          {/* Aircraft Counter Pill & Manual Refresh */}
+          <button
+            onClick={fetchFlights}
+            disabled={loading}
+            className="bg-slate-900/90 hover:bg-slate-800 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/15 shadow-xl flex items-center gap-2 text-xs font-semibold text-white transition active:scale-95 cursor-pointer"
+            title="Click to refresh live radar feed"
+          >
+            <span className={`w-2 h-2 rounded-full ${loading ? 'bg-amber-400 animate-spin' : 'bg-emerald-400 animate-ping'}`} />
+            <span className="text-amber-400 font-mono font-bold">{loading ? '...' : filteredFlights.length}</span>
+            <span className="hidden sm:inline text-slate-300">{loading ? 'Scanning…' : (isLiveFeed ? 'Live OpenSky' : 'Radar Snapshot')}</span>
+            <RefreshCw className={`w-3.5 h-3.5 text-slate-400 ${loading ? 'animate-spin text-amber-400' : ''}`} />
+          </button>
 
           {/* Drawer Toggle */}
           <button
@@ -454,12 +485,10 @@ export default function GlobalMapPage() {
         </div>
       )}
 
-      {/* ── 5. Bottom Brand Watermark & 120s Cache Indicator ── */}
+      {/* ── 5. Bottom Status Indicator ── */}
       <div className="absolute bottom-4 left-4 z-10 pointer-events-none hidden sm:flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-[11px] text-slate-300 border border-white/10">
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-        <span>AeroMate Global ADS-B Radar</span>
-        <span className="text-slate-500">·</span>
-        <span className="text-slate-400">120s Live Cache</span>
+        <span>Live Global Airspace Radar</span>
       </div>
     </div>
   )
