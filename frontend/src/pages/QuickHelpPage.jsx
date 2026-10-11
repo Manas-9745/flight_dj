@@ -138,6 +138,7 @@ export default function QuickHelpPage({ token }) {
   const [isCallActive, setIsCallActive] = useState(false)
   const [callDuration, setCallDuration] = useState(0)
   const [ivrPrompt, setIvrPrompt] = useState('')
+  const [activeResult, setActiveResult] = useState(null)
   const timerRef = useRef(null)
 
   // Context Dialog Modal State (for flight number required)
@@ -328,6 +329,7 @@ export default function QuickHelpPage({ token }) {
     }
 
     setExecuting(true)
+    setUnrecognizedSubmitted(null)
 
     try {
       const resolution = await resolveQuickHelpCommand({
@@ -339,24 +341,45 @@ export default function QuickHelpPage({ token }) {
         question: contextForm.question
       }).catch(() => null)
 
-      const navUrl = resolution?.data?.redirectUrl || selected.targetRoute
-      const navState = resolution?.data?.navigationState || {
-        tab: selected.targetTab,
+      const resultPayload = {
+        code: selected.code,
+        title: selected.title,
+        description: selected.description,
+        actionText: selected.actionText,
+        category: selected.category,
         flightNumber: contextForm.flightNumber,
         origin: contextForm.origin,
-        destination: contextForm.destination
+        destination: contextForm.destination,
+        data: resolution?.data?.data || resolution?.data || null,
+        suggestedNextSteps: selected.suggestedNextSteps || [
+          'Verify terminal monitors for real-time gate calls',
+          'Keep travel wallet documents ready for identity check'
+        ]
       }
 
-      if (navUrl.startsWith('/flight') && contextForm.flightNumber) {
-        navigate(`/flight/${contextForm.flightNumber.toUpperCase()}`, { state: navState })
-      } else if (navUrl.startsWith('/navigation')) {
-        navigate(`/navigation?flight=${contextForm.flightNumber}&from=${contextForm.origin}&to=${contextForm.destination}`, { state: navState })
-      } else {
-        navigate(navUrl, { state: navState })
+      setActiveResult(resultPayload)
+
+      // Spoken voice summary if phone call or audio is active
+      const spokenSummary = `Code ${selected.code}: ${selected.title}. ${selected.description}`
+      if (isCallActive) {
+        setIvrPrompt(`Resolved ${selected.title}: ${selected.description}`)
+        speakText(spokenSummary, 'en')
       }
     } catch {
-      // Graceful fallback to target route
-      navigate(selected.targetRoute, { state: { tab: selected.targetTab, flightNumber: contextForm.flightNumber } })
+      setActiveResult({
+        code: selected.code,
+        title: selected.title,
+        description: selected.description,
+        actionText: selected.actionText,
+        category: selected.category,
+        flightNumber: contextForm.flightNumber,
+        origin: contextForm.origin,
+        destination: contextForm.destination,
+        suggestedNextSteps: [
+          'Review airline gate announcements',
+          'Contact airline help desk if status changes'
+        ]
+      })
     } finally {
       setExecuting(false)
     }
@@ -565,6 +588,97 @@ export default function QuickHelpPage({ token }) {
                 </>
               )}
             </button>
+
+            {/* In-place Command Resolution Result (No Redirection) */}
+            {activeResult && (
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#1A1A1A]/15 shadow-subtle text-left space-y-3.5 animate-fadeIn">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#1A1A1A] text-white font-mono font-bold text-xs">
+                      {activeResult.code}
+                    </span>
+                    <div>
+                      <h3 className="font-semibold text-sm text-[#0D0D0D]">
+                        {activeResult.title}
+                      </h3>
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-[#6B6B6B]">
+                        {activeResult.category}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setActiveResult(null)}
+                    className="p-1 rounded-lg text-[#8C8C85] hover:text-[#0D0D0D] hover:bg-[#F5F5F0] transition-colors"
+                    title="Dismiss"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <p className="text-xs text-[#52524E] leading-relaxed">
+                  {activeResult.description}
+                </p>
+
+                {/* Real-time Flight Metrics if Available */}
+                {activeResult.data?.flight && (
+                  <div className="p-3 rounded-xl bg-[#FAFAF7] border border-[#E5E5E0] space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-[#0D0D0D]">
+                        Flight {activeResult.data.flight.flightNumber || activeResult.flightNumber}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        activeResult.data.flight.status === 'DELAYED'
+                          ? 'bg-amber-100 text-amber-800'
+                          : activeResult.data.flight.status === 'CANCELLED'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-emerald-100 text-emerald-800'
+                      }`}>
+                        {activeResult.data.flight.status || 'SCHEDULED'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-[11px] text-[#52524E]">
+                      <div>
+                        Route: <strong className="text-[#0D0D0D]">{activeResult.origin || 'LHR'} → {activeResult.destination || 'JFK'}</strong>
+                      </div>
+                      {activeResult.data.flight.delayMinutes > 0 && (
+                        <div>
+                          Delay: <strong className="text-amber-600">+{activeResult.data.flight.delayMinutes} mins</strong>
+                        </div>
+                      )}
+                      {activeResult.data.flight.terminal && (
+                        <div>
+                          Terminal: <strong className="text-[#0D0D0D]">{activeResult.data.flight.terminal}</strong>
+                        </div>
+                      )}
+                      {activeResult.data.flight.gate && (
+                        <div>
+                          Gate: <strong className="text-[#0D0D0D]">{activeResult.data.flight.gate}</strong>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Suggested Steps */}
+                {activeResult.suggestedNextSteps?.length > 0 && (
+                  <div className="space-y-1.5 pt-1">
+                    <span className="text-[10px] font-bold tracking-wider text-[#6B6B6B] uppercase">
+                      Recommended Next Steps
+                    </span>
+                    <ul className="space-y-1 text-xs text-[#0D0D0D]">
+                      {activeResult.suggestedNextSteps.map((step, idx) => (
+                        <li key={idx} className="flex items-start gap-1.5 text-[11px] text-[#52524E]">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                          <span>{step}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Code Not Recognized Fallback Actions */}
             {showUnrecognizedBlock && (
