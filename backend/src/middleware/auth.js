@@ -22,7 +22,7 @@ async function authenticateUser(req, res, next) {
     return res.status(401).json({
       success: false,
       error: 'Unauthorized',
-      message: 'Authentication required. Please sign in to access your travel wallet.'
+      message: 'Authentication required. Please sign in to access your travel wallet and documents.'
     });
   }
 
@@ -57,8 +57,8 @@ async function authenticateUser(req, res, next) {
     }
   }
 
-  // 3. Fallback for guest sessions
-  if (token === 'demo-token' || token === 'guest') {
+  // 3. Fallback for demo sessions only in development non-test if explicitly allowed
+  if (process.env.NODE_ENV === 'development' && process.env.ALLOW_DEMO_TOKEN === 'true' && (token === 'demo-token' || token === 'guest')) {
     req.user = {
       id: 'guest_user',
       email: 'guest@aeromate.local',

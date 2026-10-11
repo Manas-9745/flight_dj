@@ -50,15 +50,21 @@ async function testBackend() {
       replySnippet: chatRes.data?.reply?.slice(0, 100) + '...'
     });
 
-    // 6. User Trips with Auth
+    // 6. User Trips with Auth (Security Check)
     const tripsRes = await fetch(`${baseUrl}/trips`, {
       headers: { 'Authorization': 'Bearer demo-token' }
-    }).then(r => r.json());
-    console.log('\n[6] Saved Trips with Auth:', tripsRes.success ? 'PASSED ✅' : 'FAILED ❌', {
-      count: tripsRes.count
+    });
+    const tripsStatus = tripsRes.status;
+    const tripsBody = await tripsRes.json();
+    console.log('\n[6] Saved Trips Auth Security Check:', tripsStatus === 401 ? 'PASSED ✅' : 'FAILED ❌', {
+      expectedStatus: 401,
+      receivedStatus: tripsStatus,
+      error: tripsBody.error
     });
 
-    console.log('\n🎉 ALL 6 BACKEND ENDPOINT TESTS PASSED SUCCESSFULLY!');
+    if (healthRes.status === 'healthy' && tripsStatus === 401) {
+      console.log('\n🎉 ALL BACKEND ENDPOINT TESTS PASSED SUCCESSFULLY (INCLUDING STRICT AUTH SEC)!');
+    }
     server.close();
     process.exit(0);
   } catch (err) {

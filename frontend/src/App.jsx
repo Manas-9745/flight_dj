@@ -39,6 +39,7 @@ export { supabase }
 
 export default function App() {
   const [voiceAssistantOpen, setVoiceAssistantOpen] = useState(false)
+  const [session, setSession] = useState(null)
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem('aeromate_auth_user')
@@ -62,11 +63,12 @@ export default function App() {
     supabase.auth.getSession()
       .then(({ data }) => {
         clearTimeout(safetyTimer)
-        if (data?.session?.user) {
+        if (data?.session) {
+          setSession(data.session)
           const supaUser = {
             id: data.session.user.id,
             email: data.session.user.email,
-            name: data.session.user.user_metadata?.name || data.session.user.email.split('@')[0],
+            name: data.session.user.user_metadata?.full_name || data.session.user.user_metadata?.name || data.session.user.email?.split('@')[0],
             access_token: data.session.access_token
           }
           setUser(supaUser)
@@ -79,19 +81,18 @@ export default function App() {
         setAuthLoading(false)
       })
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      if (session?.user) {
+    // Listen for auth changes (Google OAuth, login, logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, currentSession) => {
+      setSession(currentSession || null)
+      if (currentSession?.user) {
         const supaUser = {
-          id: session.user.id,
-          email: session.user.email,
-          name: session.user.user_metadata?.name || session.user.email.split('@')[0],
-          access_token: session.access_token
+          id: currentSession.user.id,
+          email: currentSession.user.email,
+          name: currentSession.user.user_metadata?.full_name || currentSession.user.user_metadata?.name || currentSession.user.email?.split('@')[0],
+          access_token: currentSession.access_token
         }
         setUser(supaUser)
         localStorage.setItem('aeromate_auth_user', JSON.stringify(supaUser))
-      } else if (!session) {
-        // Only clear if Supabase was the authority
       }
     })
 
@@ -123,11 +124,12 @@ export default function App() {
     } catch (e) {
       // ignore
     }
+    setSession(null)
     setUser(null)
   }
 
-  // Token is strictly tied to the logged-in user. If not logged in, token is null.
-  const token = user?.access_token || (user?.email ? ('usr_' + btoa(user.email.toLowerCase().trim())) : null)
+  // Token is strictly tied to the logged-in user.
+  const token = session?.access_token || user?.access_token || (user?.email ? ('usr_' + btoa(user.email.toLowerCase().trim())) : null)
 
   if (authLoading) {
     return (
@@ -166,7 +168,7 @@ export default function App() {
             <Route path="/baggage"   element={<BaggagePage />} />
             <Route path="/hold"      element={<HoldCheckPage />} />
             <Route path="/wallet"    element={<WalletPage user={user} token={token} />} />
-            <Route path="/settings"  element={<SettingsPage user={user} />} />
+            <Route path="/settings"  element={<SettingsPage user={user} token={token} />} />
             <Route path="/login"     element={<LoginPage onLogin={handleLogin} />} />
             <Route path="/signup"    element={<SignupPage onSignup={handleLogin} />} />
             <Route path="*"          element={<Navigate to="/" replace />} />

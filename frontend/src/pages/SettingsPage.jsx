@@ -1,19 +1,45 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
-  Globe, Gauge, CheckCircle2, Trash2
+  Globe, Gauge, CheckCircle2, Trash2, RefreshCw
 } from 'lucide-react'
+import { getProfile, updateProfile } from '../services/api'
 
-export default function SettingsPage() {
+export default function SettingsPage({ user, token }) {
   const [language, setLanguage] = useState(() => localStorage.getItem('aeromate_language') || 'en')
   const [altUnit, setAltUnit] = useState(() => localStorage.getItem('aeromate_unit_alt') || 'feet')
   const [speedUnit, setSpeedUnit] = useState(() => localStorage.getItem('aeromate_unit_speed') || 'knots')
   const [savedMsg, setSavedMsg] = useState(false)
+  const [saving, setSaving] = useState(false)
 
-  const handleSave = (e) => {
+  useEffect(() => {
+    if (token) {
+      getProfile(token).then(res => {
+        if (res?.data?.preferred_language) {
+          setLanguage(res.data.preferred_language)
+        }
+      }).catch(err => console.error("Error fetching profile", err))
+    }
+  }, [token])
+
+  const handleSave = async (e) => {
     e.preventDefault()
+    setSaving(true)
+    
+    // Save to local storage for quick access
     localStorage.setItem('aeromate_language', language)
     localStorage.setItem('aeromate_unit_alt', altUnit)
     localStorage.setItem('aeromate_unit_speed', speedUnit)
+    
+    // Sync to backend if logged in
+    if (token) {
+      try {
+        await updateProfile({ preferred_language: language }, token)
+      } catch (err) {
+        console.error("Failed to sync profile to server", err)
+      }
+    }
+    
+    setSaving(false)
     setSavedMsg(true)
     setTimeout(() => setSavedMsg(false), 2500)
   }
@@ -123,8 +149,10 @@ export default function SettingsPage() {
 
           <button
             type="submit"
-            className="btn-primary py-2.5 px-6 text-xs"
+            disabled={saving}
+            className="btn-primary py-2.5 px-6 text-xs flex items-center gap-2"
           >
+            {saving && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
             Save Changes
           </button>
         </div>

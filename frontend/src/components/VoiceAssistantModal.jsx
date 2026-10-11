@@ -32,6 +32,7 @@ export default function VoiceAssistantModal({ isOpen, onClose }) {
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [language, setLanguage] = useState('en')
   const [statusMessage, setStatusMessage] = useState('Tap to speak')
+  const [textInput, setTextInput] = useState('')
   const recognitionRef = useRef(null)
   const navigate = useNavigate()
 
@@ -80,7 +81,16 @@ export default function VoiceAssistantModal({ isOpen, onClose }) {
       onError: (err) => {
         console.warn('Voice recognition error:', err)
         setIsListening(false)
-        setStatusMessage('Could not hear clearly. Tap mic to try again.')
+        const errorType = err?.error || err?.message || ''
+        if (errorType === 'not-allowed' || errorType === 'permission-denied') {
+          setStatusMessage('Microphone access blocked. Allow mic in browser or type below.')
+        } else if (errorType === 'no-speech') {
+          setStatusMessage('No speech detected. Tap mic and speak or type below.')
+        } else if (errorType === 'network') {
+          setStatusMessage('Speech network error. Tap mic again or type below.')
+        } else {
+          setStatusMessage('Could not hear clearly. Tap mic or type below.')
+        }
       },
       onEnd: () => {
         setIsListening(false)
@@ -300,6 +310,34 @@ export default function VoiceAssistantModal({ isOpen, onClose }) {
             </p>
           </div>
         )}
+
+        {/* Manual Query Input (Fallback if Mic is blocked or unclear) */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (!textInput.trim()) return
+            const val = textInput.trim()
+            setTextInput('')
+            setTranscript(val)
+            handleProcessVoiceInput(val)
+          }}
+          className="flex items-center gap-2"
+        >
+          <input
+            type="text"
+            value={textInput}
+            onChange={(e) => setTextInput(e.target.value)}
+            placeholder="Or type a question / command here…"
+            className="flex-1 px-3.5 py-2.5 rounded-xl border border-[#E5E5E0] bg-[#FAFAF7] text-xs text-[#0D0D0D] placeholder-[#8C8C85] focus:outline-none focus:ring-1 focus:ring-[#246BFD] focus:bg-white"
+          />
+          <button
+            type="submit"
+            disabled={!textInput.trim() || loading}
+            className="px-4 py-2.5 rounded-xl bg-[#1A1A1A] hover:bg-black text-white text-xs font-semibold disabled:opacity-40 transition-colors"
+          >
+            Send
+          </button>
+        </form>
 
         {/* Quick Voice Command Hints */}
         <div className="pt-2 border-t border-[#E5E5E0] flex flex-wrap items-center justify-center gap-1.5 text-[11px]">

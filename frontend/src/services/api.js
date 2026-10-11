@@ -94,6 +94,48 @@ export const saveTrip = (tripData, token) =>
 export const deleteTrip = (id, token) =>
   api.delete(`/trips/${id}`, authHeader(token)).then(r => r.data)
 
+// ── Profiles ─────────────────────────────────────────────────────────────────
+
+export const getProfile = (token) =>
+  api.get('/profile', authHeader(token)).then(r => r.data)
+
+export const updateProfile = (data, token) =>
+  api.put('/profile', data, authHeader(token)).then(r => r.data)
+
+// ── Passengers ───────────────────────────────────────────────────────────────
+
+export const getPassengers = (token) =>
+  api.get('/passengers', authHeader(token)).then(r => r.data)
+
+export const addPassenger = (data, token) =>
+  api.post('/passengers', data, authHeader(token)).then(r => r.data)
+
+export const deletePassenger = (id, token) =>
+  api.delete(`/passengers/${id}`, authHeader(token)).then(r => r.data)
+
+// ── Bookings ─────────────────────────────────────────────────────────────────
+
+export const getBookings = (token) =>
+  api.get('/bookings', authHeader(token)).then(r => r.data)
+
+export const addBooking = (data, token) =>
+  api.post('/bookings', data, authHeader(token)).then(r => r.data)
+
+export const deleteBooking = (id, token) =>
+  api.delete(`/bookings/${id}`, authHeader(token)).then(r => r.data)
+
+// ── Notification Preferences ─────────────────────────────────────────────────
+
+export const getNotificationPreferences = (token) =>
+  api.get('/notifications/preferences', authHeader(token)).then(r => r.data)
+
+export const updateNotificationPreferences = (data, token) =>
+  api.put('/notifications/preferences', data, authHeader(token)).then(r => r.data)
+
+export const getNotificationHistory = (token) =>
+  api.get('/notifications/history', authHeader(token)).then(r => r.data)
+
+
 // ── Live Crisis & Aviation Alerts (Feature 11) ────────────────────────────────
 
 export const getAlerts = (params = {}) =>
